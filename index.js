@@ -3,6 +3,8 @@ const rp = require('request-promise');
 const debug = require('debug')('kibanaErrors');
 const debugCMP = require('debug')('kibanaErrors:cmp');
 const config = require('config');
+const moment = require('moment');
+const knex = require('knex')(config.db);
 
 function fixLogEntry(logEntry) {
   const message = logEntry._source['message'] || 'none';
@@ -34,9 +36,10 @@ function fixLogEntry(logEntry) {
 
   }
   return {
+    guid: `${logEntry._index}${logEntry._id}`,
     type: logEntry._type,
     name: logEntry._source.fields.name,
-    timestamp: logEntry._source['@timestamp'],
+    eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss'),
     level: logEntry._source.fields.type,
     message: message.trim(),
     msgName: messageName.trim(),
@@ -46,7 +49,6 @@ function fixLogEntry(logEntry) {
     role: logEntry._source['role'],
   };
 }
-
 
 function getIndex(queryFrom, queryTo) {
   // request current index
@@ -106,8 +108,8 @@ function getData(queryFrom, queryTo, index) {
   const dataString1 = {"index": [index], "ignore_unavailable": true, "preference": config.kibana.preference};
   const dataString2 = {
     "version": true,
-    "size": 50,
-    "sort": [{"@timestamp": {"order": "desc", "unmapped_type": "boolean"}}],
+    "size": config.kibana.fetchNum,
+    "sort": [{"@timestamp": {"order": "asc", "unmapped_type": "boolean"}}],
     "query": {
       "bool": {
         "must": [{"match_all": {}}, {"match_phrase": {"fields.type": {"query": "E"}}}, {
@@ -181,44 +183,83 @@ function getData(queryFrom, queryTo, index) {
     });
 }
 
-const queryTo = Date.now();
-const queryFrom = Date.now() - config.kibana.searchFor * 3600 * 1000;// for last searchFor hours
-
-getIndex(queryFrom, queryTo)
-  .then((data) => {
-    const indexes = Object.keys(data.indices);
-    debug('indices:', indexes);
-    return indexes;
-  })
-  // .then(indexes=> getData(userQuery, queryFrom, queryTo, indexes[0]))
-  .then((indexes) => {
-    const promises = indexes.map((index) => getData(queryFrom, queryTo, index));
-    return Promise.all(promises);
-  })
-  .then((dataArray) => {
-    return dataArray.map((element) => {
-      let data;
-      try {
-        data = JSON.parse(element);
-      } catch (e) {
-        debug('malformed json!', e, element);
-        return;
+function fetchData(queryFrom, queryTo) {
+  return getIndex(queryFrom, queryTo)
+    .then((data) => {
+      const indexes = Object.keys(data.indices);
+      if (!indexes || !indexes.length) {
+        throw new Error('Failed to fetch indices!');
       }
-      try {
-        data = data.responses[0].hits.hits;
-        return data;
-      } catch (e) { // data has no... data
-        debug('No hits.hits:', data);
-        return;
-      }
-      return data;
+      debug('indices:', indexes);
+      return indexes;
     })
-      .reduce((res, el) => {
-        return res.concat(el);
-      }, [])
-      .filter(item => item)
-      .map(fixLogEntry);
+    // .then(indexes=> getData(userQuery, queryFrom, queryTo, indexes[0]))
+    .then((indexes) => {
+      const promises = indexes.map((index) => getData(queryFrom, queryTo, index));
+      return Promise.all(promises);
+    })
+    .then((dataArray) => {
+      return dataArray.map((element) => {
+        let data;
+        try {
+          data = JSON.parse(element);
+        } catch (e) {
+          debug('malformed json!', e, element);
+          return;
+        }
+        try {
+          data = data.responses[0].hits.hits;
+          return data;
+        } catch (e) { // data has no... data
+          debug('No hits.hits:', data);
+          return;
+        }
+        return data;
+      })
+        .reduce((res, el) => {
+          return res.concat(el);
+        }, [])
+        .filter(item => item)
+        .map(fixLogEntry);
+    })
+    .then((data) => {
+      return {count: data.length, data};
+    });
+}
+
+knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
+  .then((lastDate) => {
+    let queryFrom;
+    let queryTo;
+    if (!lastDate) {
+      queryFrom = moment().subtract(config.kibana.searchFor, 'h');// for last searchFor hours
+      queryTo = moment();
+    }
+    else {
+      queryFrom = moment(lastDate);
+      queryTo = queryFrom.clone().add(config.kibana.searchFor, 'h');
+    }
+    debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
+    return fetchData(queryFrom.unix() * 1000, queryTo.unix() * 1000);
   })
   .then((data) => {
-    return {count: data.length, data};
-  }).then((res) => debug('RES: ' + JSON.stringify(res, null, 3)));
+    // debug(data.data[0]);
+    debug(`Adding ${data.count} items`);
+    const entries = data.data.map((entry) => knex('logs').insert(entry).catch((err) => {
+      if (!err.message.includes('Duplicate entry')) {
+        debug(`Failed add: ${err}`);
+      }
+      return false;
+    }));
+    return Promise.all(entries);
+  })
+  .then((res) => {
+    const failed = res.filter(item => !item).length;
+    if (failed !== 0) {
+      debug(`Failed to add ${failed} items (possibly duplicates?)`);
+    }
+  })
+  .catch((err) => {
+    debug(err);
+  })
+  .finally(() => Promise.delay(1000).then(() => process.exit(0)));

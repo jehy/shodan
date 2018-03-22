@@ -12,6 +12,9 @@
     "bluebird": "3.5.1",
     "config": "^1.30.0",
     "debug": "^3.1.0",
+    "knex": "^0.14.4",
+    "moment": "^2.21.0",
+    "mysql": "^2.15.0",
     "request": "^2.85.0",
     "request-promise": "4.2.2"
   }

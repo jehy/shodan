@@ -5,7 +5,21 @@
     "url": "",
     "searchFor": 1,
     "preference": 1521709471107,
-    "search": ""
+    "search": "",
+    "fetchNum": 500
   },
-  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36"
+  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36",
+  "db": {
+    "client": "mysql",
+    "connection": {
+      "host": "127.0.0.1",
+      "user": "your_database_user",
+      "password": "your_database_password",
+      "database": "myapp_test",
+      "charset": "utf8"
+    },
+    "migrations": {
+      "tableName": "knex_migrations"
+    }
+  }
 }

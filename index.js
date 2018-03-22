@@ -89,7 +89,6 @@ function getIndex(queryFrom, queryTo) {
 
 
 function getData(queryFrom, queryTo, index) {
-
   const kibanaUrl = config.kibana.url;
   const headers = {
     Origin: kibanaUrl,
@@ -162,8 +161,6 @@ function getData(queryFrom, queryTo, index) {
   };
 
   const dataString = `${JSON.stringify(dataString1)}\n${JSON.stringify(dataString2)}\n`;
-
-
   const options = {
     url: `${kibanaUrl}/elasticsearch/_msearch`,
     method: 'POST',
@@ -227,39 +224,44 @@ function fetchData(queryFrom, queryTo) {
     });
 }
 
-knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
-  .then((lastDate) => {
-    let queryFrom;
-    let queryTo;
-    if (!lastDate) {
-      queryFrom = moment().subtract(config.kibana.searchFor, 'h');// for last searchFor hours
-      queryTo = moment();
-    }
-    else {
-      queryFrom = moment(lastDate);
-      queryTo = queryFrom.clone().add(config.kibana.searchFor, 'h');
-    }
-    debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
-    return fetchData(queryFrom.unix() * 1000, queryTo.unix() * 1000);
-  })
-  .then((data) => {
-    // debug(data.data[0]);
-    debug(`Adding ${data.count} items`);
-    const entries = data.data.map((entry) => knex('logs').insert(entry).catch((err) => {
-      if (!err.message.includes('Duplicate entry')) {
-        debug(`Failed add: ${err}`);
+function updateLogs() {
+  knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
+    .then((lastDate) => {
+      let queryFrom;
+      let queryTo;
+      if (!lastDate) {
+        queryFrom = moment().subtract(config.kibana.searchFor, 'h');// for last searchFor hours
+        queryTo = moment();
       }
-      return false;
-    }));
-    return Promise.all(entries);
-  })
-  .then((res) => {
-    const failed = res.filter(item => !item).length;
-    if (failed !== 0) {
-      debug(`Failed to add ${failed} items (possibly duplicates?)`);
-    }
-  })
-  .catch((err) => {
-    debug(err);
-  })
-  .finally(() => Promise.delay(1000).then(() => process.exit(0)));
+      else {
+        queryFrom = moment(lastDate);
+        queryTo = queryFrom.clone().add(config.kibana.searchFor, 'h');
+      }
+      debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
+      return fetchData(queryFrom.unix() * 1000, queryTo.unix() * 1000);
+    })
+    .then((data) => {
+      // debug(data.data[0]);
+      debug(`Adding ${data.count} items`);
+      const entries = data.data.map((entry) => knex('logs').insert(entry).catch((err) => {
+        if (!err.message.includes('Duplicate entry')) {
+          debug(`Failed add: ${err}`);
+        }
+        return false;
+      }));
+      return Promise.all(entries);
+    })
+    .then((res) => {
+      const failed = res.filter(item => !item).length;
+      if (failed !== 0) {
+        debug(`Failed to add ${failed} items (possibly duplicates?)`);
+      }
+    })
+    .catch((err) => {
+      debug(err);
+    })
+    .finally(() => setTimeout(() => updateLogs(), 100*1000));
+  //.finally(() => Promise.delay(1000).then(() => process.exit(0)));
+}
+
+updateLogs();

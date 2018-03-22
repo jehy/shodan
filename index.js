@@ -35,6 +35,7 @@ function fixLogEntry(logEntry) {
   }
   return {
     type: logEntry._type,
+    name: logEntry._source.fields.name,
     timestamp: logEntry._source['@timestamp'],
     level: logEntry._source.fields.type,
     message: message.trim(),

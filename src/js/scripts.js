@@ -30,17 +30,18 @@ function showDiff(sec) {
 
 function showTopErrors() {
   const env = $('#topErrors-env').val();
-  socket.emit('event', {name: 'showTopErrors', data: {env}});
+  const period = $('#topErrors-period').val();
+  socket.emit('event', {name: 'showTopErrors', data: {env, period}});
 }
 
-function reloader()
-{
+function reloader() {
   const interval = parseInt($('#reload-interval').val(), 10);
   if (interval) {
     showTopErrors();
     setTimeout(reloader, interval * 1000);
   }
 }
+
 reloader();
 
 socket.on('connect', () => {
@@ -67,12 +68,12 @@ socket.on('event', (event) => {
       if (errorDelta > 0) {
         errorDelta = `+${errorDelta}`;
       }
-      let errorDivide = 1;
+      let errorDivide = 2;
       if (row.preHour) {
         errorDivide = row.count / row.preHour;
       }
       let tdClass = '';
-      if (errorDivide > 2) {
+      if (errorDivide >= 2) {
         tdClass = 'danger';
       }
       else if (errorDivide < 0.5) {

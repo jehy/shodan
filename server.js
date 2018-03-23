@@ -16,9 +16,13 @@ io.on('connection', (socket) => {
     debug(`event ${event.name} fired`);
     debug(JSON.stringify(event));
     if (event.name === 'showTopErrors') {
+      let interval = 'DAY';
+      if (event.data.period === 'hour') {
+        interval = 'HOUR';
+      }
       let query = knex('logs')
         .select('msgName', 'name')
-        .whereRaw('eventDate >= DATE_SUB(NOW(),INTERVAL 1 HOUR)');
+        .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
       if (event.data.env) {
         query = query
           .where('env', event.data.env);
@@ -36,7 +40,7 @@ io.on('connection', (socket) => {
             .select('msgName', 'name')
             .count('msgName as count')
             .groupBy('msgName', 'name')
-            .whereRaw('eventDate BETWEEN DATE_SUB(NOW(),INTERVAL 2 HOUR) AND DATE_SUB(NOW(),INTERVAL 1 HOUR)');
+            .whereRaw(`eventDate BETWEEN DATE_SUB(NOW(),INTERVAL 2 ${interval}) AND DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
           if (event.data.env) {
             hourPreQuery = hourPreQuery
               .where('env', event.data.env);

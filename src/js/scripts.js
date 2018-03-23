@@ -36,7 +36,8 @@ function showTopErrors() {
 socket.on('connect', () => {
   console.log('client connected');
   showTopErrors();
-  $('#topErrors-show').click(() => showTopErrors());
+  // $('#topErrors-show').click(() => showTopErrors());
+  $('#topErrors-env').change(() => showTopErrors());
 });
 
 socket.on('event', (event) => {
@@ -52,7 +53,10 @@ socket.on('event', (event) => {
       });
       const firstMet = moment().diff(moment(row.firstMet), 's');
       const lastMet = moment().diff(moment(row.lastMet), 's');
-      const errorDelta = row.count - row.preHour;
+      let errorDelta = row.count - row.preHour;
+      if (errorDelta > 0) {
+        errorDelta = `+${errorDelta}`;
+      }
       let errorDivide = 1;
       if (row.preHour) {
         errorDivide = row.count / row.preHour;

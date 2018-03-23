@@ -19,7 +19,7 @@
                 <option value="production-b">production-b</option>
                 <option value="staging">staging</option>
             </select>
-            <button type="button" class="btn btn-default" id="topErrors-show">Show</button>
+            <!--<button type="button" class="btn btn-default" id="topErrors-show">Show</button>-->
         </div>
     </form>
     <table class="table table-striped" id="topErrors">
@@ -59,17 +59,3 @@
 </div>
 </body>
 </html>
-<!--
-
-
-    t.dateTime('eventDate').notNull().index();
-    t.string('name').notNull().index();
-    t.string('type').notNull().index();
-    t.string('msgName').notNull().index();
-    t.string('msgId').notNull();
-    t.string('guid').notNull().unique();
-    t.string('env').notNull().index();
-    t.string('host').notNull();
-    t.string('role').notNull().index();
-    t.text('message').nullable();
-    t.enum('level', ['I', 'E', 'W','Z','D','']).notNull().index();-->

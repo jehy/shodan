@@ -19,6 +19,14 @@ io.on('connection', function (socket) {
     .orderByRaw('count(msgName) desc')
     .limit(50)
     .then((topErrors) => {
+      return Promise.all(topErrors.map((err) => {
+        return knex('logs').select('eventDate').where('msgName', err.msgName).orderBy('id', 'asc').limit(1)
+          .then((data) => {
+            return Object.assign(err, {firstMet: data[0].eventDate});
+          });
+      }));
+    })
+    .then((topErrors) => {
       socket.emit('event', {name: 'updateTopErrors', data: topErrors});
     });
 

@@ -33,16 +33,26 @@ function showTopErrors() {
   socket.emit('event', {name: 'showTopErrors', data: {env}});
 }
 
+function reloader()
+{
+  const interval = parseInt($('#reload-interval').val(), 10);
+  if (interval) {
+    showTopErrors();
+    setTimeout(reloader, interval * 1000);
+  }
+}
+reloader();
+
 socket.on('connect', () => {
   console.log('client connected');
-  showTopErrors();
+  // showTopErrors();
   // $('#topErrors-show').click(() => showTopErrors());
   $('#topErrors-env').change(() => showTopErrors());
 });
 
 socket.on('event', (event) => {
   console.log(`received event ${event.name}`);
-  console.log(JSON.stringify(event, null, 3));
+  // console.log(JSON.stringify(event, null, 3));
 
   if (event.name === 'updateTopErrors') {
     const tbody = $('<tbody/>');

@@ -26,7 +26,7 @@ io.on('connection', (socket) => {
       query = query
         .groupBy('msgName', 'name')
         .count('msgName as count')
-        .orderByRaw('count(msgName) desc')
+        .orderByRaw('count(msgName) desc, msgName')
         .limit(50);
       query
         .then((topErrors) => {

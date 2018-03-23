@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>Shodan</title>
+</head>
+<body>
+<div class="container">
+    <h1>Top errors for last hour</h1>
+
+    <table class="table table-striped" id="topErrors">
+        <thead>
+        <tr>
+            <td>msgId</td>
+            <td>Count</td>
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+<div id="modal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+<!--
+
+
+    t.dateTime('eventDate').notNull().index();
+    t.string('name').notNull().index();
+    t.string('type').notNull().index();
+    t.string('msgName').notNull().index();
+    t.string('msgId').notNull();
+    t.string('guid').notNull().unique();
+    t.string('env').notNull().index();
+    t.string('host').notNull();
+    t.string('role').notNull().index();
+    t.text('message').nullable();
+    t.enum('level', ['I', 'E', 'W','Z','D','']).notNull().index();-->

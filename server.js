@@ -14,15 +14,15 @@ io.on('connection', function (socket) {
   knex('logs')
     .select('msgName')
     .whereRaw('eventDate >= DATE_SUB(NOW(),INTERVAL 1 HOUR)')
-    .groupBy('msgName')
+    .groupBy('msgName','name')
     .count('msgName as count')
     .orderByRaw('count(msgName) desc')
     .limit(50)
     .then((topErrors) => {
       return Promise.all(topErrors.map((err) => {
-        return knex('logs').select('eventDate').where('msgName', err.msgName).orderBy('id', 'asc').limit(1)
+        return knex('logs').min('eventDate as firstMet').max('eventDate as lastMet').where('msgName', err.msgName)
           .then((data) => {
-            return Object.assign(err, {firstMet: data[0].eventDate});
+            return Object.assign(err, {firstMet: data[0].firstMet, lastMet: data[0].lastMet,});
           });
       }));
     })

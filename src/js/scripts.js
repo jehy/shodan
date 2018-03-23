@@ -8,6 +8,24 @@ function showModal(header, data) {
   $('#modal').modal();
 }
 
+function showDiff(sec) {
+  let unit = 'sec';
+  let data = sec;
+  if (data > 60) {
+    data /= 60;
+    unit = 'min';
+    if (data > 60) {
+      data /= 60;
+      unit = 'hour';
+      if (data > 24) {
+        data /= 24;
+        unit = 'day';
+      }
+    }
+  }
+  return `${parseInt(data, 10)} ${unit}`;
+}
+
 socket.on('connect', function () {
   console.log('client connected');
 });
@@ -22,14 +40,9 @@ socket.on('event', function (event) {
       tr.click(() => {
         socket.emit('event', {name: 'showLogsByMsgName', data: {msgName: row.msgName}});
       });
-      let diff = moment().diff(moment(row.firstMet), 'h');
-      if (diff > 24) {
-        diff = `${diff} d`;
-      }
-      else {
-        diff = `${diff} h`;
-      }
-      tr.append(`<td>${row.msgName}</td><td>${row.count}</td><td>${diff}</td>`);
+      let firstMet = moment().diff(moment(row.firstMet), 's');
+      let lastMet = moment().diff(moment(row.lastMet), 's');
+      tr.append(`<td>${row.msgName}</td><td>${row.count}</td><td>${showDiff(firstMet)}</td><td>${showDiff(lastMet)}</td>`);
       tbody.append(tr);
     });
     $('#topErrors tbody').replaceWith(tbody);

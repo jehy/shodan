@@ -10,6 +10,18 @@
 <div class="container">
     <h1>Top errors for last hour</h1>
 
+    <form id="topErrors">
+        <div class="form-group">
+            <label for="topErrors-env">Choose env:</label>
+            <select id="topErrors-env" class="form-control">
+                <option selected value="">--</option>
+                <option value="production-a">production-a</option>
+                <option value="production-b">production-b</option>
+                <option value="staging">staging</option>
+            </select>
+            <button type="button" class="btn btn-default" id="topErrors-show">Show</button>
+        </div>
+    </form>
     <table class="table table-striped" id="topErrors">
         <thead>
         <tr>
@@ -18,6 +30,7 @@
             <th>Count</th>
             <th>Age</th>
             <th>Last met</th>
+            <th>Last hour</th>
         </tr>
         </thead>
         <tbody>

@@ -1,3 +1,5 @@
+'use strict';
+
 const socket = require('socket.io-client')('http://localhost:3000');
 const $ = require('jquery');
 const moment = require('moment');
@@ -26,10 +28,18 @@ function showDiff(sec) {
   return `${parseInt(data, 10)} ${unit}`;
 }
 
-socket.on('connect', function () {
+function showTopErrors() {
+  const env = $('#topErrors-env').val();
+  socket.emit('event', {name: 'showTopErrors', data: {env}});
+}
+
+socket.on('connect', () => {
   console.log('client connected');
+  showTopErrors();
+  $('#topErrors-show').click(() => showTopErrors());
 });
-socket.on('event', function (event) {
+
+socket.on('event', (event) => {
   console.log(`received event ${event.name}`);
   console.log(JSON.stringify(event, null, 3));
 
@@ -40,28 +50,43 @@ socket.on('event', function (event) {
       tr.click(() => {
         socket.emit('event', {name: 'showLogsByMsgName', data: {msgName: row.msgName}});
       });
-      let firstMet = moment().diff(moment(row.firstMet), 's');
-      let lastMet = moment().diff(moment(row.lastMet), 's');
-      tr.append(`<td>${row.name}</td><td>${row.msgName}</td><td>${row.count}</td><td>${showDiff(firstMet)}</td><td>${showDiff(lastMet)}</td>`);
+      const firstMet = moment().diff(moment(row.firstMet), 's');
+      const lastMet = moment().diff(moment(row.lastMet), 's');
+      const errorDelta = row.count - row.preHour;
+      let errorDivide = 1;
+      if (row.preHour) {
+        errorDivide = row.count / row.preHour;
+      }
+      let tdClass = '';
+      if (errorDivide > 2) {
+        tdClass = 'danger';
+      }
+      else if (errorDivide < 0.5) {
+        tdClass = 'success';
+      }
+      const tdDelta = `<td class="${tdClass}">${errorDelta}</td>`;
+      tr.append(`<td>${row.name}</td><td>${row.msgName}</td>`)
+        .append(`<td>${row.count}</td><td>${showDiff(firstMet)}</td><td>${showDiff(lastMet)}</td>`)
+        .append(tdDelta);
       tbody.append(tr);
     });
     $('#topErrors tbody').replaceWith(tbody);
   }
   else if (event.name === 'displayErrByMessage') {
-    //eventDate, name,type,msgId,env,host,role,message
-    const needFilelds = Object.keys(event.data.errors[0]).filter((key) => key !== 'message')
+    // eventDate, name,type,msgId,env,host,role,message
+    const needFilelds = Object.keys(event.data.errors[0]).filter(key => key !== 'message');
     const header = event.data.msgName;
     const thead = $('<thead>');
-    const headerTds = needFilelds.map((key) => `<th>${key}</th>`);
+    const headerTds = needFilelds.map(key => `<th>${key}</th>`);
     thead.append(headerTds);
     const table = $('<table class="table table-striped"/>');
     table.append(thead);
     const tbody = $('<tbody>');
     event.data.errors.forEach((err) => {
       err.eventDate = moment(err.eventDate).format('HH:mm:ss');
-      const meta = needFilelds.map((key) => `<td>${err[key]}</td>`).join('');
+      const meta = needFilelds.map(key => `<td>${err[key]}</td>`).join('');
       const message = `<td colspan=${needFilelds.length}>${err.message}</td>`;
-      //tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
+      // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
       tbody.append(`<tr>${meta}</tr>`);
       tbody.append(`<tr>${message}</tr>`);
     });
@@ -72,6 +97,6 @@ socket.on('event', function (event) {
     console.log(`unknown event ${event.name}`);
   }
 });
-socket.on('disconnect', function () {
+socket.on('disconnect', () => {
   console.log('client disconnected');
 });

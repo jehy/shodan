@@ -4,8 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "updater": "DEBUG=shodan:updater node ./bin/updater.js",
-    "start": "DEBUG=shodan:server node ./server.js",
+    "updater": "DEBUG=shodan:updater node --use-strict ./bin/updater.js",
+    "start": "DEBUG=shodan:server,knex:query node --use-strict ./server.js",
     "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js",
     "build-dev": "node ./node_modules/webpack/bin/webpack.js --env=dev --progress --profile --colors",
     "build": "node ./node_modules/webpack/bin/webpack.js --env=prod --progress --profile --colors",

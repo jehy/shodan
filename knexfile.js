@@ -1,4 +1,5 @@
 // Update with your config settings.
+
 const config = require('config');
 
 module.exports = {
@@ -10,15 +11,15 @@ module.exports = {
     connection: {
       database: 'my_db',
       user: 'username',
-      password: 'password'
+      password: 'password',
     },
     pool: {
       min: 2,
-      max: 10
+      max: 10,
     },
     migrations: {
-      tableName: 'knex_migrations'
-    }
+      tableName: 'knex_migrations',
+    },
   },
 
   production: {
@@ -26,15 +27,15 @@ module.exports = {
     connection: {
       database: 'my_db',
       user: 'username',
-      password: 'password'
+      password: 'password',
     },
     pool: {
       min: 2,
-      max: 10
+      max: 10,
     },
     migrations: {
-      tableName: 'knex_migrations'
-    }
-  }
+      tableName: 'knex_migrations',
+    },
+  },
 
 };

@@ -42,7 +42,7 @@ socket.on('event', function (event) {
       });
       let firstMet = moment().diff(moment(row.firstMet), 's');
       let lastMet = moment().diff(moment(row.lastMet), 's');
-      tr.append(`<td>${row.msgName}</td><td>${row.count}</td><td>${showDiff(firstMet)}</td><td>${showDiff(lastMet)}</td>`);
+      tr.append(`<td>${row.name}</td><td>${row.msgName}</td><td>${row.count}</td><td>${showDiff(firstMet)}</td><td>${showDiff(lastMet)}</td>`);
       tbody.append(tr);
     });
     $('#topErrors tbody').replaceWith(tbody);
@@ -58,6 +58,7 @@ socket.on('event', function (event) {
     table.append(thead);
     const tbody = $('<tbody>');
     event.data.errors.forEach((err) => {
+      err.eventDate = moment(err.eventDate).format('HH:mm:ss');
       const meta = needFilelds.map((key) => `<td>${err[key]}</td>`).join('');
       const message = `<td colspan=${needFilelds.length}>${err.message}</td>`;
       //tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));

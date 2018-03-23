@@ -12,9 +12,9 @@ app.get('/', function (req, res) {
 io.on('connection', function (socket) {
   debug('a user connected');
   knex('logs')
-    .select('msgName')
+    .select('msgName', 'name')
     .whereRaw('eventDate >= DATE_SUB(NOW(),INTERVAL 1 HOUR)')
-    .groupBy('msgName','name')
+    .groupBy('msgName', 'name')
     .count('msgName as count')
     .orderByRaw('count(msgName) desc')
     .limit(50)
@@ -31,7 +31,7 @@ io.on('connection', function (socket) {
     });
 
   socket.on('event', function (event) {
-    debug(`event ${event.name} fired with data ${event.data}`);
+    debug(`event ${event.name} fired`);
     if (event.name === 'showLogsByMsgName') {
       const msgName = event.data.msgName;
       knex('logs')

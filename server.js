@@ -73,10 +73,16 @@ io.on('connection', (socket) => {
         });
     }
     else if (event.name === 'showLogsByMsgName') {
-      const {msgName} = event.data;
-      knex('logs')
+      const {msgName, name, env} = event.data;
+      let query = knex('logs')
         .where('msgName', msgName)
-        .select('eventDate', 'name', 'type', 'msgId', 'env', 'host', 'role', 'message')
+        .where('name', name);
+
+      if (env) {
+        query = query
+          .where('env', env);
+      }
+      query = query.select('eventDate', 'name', 'type', 'msgId', 'env', 'host', 'role', 'message')
         .orderBy('id', 'desc')
         .limit(50)
         .then((errors) => {

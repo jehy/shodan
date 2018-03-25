@@ -64,7 +64,15 @@ socket.on('event', (event) => {
     event.data.forEach((row) => {
       const tr = $('<tr/>');
       tr.click(() => {
-        socket.emit('event', {name: 'showLogsByMsgName', data: {msgName: row.msgName}});
+        const errorData = {
+          name: 'showLogsByMsgName',
+          data: {
+            msgName: row.msgName,
+            name: row.name,
+            env: row.env,
+          },
+        };
+        socket.emit('event', errorData);
       });
       const firstMet = moment().diff(moment(row.firstMet), 's');
       const lastMet = moment().diff(moment(row.lastMet), 's');

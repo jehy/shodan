@@ -4,6 +4,8 @@ const socket = require('socket.io-client')('http://localhost:3000');
 const $ = require('jquery');
 const moment = require('moment');
 
+let timeoutId = 0;
+
 function showModal(header, data) {
   $('#modal .modal-title').html(header);
   $('#modal .modal-body').html(data);
@@ -37,8 +39,9 @@ function showTopErrors() {
 function reloader() {
   const interval = parseInt($('#reload-interval').val(), 10);
   if (interval) {
+    clearTimeout(timeoutId);
     showTopErrors();
-    setTimeout(reloader, interval * 1000);
+    timeoutId = setTimeout(reloader, interval * 1000);
   }
 }
 
@@ -49,6 +52,7 @@ socket.on('connect', () => {
   // showTopErrors();
   // $('#topErrors-show').click(() => showTopErrors());
   $('#topErrors-env').change(() => showTopErrors());
+  $('#reload-interval').change(() => reloader());
 });
 
 socket.on('event', (event) => {
@@ -68,7 +72,7 @@ socket.on('event', (event) => {
       if (errorDelta > 0) {
         errorDelta = `+${errorDelta}`;
       }
-      let errorDivide = 2;
+      let errorDivide = 3;
       if (row.preHour) {
         errorDivide = row.count / row.preHour;
       }

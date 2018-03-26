@@ -1,6 +1,6 @@
 # Shodan
 
-Logs monitoring using kibana logs.
+Advanced error monitoring using kibana logs.
 
 ## Screenshots
 

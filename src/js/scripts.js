@@ -1,6 +1,6 @@
 'use strict';
 
-const socket = require('socket.io-client')('http://localhost:3000');
+const socket = require('socket.io-client')('http://192.168.16.195:3000');
 const $ = require('jquery');
 const moment = require('moment');
 const Highcharts = require('highcharts');

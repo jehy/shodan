@@ -114,7 +114,7 @@ io.on('connection', (socket) => {
 
 });
 
-http.listen(3000, () => {
-  debug('listening on *:3000');
+http.listen(config.port, () => {
+  debug(`listening on *:${config.port}`);
 });
 

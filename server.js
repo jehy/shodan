@@ -93,9 +93,7 @@ io.on('connection', (socket) => {
       let queryGraph = knex('logs')
         .count('eventDate as count')
         .select(knex.raw('CONCAT(DATE_FORMAT(eventDate, "%Y %m %d %H")," ", FLOOR(DATE_FORMAT(eventDate, "%i")/10)*10)  as eventDate'))
-        // .select(knex.raw('CEIL(DATE_FORMAT(eventDate, "%i")/10)*10 as minutes'))
         .where('msgName', msgName)
-        // .whereRaw('eventDate BETWEEN DATE_SUB(NOW(), INTERVAL 1 DAY) AND DATE_FORMAT(NOW(), "%Y-%m-%d %H:00:00")')
         .whereRaw('eventDate > DATE_SUB(NOW(), INTERVAL 1 DAY)')
         .where('name', name);
 
@@ -103,23 +101,7 @@ io.on('connection', (socket) => {
         queryGraph = queryGraph
           .where('env', env);
       }
-      // queryGraph = queryGraph.groupByRaw('DATE_FORMAT(eventDate, "%Y-%m-%d %H")');
       queryGraph = queryGraph.groupByRaw('CONCAT(DATE_FORMAT(eventDate, "%Y %m %d %H")," ",FLOOR(DATE_FORMAT(eventDate, "%i")/10)*10)');
-      /*
-      let query = 'select count(1) as `count`,' +
-        'CONCAT(DATE_FORMAT(eventDate, "%Y-%m-%d %H")," ", CEIL(DATE_FORMAT(eventDate, "%i")/10))*10  as eventDate ' +
-        'from `logs` where `msgName` = ? and eventDate > DATE_SUB(NOW(), INTERVAL 1 DAY) ' +
-        'and `name` = ? group by CONCAT(DATE_FORMAT(eventDate, "%Y-%m-%d %H")," ", CEIL(DATE_FORMAT(eventDate, "%i")/10))*10';
-      console.log('!!! query: ' + query);
-      let queryGraph = knex.raw(query, [msgName, name]);
-      if (env) {
-        query = 'select count(1) as `count`,' +
-          'CONCAT(DATE_FORMAT(eventDate, "%Y-%m-%d %H")," ",CEIL(DATE_FORMAT(eventDate, "%i")/10))*10  as eventDate ' +
-          'from `logs` where `msgName` = ? and and env=? eventDate > DATE_SUB(NOW(), INTERVAL 1 DAY) ' +
-          'and `name` = ? group by CONCAT(DATE_FORMAT(eventDate, "%Y-%m-%d %H")," ",CEIL(DATE_FORMAT(eventDate, "%i")/10))*10';
-        console.log('!!! query: ' + query);
-        queryGraph = knex.raw(query, [msgName, env, name]);
-      } */
       Promise.all([queryGraph, queryData])
         .then(([graphData, data]) => {
           socket.emit('event', {name: 'displayErrByMessage', data: {errors: data, graph: graphData, msgName}});

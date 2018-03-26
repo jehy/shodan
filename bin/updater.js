@@ -7,6 +7,8 @@ const config = require('config');
 const moment = require('moment');
 const knex = require('knex')(config.db);
 
+let lastRemovedLogs = null;
+
 function fixLogEntry(logEntry) {
   const message = logEntry._source.message || 'none';
   let messageName = logEntry._source.msgName;
@@ -175,7 +177,6 @@ function getData(queryFrom, queryTo, index) {
   // debug(options);
   return rp(options)
     .then((result) => {
-      const formated = JSON.stringify(JSON.parse(result), null, 3);
       debug('request data ok');
       return result;
     })
@@ -228,6 +229,19 @@ function fetchData(queryFrom, queryTo) {
 }
 
 function updateLogs() {
+
+  const today = parseInt(moment().format('DD'), 10);
+  if (lastRemovedLogs === null || lastRemovedLogs !== today) {
+    debug('Removing old logs');
+    lastRemovedLogs = today;
+    knex('logs')
+      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.kibana.storeLogsFor} DAY)`)
+      .del()
+      .then((count) => {
+        debug(`Removed ${count} old logs`);
+      });
+  }
+
   knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
     .then((lastDate) => {
       let queryFrom;
@@ -268,7 +282,6 @@ function updateLogs() {
       debug(err);
     })
     .finally(() => setTimeout(() => updateLogs(), config.kibana.updateInterval * 1000));
-  // .finally(() => Promise.delay(1000).then(() => process.exit(0)));
 }
 
 updateLogs();

@@ -112,8 +112,8 @@ socket.on('event', (event) => {
   else if (event.name === 'displayErrByMessage') {
     const graph = $('<div/>');
     // //////
-    console.log('graph');
-    console.log(event.data.graph);
+    // console.log('graph');
+    // console.log(event.data.graph);
     const data = event.data.graph
       .map((item) => {
         if (item.eventDate.length < 16) {
@@ -122,10 +122,26 @@ socket.on('event', (event) => {
         return [parseInt(moment.utc(item.eventDate, 'YYYY MM DD HH mm')
           .format('x'), 10), item.count];
       });
-    console.log('data');
-    console.log(data);
+    // console.log('data');
+    // console.log(data);
+    const zeroFilled = data.reduce((res, cur, index, arr) => {
+      const next = arr[index + 1];
+      res.push(cur);
+      if (!next) {
+        return res;
+      }
+      let val = cur[0];
+      while (val < next[0] - 600000) {
+        val += 600000;
+        res.push([val, 0]);
+      }
+      return res;
+    }, []);
+    // console.log('zeroFilled');
+    // console.log(zeroFilled);
     Highcharts.chart({
       chart: {
+        type: 'area',
         zoomType: 'x',
         renderTo: graph[0],
         events: {
@@ -182,8 +198,8 @@ socket.on('event', (event) => {
 
       series: [{
         type: 'area',
-        name: 'Errors for last day',
-        data,
+        name: 'Errors',
+        data: zeroFilled,
       }],
     });
 

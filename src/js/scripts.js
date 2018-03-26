@@ -4,7 +4,7 @@ const socket = require('socket.io-client')('http://localhost:3000');
 const $ = require('jquery');
 const moment = require('moment');
 
-let timeoutId = 0;
+let timeoutId = null;
 
 function showModal(header, data) {
   $('#modal .modal-title').html(header);
@@ -39,7 +39,9 @@ function showTopErrors() {
 function reloader() {
   const interval = parseInt($('#reload-interval').val(), 10);
   if (interval) {
-    clearTimeout(timeoutId);
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId);
+    }
     showTopErrors();
     timeoutId = setTimeout(reloader, interval * 1000);
   }

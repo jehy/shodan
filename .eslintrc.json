@@ -8,6 +8,16 @@
     "mocha": true
   },
   "extends": "airbnb-base",
+  "overrides": [{
+    "files": ["src/js/**.js"],
+    "env": {
+      "browser": true,
+      "node": true
+    },
+    "parserOptions": {
+      "sourceType": "module"
+    }
+  }],
   "plugins": [
     "standard",
     "promise"

@@ -6,7 +6,7 @@
   "scripts": {
     "updater": "DEBUG=shodan:updater node --use-strict ./bin/updater.js",
     "start": "DEBUG=shodan:server,knex:query node --use-strict ./server.js",
-    "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js",
+    "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js server.js webpack.config.js webpack.dev.js webpack.dev.js mugrations bin knexfile.js",
     "build-dev": "node ./node_modules/webpack/bin/webpack.js --env=dev --progress --profile --colors",
     "build": "node ./node_modules/webpack/bin/webpack.js --env=prod --progress --profile --colors",
     "prepare": "npm run build",

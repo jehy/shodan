@@ -81,7 +81,7 @@ function getIndex(queryFrom, queryTo) {
   };
 
   const options = {
-    url: `${kibanaUrl}/elasticsearch/${config.kibana.search}-*/_field_stats?level=indices`,
+    url: `${kibanaUrl}/elasticsearch/${config.kibana.index}-*/_field_stats?level=indices`,
     method: 'POST',
     headers,
     json: true,
@@ -188,16 +188,19 @@ function getData(queryFrom, queryTo, index) {
 function fetchData(queryFrom, queryTo) {
   return getIndex(queryFrom, queryTo)
     .then((data) => {
-      const indexes = Object.keys(data.indices).filter(index => !index.includes('search'));
-      if (!indexes || !indexes.length) {
-        throw new Error('Failed to fetch indices!');
+      let indexes = Object.keys(data.indices);
+      if (config.kibana.indexFilterOut) {
+        indexes = Object.keys(data.indices).filter(index => !index.includes(config.kibana.indexFilterOut));
       }
-      debug('indices:', indexes);
+      if (!indexes || !indexes.length) {
+        throw new Error('Failed to fetch indexes!');
+      }
+      debug('indexes:', indexes);
       return indexes;
     })
     // .then(indexes=> getData(userQuery, queryFrom, queryTo, indexes[0]))
-    .then((indexes) => {
-      const promises = indexes.map(index => getData(queryFrom, queryTo, index));
+    .then((indices) => {
+      const promises = indices.map(index => getData(queryFrom, queryTo, index));
       return Promise.all(promises);
     })
     .then((dataArray) => {
@@ -247,11 +250,13 @@ function updateLogs() {
       let queryFrom;
       let queryTo;
       if (!lastDate) {
-        queryFrom = moment().subtract(config.kibana.searchFor, 'h');// for last searchFor hours
+        queryFrom = moment().subtract(config.kibana.firstSearchFor, 'h');
         queryTo = moment();
       }
       else {
-        queryFrom = moment(lastDate);
+        if (config.kibana.lookInPast) {
+          queryFrom = moment(lastDate).subtract(config.kibana.lookInPast, 'm');
+        }
         queryTo = queryFrom.clone().add(config.kibana.searchFor, 'h');
       }
       debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);

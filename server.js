@@ -12,6 +12,9 @@ app.get('/', (req, res) => {
 
 app.use(express.static('dist'));
 
+setInterval(() => {
+  debug(`Current users connected: ${Object.keys(io.sockets.connected).length}`);
+}, 5000);
 
 io.on('connection', (socket) => {
   debug('a user connected');

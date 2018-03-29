@@ -5,8 +5,10 @@
     "version": "5.5.2",
     "url": "",
     "searchFor": 1,
+    "firstSearchFor": 24,
+    "lookInPast": 5,
     "preference": 1521709471107,
-    "search": "",
+    "index": "",
     "fetchNum": 500,
     "updateInterval": 30,
     "storeLogsFor": 7

@@ -30,6 +30,8 @@ reloader();
 
 socket.on('connect', () => {
   console.log('client connected');
+  socket.sendBuffer = [];
+  showTopErrors();
   // $('#topErrors-show').click(() => showTopErrors());
   $('#topErrors-env').change(() => showTopErrors());
   $('#topErrors-period').change(() => showTopErrors());

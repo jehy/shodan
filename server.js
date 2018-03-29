@@ -6,6 +6,8 @@ const debug = require('debug')('shodan:server');
 const config = require('config');
 const knex = require('knex')(config.db);
 
+require('./modules/knex-timings')(knex, false);
+
 app.get('/', (req, res) => {
   res.sendFile(`${__dirname}/dist/index.html`);
 });

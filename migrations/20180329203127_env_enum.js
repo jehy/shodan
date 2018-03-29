@@ -1,11 +1,11 @@
 exports.up = (knex, Promise) => {
   return knex.schema.alterTable('logs', (t) => {
-    t.specificType('eventDate', 'DATETIME(6)').alter();
+    t.enum('env', ['production-a', 'production-b', 'staging']).notNull().alter();
   });
 };
 
 exports.down = (knex, Promise) => {
   return knex.schema.alterTable('logs', (t) => {
-    t.date('eventDate').notNull().alter();
+    t.string('env').notNull().alter();
   });
 };

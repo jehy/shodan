@@ -7,6 +7,8 @@ const config = require('config');
 const moment = require('moment');
 const knex = require('knex')(config.db);
 
+require('../modules/knex-timings')(knex, false);
+
 let lastRemovedLogs = null;
 
 function fixLogEntry(logEntry) {

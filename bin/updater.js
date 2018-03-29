@@ -139,31 +139,6 @@ function getData(queryFrom, queryTo, index) {
     },
     stored_fields: ['*'],
     script_fields: {},
-    docvalue_fields: ['@timestamp', 'data.timestamp', 'data.trip.endDateTime', 'data.trip.startDateTime',
-      'data.trips.endDateTime', 'data.trips.startDateTime'],
-    highlight: {
-      pre_tags: ['@kibana-highlighted-field@'],
-      post_tags: ['@/kibana-highlighted-field@'],
-      fields: {
-        '*': {
-          highlight_query: {
-            bool: {
-              must: [{match_all: {}}, {match_phrase: {'fields.type': {query: 'E'}}}, {
-                range: {
-                  '@timestamp': {
-                    gte: queryFrom,
-                    lte: queryTo,
-                    format: 'epoch_millis',
-                  },
-                },
-              }],
-              must_not: [],
-            },
-          },
-        },
-      },
-      fragment_size: 2147483647,
-    },
   };
 
   const dataString = `${JSON.stringify(dataString1)}\n${JSON.stringify(dataString2)}\n`;
@@ -248,22 +223,25 @@ function updateLogs() {
   knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
     .then((lastDate) => {
       let queryFrom;
-      let queryTo;
       if (!lastDate) {
         queryFrom = moment().subtract(config.kibana.firstSearchFor, 'h');
-        queryTo = moment();
       }
       else {
-        if (config.kibana.lookInPast) {
-          queryFrom = moment(lastDate).subtract(config.kibana.lookInPast, 'm');
-        }
-        queryTo = queryFrom.clone().add(config.kibana.searchFor, 'h');
+        queryFrom = moment(lastDate);
       }
+      const now = moment();
+      if (config.kibana.crawlDelay) {
+        now.subtract(config.kibana.crawlDelay, 'm');
+      }
+      const queryTo = moment.min(queryFrom.clone().add(config.kibana.searchFor, 'h'), now);
       debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
       return fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
     })
     .then((data) => {
-      // debug(data.data[0]);
+      if (data.count === 0) {
+        debug('No new items to add');
+        return true;
+      }
       debug(`Adding ${data.count} items`);
       let duplicates = 0;
       const entries = data.data.map(entry => knex('logs').insert(entry).catch((err) => {
@@ -275,13 +253,13 @@ function updateLogs() {
         }
         return false;
       }));
-      return Promise.all(entries).then(res => [res, duplicates]);
-    })
-    .then(([res, duplicates]) => {
-      const failed = res.filter(item => !item).length;
-      if (failed !== 0) {
-        debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
-      }
+      return Promise.all(entries)
+        .then((res) => {
+          const failed = res.filter(item => !item).length;
+          if (failed !== 0) {
+            debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
+          }
+        });
     })
     .catch((err) => {
       debug(err);

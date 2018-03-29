@@ -6,7 +6,7 @@
     "url": "",
     "searchFor": 1,
     "firstSearchFor": 24,
-    "lookInPast": 5,
+    "crawlDelay": 1,
     "preference": 1521709471107,
     "index": "",
     "fetchNum": 500,

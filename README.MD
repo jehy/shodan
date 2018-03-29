@@ -39,8 +39,8 @@ Error details:
     * `"version": "5.5.2",`your kibana version
     * `"url": "https://logs.google.com",` your kibana url
     * `"firstSearchFor": 24,` first search should begin fetching entries from 24 hours ago
-    * `"searchFor": 1,` new entries are fetched 1 lsat hour
-    * `"lookInPast": 5` check for new entries in the past 5 minutes from current entry
+    * `"searchFor": 1,` new entries are fetched 1 last hour
+    * `"crawlDelay": 1` delay by 1 minute to avoid ignoring entries which were added to the past
     * `"preference": 1521709471107,` some preference id from kibana requests, dunno wtf
     * `"index": "some-app",` index name to search for
     * `"indexFilterOut": "",` filter for indices

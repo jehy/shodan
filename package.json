@@ -10,7 +10,8 @@
     "build-dev": "node ./node_modules/webpack/bin/webpack.js --env=dev --progress --profile --colors",
     "build": "node ./node_modules/webpack/bin/webpack.js --env=prod --progress --profile --colors",
     "prepare": "npm run build",
-    "test": "npm run build-dev && npm run lint"
+    "test": "npm run build-dev && npm run lint",
+    "migrate": "./node_modules/.bin/knex migrate:latest"
   },
   "author": "Jehy",
   "license": "ISC",

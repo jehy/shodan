@@ -59,6 +59,7 @@ io.on('connection', (socket) => {
             .min('eventDate as firstMet')
             .max('eventDate as lastMet')
             .whereIn('msgName', msgNames)
+            // .whereIn('msgName', knex.raw(`SELECT DISTINCT msgName from logs where eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`))
             .groupBy('msgName', 'name');
           if (event.data.env) {
             firstLastMetDataQuery = firstLastMetDataQuery

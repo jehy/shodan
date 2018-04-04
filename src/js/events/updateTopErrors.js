@@ -2,6 +2,53 @@ const $ = require('jquery');
 const moment = require('moment');
 const Utils = require('../utils');
 
+
+function formatErrorDeltaTD(row) {
+  let errorDelta = row.count - row.preHour;
+  if (errorDelta > 0) {
+    errorDelta = `+${errorDelta}`;
+  }
+  let errorDivide = 3;
+  if (row.preHour) {
+    errorDivide = row.count / row.preHour;
+  }
+  let tdClass = '';
+  if (errorDivide >= 2) {
+    tdClass = 'danger';
+  }
+  else if (errorDivide < 0.5) {
+    tdClass = 'success';
+  }
+  return `<td class="${tdClass}">${errorDelta}</td>`;
+}
+
+function formatFirstMetTD(row) {
+  const firstMet = moment().diff(moment(row.firstMet), 's');
+  let tdClass = '';
+  const appearDiff = moment().diff(moment(row.firstMet), 'h');
+  if (appearDiff < 2) {
+    tdClass = 'danger';
+  }
+  else if (appearDiff < 4) {
+    tdClass = 'warning';
+  }
+  return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;
+}
+
+
+function formatLastMetTD(row) {
+  const lastMet = moment().diff(moment(row.lastMet), 's');
+  let tdClass = '';
+  const metDiff = moment().diff(moment(row.lastMet), 'm');
+  if (metDiff < 5) {
+    tdClass = 'danger';
+  }
+  else if (metDiff < 15) {
+    tdClass = 'warning';
+  }
+  return `<td class="${tdClass}">${Utils.showDiff(lastMet)}</td>`;
+}
+
 function updateTopErrors(data, socket) {
   const tbody = $('<tbody/>');
   data.forEach((row) => {
@@ -17,27 +64,11 @@ function updateTopErrors(data, socket) {
       };
       socket.emit('event', errorData);
     });
-    const firstMet = moment().diff(moment(row.firstMet), 's');
-    const lastMet = moment().diff(moment(row.lastMet), 's');
-    let errorDelta = row.count - row.preHour;
-    if (errorDelta > 0) {
-      errorDelta = `+${errorDelta}`;
-    }
-    let errorDivide = 3;
-    if (row.preHour) {
-      errorDivide = row.count / row.preHour;
-    }
-    let tdClass = '';
-    if (errorDivide >= 2) {
-      tdClass = 'danger';
-    }
-    else if (errorDivide < 0.5) {
-      tdClass = 'success';
-    }
-    const tdDelta = `<td class="${tdClass}">${errorDelta}</td>`;
     tr.append(`<td>${row.name}</td><td>${row.msgName}</td>`)
-      .append(`<td>${row.count}</td><td>${Utils.showDiff(firstMet)}</td><td>${Utils.showDiff(lastMet)}</td>`)
-      .append(tdDelta);
+      .append(`<td>${row.count}</td>`)
+      .append(formatFirstMetTD(row))
+      .append(formatLastMetTD(row))
+      .append(formatErrorDeltaTD(row));
     tbody.append(tr);
   });
   $('#topErrors tbody').replaceWith(tbody);

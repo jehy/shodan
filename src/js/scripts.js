@@ -6,6 +6,14 @@ const events = require('./events');
 
 let timeoutId = null;
 
+$('#topErrors').on('keyup keypress', (e) => {
+  const keyCode = e.keyCode || e.which;
+  if (keyCode === 13) {
+    e.preventDefault();
+    return false;
+  }
+  return true;
+});
 
 function showTopErrors() {
   const env = $('#topErrors-env').val();

@@ -49,6 +49,15 @@ function formatLastMetTD(row) {
   return `<td class="${tdClass}">${Utils.showDiff(lastMet)}</td>`;
 }
 
+function formatMessageName(row) {
+
+  let tdClass = '';
+  if (row.msgName.toLowerCase().includes('uncaughtexception')) {
+    tdClass = 'danger';
+  }
+  return `<td class="${tdClass}">${row.msgName}</td>`;
+}
+
 function updateTopErrors(data, socket) {
   const tbody = $('<tbody/>');
   data.forEach((row) => {
@@ -64,7 +73,8 @@ function updateTopErrors(data, socket) {
       };
       socket.emit('event', errorData);
     });
-    tr.append(`<td>${row.name}</td><td>${row.msgName}</td>`)
+    tr.append(`<td>${row.name}</td>`)
+      .append(formatMessageName(row))
       .append(`<td>${row.count}</td>`)
       .append(formatFirstMetTD(row))
       .append(formatLastMetTD(row))

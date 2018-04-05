@@ -2,58 +2,15 @@
 const Promise = require('bluebird');
 const rp = require('request-promise');
 const debug = require('debug')('shodan:updater');
-const debugCMP = require('debug')('shodan:updater:cmp');
 const config = require('config');
 const moment = require('moment');
 const knex = require('knex')(config.db);
+const {fixLogEntry} = require('../utils');
 
 require('../modules/knex-timings')(knex, false);
 
 let lastRemovedLogs = null;
 
-function fixLogEntry(logEntry) {
-  const message = logEntry._source.message || 'none';
-  let messageName = logEntry._source.msgName;
-  if (!messageName) {
-    messageName = `AUTO ${message.replace(new RegExp(/\n/g), '')}`;
-    messageName = messageName.replace(/js:\d+:\d+/g, 'js:xx:xx');// remove stack traces
-    messageName = messageName.replace(/{.+}/g, '{OBJ}');// remove json objects
-    messageName = messageName.replace(/releases\/\d+\//g, 'DATE');// remove release dates
-    messageName = messageName.replace(/http:\/\/.+ /g, 'http://addr');// remove http addresses
-    messageName = messageName.replace(/https:\/\/.+ /g, 'https://addr');// remove https addresses
-    messageName = messageName.replace(/\d+ ms/g, 'xx ms');// remove timings
-    messageName = messageName.replace(/\d+ attempts/g, 'x attempts');// remove attempts
-    messageName = messageName.replace(/\d+ attempt/g, 'x attempt');// remove attempts
-    messageName = messageName.replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/ig, 'GUID');// remove GUIDs
-    messageName = messageName.replace(/\d+/g, 'x');// remove any numbers
-    messageName = messageName.replace(/ +/g, ' ');// remove double spaces
-    if (messageName.length > 50) {
-      const pos = messageName.indexOf(' ', 50);
-      if (pos && pos < 60) {
-        messageName = `${messageName.substr(0, pos)}...`;
-      }
-      else {
-        messageName = `${messageName.substr(0, 50)}...`;
-      }
-    }
-    debugCMP(`message:${message.replace(new RegExp(/\n/g), '')}`);
-    debugCMP(`messageName:${messageName}`);
-
-  }
-  return {
-    guid: `${logEntry._index}${logEntry._id}`,
-    type: logEntry._type,
-    name: logEntry._source.fields.name,
-    eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),
-    level: logEntry._source.fields.type,
-    message: message.trim(),
-    msgName: messageName.trim(),
-    msgId: logEntry._source.msgId,
-    env: logEntry._source.chef_environment,
-    host: logEntry._source.host,
-    role: logEntry._source.role,
-  };
-}
 
 function getIndex(queryFrom, queryTo) {
   // request current index
@@ -211,6 +168,7 @@ function fetchData(queryFrom, queryTo) {
 function updateLogs() {
 
   const today = parseInt(moment().format('DD'), 10);
+  let full = false;
   if (lastRemovedLogs === null || lastRemovedLogs !== today) {
     debug('Removing old logs');
     lastRemovedLogs = today;
@@ -231,6 +189,7 @@ function updateLogs() {
       else {
         queryFrom = moment(lastDate);
       }
+      // queryFrom = moment().subtract(3,'m'); //temp fix for data overflow
       const now = moment();
       if (config.kibana.crawlDelay) {
         now.subtract(config.kibana.crawlDelay, 'm');
@@ -240,6 +199,9 @@ function updateLogs() {
       return fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
     })
     .then((data) => {
+      if (data.count === config.kibana.fetchNum) {
+        full = true;
+      }
       if (data.count === 0) {
         debug('No new items to add');
         return true;
@@ -266,7 +228,7 @@ function updateLogs() {
     .catch((err) => {
       debug(err);
     })
-    .finally(() => setTimeout(() => updateLogs(), config.kibana.updateInterval * 1000));
+    .finally(() => setTimeout(() => updateLogs(), full && 1000 || config.kibana.updateInterval * 1000));
 }
 
 updateLogs();

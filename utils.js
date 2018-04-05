@@ -1,0 +1,98 @@
+/* eslint-disable no-underscore-dangle */
+
+const debugCMP = require('debug')('shodan:updater:cmp');
+const moment = require('moment');
+
+function getStackStart(msg) {
+  const stackBegin1 = msg.includes('(/') && msg.indexOf('(/');
+  const stackBegin2 = msg.includes('at /') && msg.indexOf('at /');
+  if (stackBegin1 && stackBegin2) {
+    return Math.min(stackBegin1, stackBegin2);
+  }
+  else if (stackBegin1 || stackBegin2) {
+    return stackBegin1 || stackBegin2;
+  }
+  return -1;
+}
+
+function minimalReplace(messageName) {
+  return messageName.replace(new RegExp(/\n/g), ' ') // remove carriage returns
+    .replace(/ +/g, ' ');// remove double spaces
+}
+
+function getMessageName(messageName, message) {
+  if (messageName === 'uncaughtException_0') {
+    let start = message.lastIndexOf('uncaughtException');
+    let realMessage = message;
+    let to = -1;
+    if (start !== -1) {
+      start += 'uncaughtException'.length;
+      realMessage = realMessage.substr(start);
+      to = getStackStart(realMessage);
+    }
+    if (start !== -1 && to !== -1) {
+      return minimalReplace(`uncaughtException_0 ${realMessage.substr(0, to)}`).substr(0, 255);
+    }
+  }
+  if (messageName === 'uncaughtException') {
+    const data = message.split('------------------------------');
+    if (data.length > 1) {
+      const realMessage = data[data.length - 1];
+      const to = getStackStart(realMessage);
+      if (to !== -1) {
+        return minimalReplace(`uncaughtException ${realMessage.substr(0, to).trim()}`).substr(0, 255);
+      }
+    }
+  }
+  if (!messageName) {
+    let autoMessageName = `AUTO ${minimalReplace(message)}`
+      .replace(/js:\d+:\d+/g, 'js:xx:xx')// remove stack traces
+      .replace(/{.+}/g, '{OBJ}')// remove json objects
+      .replace(/releases\/\d+\//g, 'DATE')// remove release dates
+      .replace(/http:\/\/.+ /g, 'http://addr')// remove http addresses
+      .replace(/https:\/\/.+ /g, 'https://addr')// remove https addresses
+      .replace(/\d+ ms/g, 'xx ms')// remove timings
+      .replace(/\d+ attempts/g, 'x attempts')// remove attempts
+      .replace(/\d+ attempt/g, 'x attempt')// remove attempts
+      .replace(/[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}/ig, 'GUID')// remove GUIDs
+      .replace(/\d+/g, 'x')// remove any numbers
+      .trim();
+    if (autoMessageName.length > 50) {
+      const pos = autoMessageName.indexOf(' ', 50);
+      if (pos && pos < 60) {
+        autoMessageName = `${autoMessageName.substr(0, pos)}...`;
+      }
+      else {
+        autoMessageName = `${autoMessageName.substr(0, 50)}...`;
+      }
+    }
+    debugCMP(`message:${message.replace(new RegExp(/\n/g), '')}`);
+    debugCMP(`messageName:${autoMessageName}`);
+    return autoMessageName;
+  }
+  return messageName;
+}
+
+function fixLogEntry(logEntry) {
+  const message = logEntry._source.message || 'none';
+  let messageName = logEntry._source.msgName;
+  messageName = getMessageName(messageName, message);
+  return {
+    guid: `${logEntry._index}${logEntry._id}`,
+    type: logEntry._type,
+    name: logEntry._source.fields.name,
+    eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),
+    level: logEntry._source.fields.type,
+    message: message.trim(),
+    msgName: messageName.trim(),
+    msgId: logEntry._source.msgId,
+    env: logEntry._source.chef_environment,
+    host: logEntry._source.host,
+    role: logEntry._source.role,
+  };
+}
+
+module.exports = {
+  fixLogEntry,
+  getMessageName,
+};

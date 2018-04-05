@@ -21,7 +21,7 @@ function showDiff(sec) {
       }
     }
   }
-  return `${parseInt(data, 10)} ${unit}`;
+  return `${parseInt(data, 10)} ${unit}`.replace(' ', '&nbsp;');
 }
 
 module.exports = {

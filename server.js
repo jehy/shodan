@@ -68,7 +68,12 @@ io.on('connection', (socket) => {
           return Promise.all([hourPreQuery, firstLastMetDataQuery])
             .then(([preHourData, firstLastMetData]) => {
               return topErrors.map((err) => {
-                const metData = firstLastMetData.find(item => item.msgName === err.msgName && item.name === err.name);
+                let metData = firstLastMetData
+                  .find(item => item.msgName === err.msgName && item.name === err.name);
+                if (!metData) {
+                  debug(`ERR: not found met data for msgName "${err.msgName}" and name "${err.name}"`);
+                  metData = {firstMet: 0, lastMet: 0};
+                }
                 const preHour = preHourData.find(item => item.msgName === err.msgName && item.name === err.name);
                 return Object.assign(err, {
                   firstMet: metData.firstMet,

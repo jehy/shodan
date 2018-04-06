@@ -71,7 +71,8 @@ io.on('connection', (socket) => {
                 let metData = firstLastMetData
                   .find(item => item.msgName === err.msgName && item.name === err.name);
                 if (!metData) {
-                  debug(`ERR: not found met data for msgName "${err.msgName}" and name "${err.name}"`);
+                  debug(`ERR: not found met data for msgName "${err.msgName}" and name "${err.name}" 
+                  in object ${JSON.stringify(firstLastMetData, null, 3)}`);
                   metData = {firstMet: 0, lastMet: 0};
                 }
                 const preHour = preHourData.find(item => item.msgName === err.msgName && item.name === err.name);

@@ -230,7 +230,6 @@ function updateLogs() {
   return knex('logs').count().whereRaw("eventDate>STR_TO_DATE(DATE_FORMAT(SYSDATE(), '%y-%m-%d-%H'), '%y-%m-%d-%H')")
     .then((reply) => {
       const logsForLastHour = Object.values(reply[0])[0];
-      debug(`reply: ${JSON.stringify(reply)}`);
       debug(`Logs for last hour: ${JSON.stringify(logsForLastHour)}`);
       if (logsForLastHour > config.kibana.maxLogsPerHour) {
         debug('Too many logs per this hour, not fetching');

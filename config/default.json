@@ -10,8 +10,9 @@
     "preference": 1521709471107,
     "index": "",
     "fetchNum": 500,
-    "updateInterval": 30,
-    "storeLogsFor": 8
+    "updateInterval": 10,
+    "storeLogsFor": 8,
+    "maxLogsPerHour": 12000
   },
   "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36",
   "db": {

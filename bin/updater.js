@@ -165,22 +165,8 @@ function fetchData(queryFrom, queryTo) {
     });
 }
 
-function updateLogs() {
-
-  const today = parseInt(moment().format('DD'), 10);
-  let full = false;
-  if (lastRemovedLogs === null || lastRemovedLogs !== today) {
-    debug('Removing old logs');
-    lastRemovedLogs = today;
-    knex('logs')
-      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.kibana.storeLogsFor} DAY)`)
-      .del()
-      .then((count) => {
-        debug(`Removed ${count} old logs`);
-      });
-  }
-
-  knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
+function doUpdateLogs() {
+  return knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
     .then((lastDate) => {
       let queryFrom;
       if (!lastDate) {
@@ -199,9 +185,9 @@ function updateLogs() {
       return fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
     })
     .then((data) => {
-      if (data.count === config.kibana.fetchNum) {
+      /* if (data.count === config.kibana.fetchNum) {
         full = true;
-      }
+      } */
       if (data.count === 0) {
         debug('No new items to add');
         return true;
@@ -224,11 +210,38 @@ function updateLogs() {
             debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
           }
         });
+    });
+}
+
+function updateLogs() {
+
+  const today = parseInt(moment().format('DD'), 10);
+  if (lastRemovedLogs === null || lastRemovedLogs !== today) {
+    debug('Removing old logs');
+    lastRemovedLogs = today;
+    knex('logs')
+      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.kibana.storeLogsFor} DAY)`)
+      .del()
+      .then((count) => {
+        debug(`Removed ${count} old logs`);
+      });
+  }
+
+  return knex('logs').count().whereRaw("eventDate>STR_TO_DATE(DATE_FORMAT(SYSDATE(), '%y-%m-%d-%H'), '%y-%m-%d-%H')")
+    .then((reply) => {
+      const logsForLastHour = Object.values(reply[0])[0];
+      debug(`reply: ${JSON.stringify(reply)}`);
+      debug(`Logs for last hour: ${JSON.stringify(logsForLastHour)}`);
+      if (logsForLastHour > config.kibana.maxLogsPerHour) {
+        debug('Too many logs per this hour, not fetching');
+        return false;
+      }
+      return doUpdateLogs();
     })
     .catch((err) => {
       debug(err);
     })
-    .finally(() => setTimeout(() => updateLogs(), full && 1000 || config.kibana.updateInterval * 1000));
+    .finally(() => setTimeout(() => updateLogs(), config.kibana.updateInterval * 1000));
 }
 
 updateLogs();

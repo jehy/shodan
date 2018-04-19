@@ -88,7 +88,7 @@ function fixLogEntry(logEntry) {
     level: logEntry._source.fields.type,
     message: message.trim(),
     msgName: messageName.trim(),
-    msgId: logEntry._source.msgId,
+    msgId: logEntry._source.msgId || 'NONE',
     env: logEntry._source.chef_environment,
     host: logEntry._source.host,
     role: logEntry._source.role,

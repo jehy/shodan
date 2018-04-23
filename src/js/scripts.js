@@ -5,6 +5,7 @@ const $ = require('jquery');
 const events = require('./events');
 
 let timeoutId = null;
+const progressBar = $('.progress');
 
 $('#topErrors').on('keyup keypress', (e) => {
   const keyCode = e.keyCode || e.which;
@@ -19,7 +20,7 @@ function showTopErrors() {
   const env = $('#topErrors-env').val();
   const period = $('#topErrors-period').val();
   socket.emit('event', {name: 'showTopErrors', data: {env, period}});
-  $('.progress').show();
+  progressBar.show();
 }
 
 function reloader() {
@@ -28,7 +29,7 @@ function reloader() {
     if (timeoutId !== null) {
       clearTimeout(timeoutId);
     }
-    $('.progress').show();
+    progressBar.show();
     showTopErrors();
     timeoutId = setTimeout(reloader, interval * 1000);
   }
@@ -50,7 +51,7 @@ socket.on('event', (event) => {
   $('.progress').hide();
   console.log(`received event ${event.name}`);
   if (events[event.name]) {
-    events[event.name](event.data, socket);
+    events[event.name](event.data, event.fetchErrors, socket);
   }
   else {
     console.log(`unknown event ${event.name}`);

@@ -41,9 +41,15 @@ io.on('connection', (socket) => {
         .count('msgName as count')
         .orderByRaw('count(msgName) desc, name, msgName')
         .limit(50);
+      const fetchErrors = [];
       query
         .then((topErrors) => {
           const msgNames = topErrors.map(err => err.msgName);
+          const errorsPerThisHourQuery = knex('logs')
+            .count().whereRaw("eventDate>STR_TO_DATE(DATE_FORMAT(SYSDATE(), '%y-%m-%d-%H'), '%y-%m-%d-%H')")
+            .then((reply) => {
+              return Object.values(reply[0])[0];
+            });
 
           let hourPreQuery = knex('logs')
             .select('msgName', 'name')
@@ -65,8 +71,11 @@ io.on('connection', (socket) => {
             firstLastMetDataQuery = firstLastMetDataQuery
               .where('env', event.data.env);
           }
-          return Promise.all([hourPreQuery, firstLastMetDataQuery])
-            .then(([preHourData, firstLastMetData]) => {
+          return Promise.all([hourPreQuery, firstLastMetDataQuery, errorsPerThisHourQuery])
+            .then(([preHourData, firstLastMetData, errorsPerHour]) => {
+              if (errorsPerHour > config.kibana.maxLogsPerHour) {
+                fetchErrors.push(`Too many logs per this hour (${errorsPerHour}), fetching stopped`);
+              }
               return topErrors.map((err) => {
                 let metData = firstLastMetData
                   .find(item => item.msgName === err.msgName && item.name === err.name);
@@ -85,7 +94,7 @@ io.on('connection', (socket) => {
             });
         })
         .then((topErrors) => {
-          socket.emit('event', {name: 'updateTopErrors', data: topErrors});
+          socket.emit('event', {name: 'updateTopErrors', data: topErrors, fetchErrors});
         });
     }
     else if (event.name === 'showLogsByMsgName') {

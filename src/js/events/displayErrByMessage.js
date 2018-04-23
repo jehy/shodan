@@ -4,7 +4,7 @@ const Highcharts = require('highcharts');
 const Utils = require('../utils');
 require('highcharts/modules/exporting')(Highcharts);
 
-function displayErrByMessage(data, socket) {
+function displayErrByMessage(data,fetchErrors, socket) {
 
   const graph = $('<div/>');
   // //////

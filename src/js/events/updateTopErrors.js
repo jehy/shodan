@@ -2,6 +2,7 @@ const $ = require('jquery');
 const moment = require('moment');
 const Utils = require('../utils');
 
+const fetchErrorsAlert = $('#fetchErrors');
 
 function formatErrorDeltaTD(row) {
   let errorDelta = row.count - row.preHour;
@@ -58,7 +59,13 @@ function formatMessageName(row) {
   return `<td class="${tdClass}">${row.msgName}</td>`;
 }
 
-function updateTopErrors(data, socket) {
+function updateTopErrors(data, fetchErrors, socket) {
+  if (fetchErrors && fetchErrors.length) {
+    fetchErrorsAlert.empty().append(fetchErrors.join('<br>')).show();
+  }
+  else {
+    fetchErrorsAlert.hide();
+  }
   const tbody = $('<tbody/>');
   data.forEach((row) => {
     const tr = $('<tr/>');

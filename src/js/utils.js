@@ -1,9 +1,14 @@
 const $ = require('jquery');
 
+const modalTitle = $('#modal .modal-title');
+const modalBody = $('#modal .modal-body');
+const modal = $('#modal');
+
+
 function showModal(header, data) {
-  $('#modal .modal-title').empty().append(header);
-  $('#modal .modal-body').empty().append(data);
-  $('#modal').modal();
+  modalTitle.empty().append(header);
+  modalBody.empty().append(data);
+  modal.modal();
 }
 
 function showDiff(sec) {

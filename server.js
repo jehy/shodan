@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
         .then((topErrors) => {
           const msgNames = topErrors.map(err => err.msgName);
           const errorsPerThisHourQuery = knex('logs')
-            .count().whereRaw("eventDate>STR_TO_DATE(DATE_FORMAT(SYSDATE(), '%y-%m-%d-%H'), '%y-%m-%d-%H')")
+            .count().whereRaw('eventDate>DATE_SUB(NOW(), INTERVAL 1 HOUR)')
             .then((reply) => {
               return Object.values(reply[0])[0];
             });
@@ -73,8 +73,8 @@ io.on('connection', (socket) => {
           }
           return Promise.all([hourPreQuery, firstLastMetDataQuery, errorsPerThisHourQuery])
             .then(([preHourData, firstLastMetData, errorsPerHour]) => {
-              if (errorsPerHour > config.kibana.maxLogsPerHour) {
-                fetchErrors.push(`Too many logs per this hour (${errorsPerHour}), fetching stopped`);
+              if (errorsPerHour * 0.7 > config.kibana.maxLogsPerHour) {
+                fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour})`);
               }
               return topErrors.map((err) => {
                 let metData = firstLastMetData

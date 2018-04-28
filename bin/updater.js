@@ -165,8 +165,11 @@ function fetchData(queryFrom, queryTo) {
     });
 }
 
-function doUpdateLogs() {
-  return knex('logs').select('eventDate').orderBy('eventDate', 'desc').limit(1).then(([res]) => res && res.eventDate)
+function getLogUpdateInterval() {
+  return knex('logs')
+    .select('eventDate')
+    .orderBy('eventDate', 'desc').limit(1)
+    .then(([res]) => res && res.eventDate)
     .then((lastDate) => {
       let queryFrom;
       if (!lastDate) {
@@ -175,12 +178,31 @@ function doUpdateLogs() {
       else {
         queryFrom = moment(lastDate);
       }
-      // queryFrom = moment().subtract(3,'m'); //temp fix for data overflow
       const now = moment();
       if (config.kibana.crawlDelay) {
         now.subtract(config.kibana.crawlDelay, 'm');
       }
-      const queryTo = moment.min(queryFrom.clone().add(config.kibana.searchFor, 'h'), now);
+      let queryTo = moment.min(queryFrom.clone().add(config.kibana.searchFor, 'h'), now);
+
+      const dateString = queryTo.format('YYYY-MM-DD HH:mm:ss');
+      return knex('logs').count()
+        .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.kibana.searchFor} HOUR) and  "${dateString}"`)
+        .then((reply) => {
+          const logsForLastHour = Object.values(reply[0])[0];
+          debug(`Logs in base for hour: ${logsForLastHour}`);
+          if (logsForLastHour > config.kibana.maxLogsPerHour * config.kibana.searchFor) {
+            debug('Too many logs for this hour, I will skip some...');
+            queryFrom = moment.min(now.clone().subtract(5, 'm'), queryFrom.clone().add(1, 'h'));
+            queryTo = moment.min(queryFrom.clone().add(config.kibana.searchFor, 'h'), now);
+          }
+          return {queryFrom, queryTo};
+        });
+    });
+}
+
+function doUpdateLogs() {
+  return getLogUpdateInterval()
+    .then(({queryFrom, queryTo}) => {
       debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
       return fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
     })
@@ -227,16 +249,7 @@ function updateLogs() {
       });
   }
 
-  return knex('logs').count().whereRaw("eventDate>STR_TO_DATE(DATE_FORMAT(SYSDATE(), '%y-%m-%d-%H'), '%y-%m-%d-%H')")
-    .then((reply) => {
-      const logsForLastHour = Object.values(reply[0])[0];
-      debug(`Logs for last hour: ${JSON.stringify(logsForLastHour)}`);
-      if (logsForLastHour > config.kibana.maxLogsPerHour) {
-        debug('Too many logs per this hour, not fetching');
-        return false;
-      }
-      return doUpdateLogs();
-    })
+  return doUpdateLogs()
     .catch((err) => {
       debug(err);
     })

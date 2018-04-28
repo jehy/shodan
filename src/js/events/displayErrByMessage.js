@@ -4,7 +4,7 @@ const Highcharts = require('highcharts');
 const Utils = require('../utils');
 require('highcharts/modules/exporting')(Highcharts);
 
-function displayErrByMessage(data,fetchErrors, socket) {
+function displayErrByMessage(data, fetchErrors, socket) {
 
   const graph = $('<div/>');
   // //////
@@ -113,10 +113,10 @@ function displayErrByMessage(data,fetchErrors, socket) {
   data.errors.forEach((err) => {
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
     const meta = needFilelds.map(key => `<td>${err[key]}</td>`).join('');
-    const message = `<td colspan=${needFilelds.length}>${err.message}</td>`;
+    const message = $(`<td colspan=${needFilelds.length}>`).text(err.message);
     // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
     tbody.append(`<tr>${meta}</tr>`);
-    tbody.append(`<tr>${message}</tr>`);
+    tbody.append($('<tr>').append(message));
   });
   table.append(tbody);
   const container = $('<div/>');

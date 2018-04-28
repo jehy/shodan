@@ -113,7 +113,7 @@ function displayErrByMessage(data, fetchErrors, socket) {
   data.errors.forEach((err) => {
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
     const meta = needFilelds.map(key => `<td>${err[key]}</td>`).join('');
-    const message = $(`<td colspan=${needFilelds.length}>`).text(err.message);
+    const message = $(`<td colspan=${needFilelds.length} class="err-msg">`).text(err.message);
     // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
     tbody.append(`<tr>${meta}</tr>`);
     tbody.append($('<tr>').append(message));

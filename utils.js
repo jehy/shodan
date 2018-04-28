@@ -23,7 +23,7 @@ function minimalReplace(messageName) {
     .replace(/ +/g, ' ');// remove double spaces
 }
 
-function getMessageName(messageName, message) {
+function getMessageName(messageName, message, force) {
   if (messageName === 'uncaughtException_0') {
     let start = message.lastIndexOf('uncaughtException');
     let realMessage = minimalReplace(message);
@@ -47,7 +47,7 @@ function getMessageName(messageName, message) {
       }
     }
   }
-  if (!messageName) {
+  if (!messageName || force) {
     let autoMessageName = `AUTO ${minimalReplace(message)}`
       .replace(/js:\d+:\d+/g, 'js:xx:xx')// remove stack traces
       .replace(/{.+}/g, '{OBJ}')// remove json objects
@@ -62,7 +62,7 @@ function getMessageName(messageName, message) {
       .trim();
     if (autoMessageName.length > 50) {
       const pos = autoMessageName.indexOf(' ', 50);
-      if (pos && pos < 60) {
+      if (pos !== -1 && pos < 60) {
         autoMessageName = `${autoMessageName.substr(0, pos).trim()}...`;
       }
       else {

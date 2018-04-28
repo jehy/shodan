@@ -14,12 +14,11 @@ const concurrency = 10;
 
 knex.select('id', 'msgName', 'message')
   .from('logs')
-  .where('msgName', 'like', 'uncaughtException%')
-  .orWhere('msgName', 'like', 'uncaughtexception%')
+  .where('msgName', '...')
   .then((data) => {
 
     return Promise.map(data, (item) => {
-      const newMessageName = getMessageName(item.msgName, item.message);
+      const newMessageName = getMessageName(item.msgName, item.message, true);
       if (newMessageName === item.msgName) {
         console.log(`Not updated message name! Name: ${newMessageName} \nMessage: ${item.message}`);
       }

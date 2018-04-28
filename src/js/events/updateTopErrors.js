@@ -53,7 +53,7 @@ function formatLastMetTD(row) {
 function formatMessageName(row) {
   const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
   let tdClass = '';
-  if (veryBadMessages.includes(row.msgName.toLowerCase())) {
+  if (veryBadMessages.some(bad=>row.msgName.toLowerCase().includes(bad))) {
     tdClass = 'danger';
   }
   return `<td class="${tdClass}">${row.msgName}</td>`;

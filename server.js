@@ -40,7 +40,7 @@ io.on('connection', (socket) => {
         .groupBy('msgName', 'name')
         .count('msgName as count')
         .orderByRaw('count(msgName) desc, name, msgName')
-        .limit(50);
+        .limit(config.display.errorsNumber);
       const fetchErrors = [];
       query
         .then((topErrors) => {

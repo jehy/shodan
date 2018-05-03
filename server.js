@@ -5,8 +5,13 @@ const io = require('socket.io')(http);
 const debug = require('debug')('shodan:server');
 const config = require('config');
 const knex = require('knex')(config.db);
-
 require('./modules/knex-timings')(knex, false);
+
+
+if (config.auth && config.auth.enabled) {
+// eslint-disable-next-line global-require
+  require('./auth.js')(app, io);
+}
 
 app.get('/', (req, res) => {
   res.sendFile(`${__dirname}/dist/index.html`);
@@ -19,11 +24,18 @@ setInterval(() => {
 }, 5000);
 
 io.on('connection', (socket) => {
-  debug('a user connected');
+  debug(`A user connected (${socket.request.user && socket.request.user.displayName || 'unknown'})`);
 
   socket.on('event', (event) => {
-    debug(`event ${event.name} fired`);
-    debug(JSON.stringify(event));
+    debug(`event ${event.name} fired: ${JSON.stringify(event)}`);
+
+    if (config.auth && config.auth.enabled) {
+      if (!socket.request.user || !socket.request.user.logged_in) {
+        debug('user not authorized!');
+        socket.emit('event', {name: 'updateTopErrors', data: [], fetchErrors: ['Not authorized']});
+        return;
+      }
+    }
     if (event.name === 'showTopErrors') {
       let interval = 'DAY';
       if (event.data.period === 'hour') {

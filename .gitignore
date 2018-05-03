@@ -16,3 +16,4 @@ err_reports
 config/runtime.json
 test-results.xml
 dist
+.vscode

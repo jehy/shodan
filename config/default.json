@@ -1,5 +1,6 @@
 {
   "port": 3000,
+  "host": "localhost",
   "kibana": {
     "cookie": "",
     "version": "5.5.2",
@@ -30,6 +31,15 @@
     },
     "migrations": {
       "tableName": "knex_migrations"
+    }
+  },
+  "auth": {
+    "enabled": false,
+    "secret": "so much secret",
+    "google": {
+      "id": "123456.apps.googleusercontent.com",
+      "secret": "ARRRRGH",
+      "domain": "somedomain.com"
     }
   }
 }

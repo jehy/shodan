@@ -215,7 +215,7 @@ function doUpdateLogs() {
         return true;
       }
       debug(`Adding ${data.count} items`);
-      let duplicates = 0;
+      /* let duplicates = 0;
       const entries = data.data.map(entry => knex('logs').insert(entry).catch((err) => {
         if (!err.message.includes('Duplicate entry')) {
           debug(`Failed add: ${err}`);
@@ -225,11 +225,13 @@ function doUpdateLogs() {
         }
         return false;
       }));
-      return Promise.all(entries)
+      return Promise.all(entries) */
+      knex.raw(knex('logs').insert(data.data).toString().replace('insert', 'INSERT IGNORE'))
         .then((res) => {
           const failed = res.filter(item => !item).length;
           if (failed !== 0) {
-            debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
+            // debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
+            debug(`Failed to add ${failed} items`);
           }
         });
     });

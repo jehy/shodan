@@ -15,7 +15,7 @@ function auth(app, io, knex) {
   app.use(session({
     resave: true,
     saveUninitialized: true,
-    secret: config.auth.secret,
+    secret: config.ui.auth.secret,
     store,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 31,
@@ -33,16 +33,16 @@ function auth(app, io, knex) {
   });
   passport.use(new GoogleStrategy(
     {
-      clientID: config.auth.google.id,
-      clientSecret: config.auth.google.secret,
-      callbackURL: `http://${config.host}:${config.port}/auth/google/callback`,
+      clientID: config.ui.auth.google.id,
+      clientSecret: config.ui.auth.google.secret,
+      callbackURL: `http://${config.ui.host}:${config.ui.port}/auth/google/callback`,
     },
     ((accessToken, refreshToken, profile, done) => {
 
       debug(`User ${profile.displayName} is logging in`);
       // eslint-disable-next-line no-underscore-dangle
       const profileJson = profile._json;
-      if (profileJson.domain !== config.auth.google.domain) {
+      if (profileJson.domain !== config.ui.auth.google.domain) {
         debug(`wrong domain ${profileJson.domain}`);
         done(new Error(`Wrong domain ${profileJson.domain}!`));
       } else {
@@ -53,7 +53,7 @@ function auth(app, io, knex) {
   ));
 
   app.get('/auth/google', passport.authenticate('google', {
-    hd: config.auth.google.domain,
+    hd: config.ui.auth.google.domain,
     prompt: 'select_account',
     scope: [
       'https://www.googleapis.com/auth/plus.login',
@@ -73,7 +73,7 @@ function auth(app, io, knex) {
 
   io.use(passportSocketIo.authorize({
     key: 'connect.sid',
-    secret: config.auth.secret,
+    secret: config.ui.auth.secret,
     store,
     passport,
     cookieParser,

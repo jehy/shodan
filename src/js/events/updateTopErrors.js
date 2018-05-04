@@ -51,12 +51,16 @@ function formatLastMetTD(row) {
 }
 
 function formatMessageName(row) {
-  const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
-  let tdClass = '';
-  if (veryBadMessages.some(bad=>row.msgName.toLowerCase().includes(bad))) {
+  const tdClass = '';
+  /* const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
+  if (veryBadMessages.some(bad => row.msgName.toLowerCase().includes(bad))) {
     tdClass = 'danger';
+  } */
+  let displayName = row.msgName;
+  if (row.errors && row.errors.length) {
+    displayName = `${row.msgName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
   }
-  return `<td class="${tdClass}">${row.msgName}</td>`;
+  return `<td class="${tdClass}">${displayName}</td>`;
 }
 
 function updateTopErrors(data, fetchErrors, socket) {

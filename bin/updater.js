@@ -14,19 +14,19 @@ let lastRemovedLogs = null;
 
 function getIndex(queryFrom, queryTo) {
   // request current index
-  const kibanaUrl = config.kibana.url;
+  const kibanaUrl = config.updater.kibana.url;
   const headers = {
     Origin: kibanaUrl,
     'Accept-Encoding': 'none',
     'Accept-Language': 'en-US,en;q=0.8,ru;q=0.6',
-    'kbn-version': config.kibana.version,
-    'User-Agent': config.userAgent,
+    'kbn-version': config.updater.kibana.version,
+    'User-Agent': config.updater.userAgent,
     'Content-Type': 'application/json;charset=UTF-8',
     Accept: 'application/json, text/plain, */*',
     Referer: `${kibanaUrl}/app/kibana`,
     Connection: 'keep-alive',
     'Save-Data': 'on',
-    Cookie: config.kibana.cookie,
+    Cookie: config.updater.kibana.cookie,
   };
 
   const dataString = {
@@ -40,7 +40,7 @@ function getIndex(queryFrom, queryTo) {
   };
 
   const options = {
-    url: `${kibanaUrl}/elasticsearch/${config.kibana.index}-*/_field_stats?level=indices`,
+    url: `${kibanaUrl}/elasticsearch/${config.updater.kibana.index}-*/_field_stats?level=indices`,
     method: 'POST',
     headers,
     json: true,
@@ -51,25 +51,25 @@ function getIndex(queryFrom, queryTo) {
 
 
 function getData(queryFrom, queryTo, index) {
-  const kibanaUrl = config.kibana.url;
+  const kibanaUrl = config.updater.kibana.url;
   const headers = {
     Origin: kibanaUrl,
     'Accept-Encoding': 'none',
     'Accept-Language': 'en-US,en;q=0.8,ru;q=0.6',
-    'kbn-version': config.kibana.version,
-    'User-Agent': config.userAgent,
+    'kbn-version': config.updater.kibana.version,
+    'User-Agent': config.updater.userAgent,
     'Content-Type': 'application/x-ndjson',
     Accept: 'application/json, text/plain, */*',
     Referer: `${kibanaUrl}/app/kibana?`,
     Connection: 'close',
     'Save-Data': 'on',
-    Cookie: config.kibana.cookie,
+    Cookie: config.updater.kibana.cookie,
   };
 
-  const dataString1 = {index: [index], ignore_unavailable: true, preference: config.kibana.preference};
+  const dataString1 = {index: [index], ignore_unavailable: true, preference: config.updater.kibana.preference};
   const dataString2 = {
     version: true,
-    size: config.kibana.fetchNum,
+    size: config.updater.kibana.fetchNum,
     sort: [{'@timestamp': {order: 'asc', unmapped_type: 'boolean'}}],
     query: {
       bool: {
@@ -123,8 +123,8 @@ function fetchData(queryFrom, queryTo) {
   return getIndex(queryFrom, queryTo)
     .then((data) => {
       let indexes = Object.keys(data.indices);
-      if (config.kibana.indexFilterOut) {
-        indexes = Object.keys(data.indices).filter(index => !index.includes(config.kibana.indexFilterOut));
+      if (config.updater.kibana.indexFilterOut) {
+        indexes = Object.keys(data.indices).filter(index => !index.includes(config.updater.kibana.indexFilterOut));
       }
       if (!indexes || !indexes.length) {
         throw new Error('Failed to fetch indexes!');
@@ -173,27 +173,27 @@ function getLogUpdateInterval() {
     .then((lastDate) => {
       let queryFrom;
       if (!lastDate) {
-        queryFrom = moment().subtract(config.kibana.firstSearchFor, 'h');
+        queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
       }
       else {
         queryFrom = moment(lastDate);
       }
       const now = moment();
-      if (config.kibana.crawlDelay) {
-        now.subtract(config.kibana.crawlDelay, 'm');
+      if (config.updater.kibana.crawlDelay) {
+        now.subtract(config.updater.kibana.crawlDelay, 'm');
       }
-      let queryTo = moment.min(queryFrom.clone().add(config.kibana.searchFor, 'h'), now);
+      let queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
 
       const dateString = queryTo.format('YYYY-MM-DD HH:mm:ss');
       return knex('logs').count()
-        .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.kibana.searchFor} HOUR) and  "${dateString}"`)
+        .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.updater.kibana.searchFor} HOUR) and  "${dateString}"`)
         .then((reply) => {
           const logsForLastHour = Object.values(reply[0])[0];
           debug(`Logs in base for hour: ${logsForLastHour}`);
-          if (logsForLastHour > config.kibana.maxLogsPerHour * config.kibana.searchFor) {
+          if (logsForLastHour > config.updater.kibana.maxLogsPerHour * config.updater.kibana.searchFor) {
             debug('Too many logs for this hour, I will skip some...');
             queryFrom = moment.min(now.clone().subtract(5, 'm'), queryFrom.clone().add(1, 'h'));
-            queryTo = moment.min(queryFrom.clone().add(config.kibana.searchFor, 'h'), now);
+            queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
           }
           return {queryFrom, queryTo};
         });
@@ -244,7 +244,7 @@ function updateLogs() {
     debug('Removing old logs');
     lastRemovedLogs = today;
     knex('logs')
-      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.kibana.storeLogsFor} DAY)`)
+      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
       .del()
       .then((count) => {
         debug(`Removed ${count} old logs`);
@@ -255,7 +255,7 @@ function updateLogs() {
     .catch((err) => {
       debug(err);
     })
-    .finally(() => setTimeout(() => updateLogs(), config.kibana.updateInterval * 1000));
+    .finally(() => setTimeout(() => updateLogs(), config.updater.kibana.updateInterval * 1000));
 }
 
 updateLogs();

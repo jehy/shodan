@@ -1,25 +1,40 @@
 {
-  "port": 3000,
-  "host": "localhost",
-  "kibana": {
-    "cookie": "",
-    "version": "5.5.2",
-    "url": "",
-    "searchFor": 1,
-    "firstSearchFor": 24,
-    "crawlDelay": 1,
-    "preference": 1521709471107,
-    "index": "",
-    "fetchNum": 500,
-    "updateInterval": 10,
-    "storeLogsFor": 8,
-    "maxLogsPerHour": 12000
+  "ui":{
+    "port": 3000,
+    "host": "localhost",
+    "display":
+    {
+      "errorsNumber": 100
+    },
+    "auth": {
+      "enabled": false,
+      "secret": "so much secret",
+      "google": {
+        "id": "123456.apps.googleusercontent.com",
+        "secret": "ARRRRGH",
+        "domain": "somedomain.com"
+      }
+    }
   },
-  "display":
+  "updater":
   {
-    "errorsNumber": 100
+    "maxErrorLength": 10000,
+    "kibana": {
+      "cookie": "",
+      "version": "5.5.2",
+      "url": "",
+      "searchFor": 1,
+      "firstSearchFor": 24,
+      "crawlDelay": 1,
+      "preference": 1521709471107,
+      "index": "",
+      "fetchNum": 500,
+      "updateInterval": 10,
+      "storeLogsFor": 8,
+      "maxLogsPerHour": 12000
+    },
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36"
   },
-  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.162 Safari/537.36",
   "db": {
     "client": "mysql",
     "connection": {
@@ -31,15 +46,6 @@
     },
     "migrations": {
       "tableName": "knex_migrations"
-    }
-  },
-  "auth": {
-    "enabled": false,
-    "secret": "so much secret",
-    "google": {
-      "id": "123456.apps.googleusercontent.com",
-      "secret": "ARRRRGH",
-      "domain": "somedomain.com"
     }
   }
 }

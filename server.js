@@ -8,7 +8,9 @@ const knex = require('knex')(config.db);
 require('./modules/knex-timings')(knex, false);
 
 
-if (config.auth && config.auth.enabled) {
+const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
+
+if (config.ui.auth && config.ui.auth.enabled) {
 // eslint-disable-next-line global-require
   require('./auth.js')(app, io, knex);
 }
@@ -29,7 +31,7 @@ io.on('connection', (socket) => {
   socket.on('event', (event) => {
     debug(`event ${event.name} fired: ${JSON.stringify(event)}`);
 
-    if (config.auth && config.auth.enabled) {
+    if (config.ui.auth && config.ui.auth.enabled) {
       if (!socket.request.user || !socket.request.user.logged_in) {
         debug('user not authorized!');
         socket.emit('event', {name: 'updateTopErrors', data: [], fetchErrors: ['Not authorized']});
@@ -43,6 +45,7 @@ io.on('connection', (socket) => {
       }
       let query = knex('logs')
         .select('msgName', 'name')
+        .select(knex.raw('MAX(LOCATE("... CUT", message, 1999)) as tooLong'))
         .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
       if (event.data.env) {
         query = query
@@ -52,7 +55,7 @@ io.on('connection', (socket) => {
         .groupBy('msgName', 'name')
         .count('msgName as count')
         .orderByRaw('count(msgName) desc, name, msgName')
-        .limit(config.display.errorsNumber);
+        .limit(config.ui.display.errorsNumber);
       const fetchErrors = [];
       query
         .then((topErrors) => {
@@ -85,7 +88,7 @@ io.on('connection', (socket) => {
           }
           return Promise.all([hourPreQuery, firstLastMetDataQuery, errorsPerThisHourQuery])
             .then(([preHourData, firstLastMetData, errorsPerHour]) => {
-              if (errorsPerHour * 0.7 > config.kibana.maxLogsPerHour) {
+              if (errorsPerHour * 0.7 > config.updater.kibana.maxLogsPerHour) {
                 fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour})`);
               }
               return topErrors.map((err) => {
@@ -97,6 +100,14 @@ io.on('connection', (socket) => {
                   metData = {firstMet: 0, lastMet: 0};
                 }
                 const preHour = preHourData.find(item => item.msgName === err.msgName && item.name === err.name);
+                err.errors = [];
+                if (parseInt(err.tooLong, 10) !== 0) {
+                  err.errors.push('Too long');
+                }
+
+                if (veryBadMessages.some(bad => err.msgName.toLowerCase().includes(bad))) {
+                  err.errors.push('Unhadled');
+                }
                 return Object.assign(err, {
                   firstMet: metData.firstMet,
                   lastMet: metData.lastMet,
@@ -147,7 +158,7 @@ io.on('connection', (socket) => {
 
 });
 
-http.listen(config.port, () => {
-  debug(`listening on *:${config.port}`);
+http.listen(config.ui.port, () => {
+  debug(`listening on *:${config.ui.port}`);
 });
 

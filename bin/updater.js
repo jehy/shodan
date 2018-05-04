@@ -226,7 +226,7 @@ function doUpdateLogs() {
         return false;
       }));
       return Promise.all(entries) */
-      knex.raw(knex('logs').insert(data.data).toString().replace('insert', 'INSERT IGNORE'))
+      return knex.raw(knex('logs').insert(data.data).toString().replace('insert', 'INSERT IGNORE'))
         .then((res) => {
           const failed = res.filter(item => !item).length;
           if (failed !== 0) {

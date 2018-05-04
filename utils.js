@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 
 const debugCMP = require('debug')('shodan:updater:cmp');
+const debug = require('debug')('shodan:updater');
 const moment = require('moment');
 
 function getStackStart(msg) {
@@ -77,9 +78,13 @@ function getMessageName(messageName, message, force) {
 }
 
 function fixLogEntry(logEntry) {
-  const message = logEntry._source.message || 'none';
+  let message = logEntry._source.message || 'none';
   let messageName = logEntry._source.msgName;
   messageName = getMessageName(messageName, message);
+  if (message.length > 10000) {
+    debug(`TOO long message (${message.length / 1000} KB)!!! msgName: ${messageName}, start: ${message.substr(0, 100)}`);
+    message = message.substr(0, 2000);
+  }
   return {
     guid: `${logEntry._index}${logEntry._id}`,
     type: logEntry._type,

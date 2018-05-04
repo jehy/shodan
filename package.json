@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "updater": "DEBUG=shodan:updater node --use-strict ./bin/updater.js",
-    "server": "DEBUG=shodan:server,shodan:knex-data,shodan:auth node ./server.js",
+    "server": "DEBUG=shodan:server,shodan:knex-data,shodan:auth node --use-strict ./server.js",
     "start": "DEBUG=shodan:server,shodan:updater,shodan:auth node --use-strict ./index.js",
     "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js server.js webpack.config.js webpack.dev.js webpack.dev.js mugrations bin knexfile.js modules",
     "build-dev": "node ./node_modules/webpack/bin/webpack.js --env=dev --progress --profile --colors",

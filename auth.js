@@ -4,13 +4,13 @@ const config = require('config');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
-const MySQLStore = require('connect-mysql')(session);
+const KnexSessionStore = require('connect-session-knex')(session);
 const debug = require('debug')('shodan:auth');
 
-function auth(app, io) {
-
-  const store = new MySQLStore({config: config.db.connection});
-
+function auth(app, io, knex) {
+  const store = new KnexSessionStore({
+    knex,
+  });
   app.use(cookieParser());
   app.use(session({
     resave: true,

@@ -10,7 +10,7 @@ require('./modules/knex-timings')(knex, false);
 
 if (config.auth && config.auth.enabled) {
 // eslint-disable-next-line global-require
-  require('./auth.js')(app, io);
+  require('./auth.js')(app, io, knex);
 }
 
 app.get('/', (req, res) => {

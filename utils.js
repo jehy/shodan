@@ -84,7 +84,7 @@ function fixLogEntry(logEntry) {
   messageName = getMessageName(messageName, message);
   if (message.length > config.updater.maxErrorLength) {
     debug(`TOO long message (${message.length / 1000} KB)!!! msgName: ${messageName}, start: ${message.substr(0, 100)}`);
-    message = `${message.substr(0, 2000)}... CUT`;
+    message = `${message.substr(0, 2000)}... CUT (${message.length / 1000} KB)`;
   }
   return {
     guid: `${logEntry._index}${logEntry._id}`,

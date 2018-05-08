@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
           return Promise.all([hourPreQuery, firstLastMetDataQuery, errorsPerThisHourQuery])
             .then(([preHourData, firstLastMetData, errorsPerHour]) => {
               if (errorsPerHour * 0.7 > config.updater.kibana.maxLogsPerHour) {
-                fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour})`);
+                fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour}), some may be skipped`);
               }
               return topErrors.map((err) => {
                 let metData = firstLastMetData

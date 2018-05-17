@@ -36,6 +36,9 @@ function formatFirstMetTD(row) {
   return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;
 }
 
+function formatErrorsOtherEnv(row) {
+  return `<td>${row.otherEnv || 0}</td>`;
+}
 
 function formatLastMetTD(row) {
   const lastMet = moment().diff(moment(row.lastMet), 's');
@@ -89,7 +92,8 @@ function updateTopErrors(data, fetchErrors, socket) {
       .append(`<td>${row.count}</td>`)
       .append(formatFirstMetTD(row))
       .append(formatLastMetTD(row))
-      .append(formatErrorDeltaTD(row));
+      .append(formatErrorDeltaTD(row))
+      .append(formatErrorsOtherEnv(row));
     tbody.append(tr);
   });
   $('#topErrors tbody').replaceWith(tbody);

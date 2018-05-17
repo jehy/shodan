@@ -3,7 +3,7 @@ const config = require('config');
 
 const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
 
-function getLastHourTopErrors(knex, event, interval) {
+function getLastIntervalTopErrors(knex, event, interval) {
 
   let query = knex('logs')
     .select('msgName', 'name')
@@ -21,7 +21,7 @@ function getLastHourTopErrors(knex, event, interval) {
   return query;
 }
 
-function getPreHourErrorStats(knex, event, interval) {
+function getPrevIntervalErrorStats(knex, event, interval) {
   let hourPreQuery = knex('logs')
     .select('msgName', 'name')
     .count('msgName as count')
@@ -47,6 +47,22 @@ function getFirstLastDateMet(knex, event, msgNames) {
       .where('env', event.data.env);
   }
   return firstLastMetDataQuery;
+}
+
+
+function getOtherEnvErrorNum(knex, event, msgNames, interval) {
+  let otherEnvQuery = knex('logs')
+    .select('msgName', 'name')
+    .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`)
+    .whereIn('msgName', msgNames)
+    // .whereIn('msgName', knex.raw(`SELECT DISTINCT msgName from logs where eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`))
+    .groupBy('msgName', 'name')
+    .count('msgName as count');
+  if (event.data.env) {
+    otherEnvQuery = otherEnvQuery
+      .whereNot('env', event.data.env);
+  }
+  return otherEnvQuery;
 }
 
 function getErrorTotal(knex) {
@@ -90,14 +106,18 @@ function showTopErrors(knex, socket, event) {
     interval = 'HOUR';
   }
 
-  getLastHourTopErrors(knex, event, interval)
+  getLastIntervalTopErrors(knex, event, interval)
     .then((topErrors) => {
       const msgNames = topErrors.map(err => err.msgName);
       const errorsPerThisHourQuery = getErrorTotal(knex);
       const firstLastMetQuery = getFirstLastDateMet(knex, event, msgNames);
-      const preHourQuery = getPreHourErrorStats(knex, event, interval);
-      return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery])
-        .then(([preHourData, firstLastMetData, errorsPerHour]) => {
+      const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
+      let otherEnvQuery = false;
+      if (event.data.env) {
+        otherEnvQuery = getOtherEnvErrorNum(knex, event, msgNames, interval);
+      }
+      return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery])
+        .then(([preHourData, firstLastMetData, errorsPerHour, otherEnvErrors]) => {
           if (errorsPerHour * 0.7 > config.updater.kibana.maxLogsPerHour) {
             fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour}), some may be skipped`);
           }
@@ -107,6 +127,12 @@ function showTopErrors(knex, socket, event) {
           return topErrors.map((err) => {
             const preHour = preHourData.find(item => item.msgName === err.msgName && item.name === err.name);
             const metData = getMetData(err, firstLastMetData);
+            if (otherEnvErrors) {
+              const otherEnv = otherEnvErrors.find(item => item.msgName === err.msgName && item.name === err.name);
+              if (otherEnv) {
+                Object.assign(err, {otherEnv: otherEnv.count});
+              }
+            }
             return Object.assign(err, {
               firstMet: metData.firstMet,
               lastMet: metData.lastMet,

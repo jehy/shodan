@@ -16,13 +16,6 @@ $('#topErrors').on('keyup keypress', (e) => {
   return true;
 });
 
-function showTopErrors() {
-  const env = $('#topErrors-env').val();
-  const period = $('#topErrors-period').val();
-  socket.emit('event', {name: 'showTopErrors', data: {env, period}});
-  progressBar.show();
-}
-
 function reloader() {
   const interval = parseInt($('#reload-interval').val(), 10);
   if (interval) {
@@ -30,21 +23,22 @@ function reloader() {
       clearTimeout(timeoutId);
     }
     progressBar.show();
-    showTopErrors();
+    const env = $('#topErrors-env').val();
+    const period = $('#topErrors-period').val();
+    socket.emit('event', {name: 'showTopErrors', data: {env, period}});
     timeoutId = setTimeout(reloader, interval * 1000);
   }
 }
 
-reloader();
 
 socket.on('connect', () => {
   console.log('client connected');
   socket.sendBuffer = [];
-  showTopErrors();
   // $('#topErrors-show').click(() => showTopErrors());
-  $('#topErrors-env').change(() => showTopErrors());
-  $('#topErrors-period').change(() => showTopErrors());
+  $('#topErrors-env').change(() => reloader());
+  $('#topErrors-period').change(() => reloader());
   $('#reload-interval').change(() => reloader());
+  reloader();
 });
 
 socket.on('event', (event) => {

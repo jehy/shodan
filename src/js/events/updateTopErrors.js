@@ -36,7 +36,10 @@ function formatFirstMetTD(row) {
   return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;
 }
 
-function formatErrorsOtherEnv(row) {
+function formatErrorsOtherEnv(row, showErorrsOtherEnv) {
+  if (!showErorrsOtherEnv) {
+    return '';
+  }
   return `<td>${row.otherEnv || 0}</td>`;
 }
 
@@ -86,6 +89,8 @@ function updateTopErrors(data, fetchErrors, socket, config) {
   else {
     fetchErrorsAlert.hide();
   }
+  const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval', 'Other env count', 'Comment'];
+  const showErorrsOtherEnv = data.some(row => row.otherEnv);
   const tbody = $('<tbody/>');
   data.forEach((row) => {
     const tr = $('<tr/>');
@@ -106,11 +111,16 @@ function updateTopErrors(data, fetchErrors, socket, config) {
       .append(formatFirstMetTD(row))
       .append(formatLastMetTD(row))
       .append(formatErrorDeltaTD(row))
-      .append(formatErrorsOtherEnv(row))
+      .append(formatErrorsOtherEnv(row, showErorrsOtherEnv))
       .append(`<td>${formatComment(row.comment, config)}</td>`);
     tbody.append(tr);
   });
   $('#topErrors tbody').replaceWith(tbody);
+  if (!showErorrsOtherEnv) {
+    headerFields.splice(headerFields.indexOf('Other env count'), 1);
+  }
+  const thead = $('<thead>').append($('<tr>').append(`<th>${headerFields.join('</th><th>')}</th>`));
+  $('#topErrors thead').replaceWith(thead);
 }
 
 module.exports = updateTopErrors;

@@ -38,7 +38,7 @@ function showLogsByMsgName(knex, socket, event) {
           graph: graphData,
           msgName,
           name,
-          comment: commentData[0] && commentData.comment,
+          comment: commentData[0] && commentData[0].comment,
         },
       });
     });

@@ -33,7 +33,8 @@ function reloader() {
     progressBar.show();
     const env = $('#topErrors-env').val();
     const period = $('#topErrors-period').val();
-    socket.emit('event', {name: 'showTopErrors', data: {env, period}});
+    const role = $('#topErrors-role').val();
+    socket.emit('event', {name: 'showTopErrors', data: {env, period, role}});
     timeoutId = setTimeout(reloader, interval * 1000);
   }
 }
@@ -45,6 +46,7 @@ socket.on('connect', () => {
   console.log('client connected');
   socket.sendBuffer = [];
   // $('#topErrors-show').click(() => showTopErrors());
+  $('#topErrors-role').change(() => reloader());
   $('#topErrors-env').change(() => reloader());
   $('#topErrors-period').change(() => reloader());
   $('#reload-interval').change(() => reloader());
@@ -52,13 +54,13 @@ socket.on('connect', () => {
 });
 
 socket.on('event', (event) => {
-  $('.progress').hide();
   console.log(`received event ${event.name}`);
   if (event.name === 'updateConfig') {
     Object.assign(config, event.data.config);
     console.log(`Received new config: ${JSON.stringify(config)}`);
   }
   else if (events[event.name]) {
+    $('.progress').hide();
     events[event.name](event.data, event.fetchErrors, socket, config);
   }
   else {

@@ -13,6 +13,10 @@ function getLastIntervalTopErrors(knex, event, interval) {
     query = query
       .where('env', event.data.env);
   }
+  if (event.data.role) {
+    query = query
+      .where('role', event.data.role);
+  }
   query = query
     .groupBy('msgName', 'name')
     .count('msgName as count')
@@ -31,6 +35,10 @@ function getPrevIntervalErrorStats(knex, event, interval) {
     hourPreQuery = hourPreQuery
       .where('env', event.data.env);
   }
+  if (event.data.role) {
+    hourPreQuery = hourPreQuery
+      .where('role', event.data.role);
+  }
   return hourPreQuery;
 }
 
@@ -46,14 +54,17 @@ function getFirstLastDateMet(knex, event, msgNames) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('env', event.data.env);
   }
+  if (event.data.role) {
+    firstLastMetDataQuery = firstLastMetDataQuery
+      .where('role', event.data.role);
+  }
   return firstLastMetDataQuery;
 }
 
 function getLogComments(knex, event, msgNames) {
-  let commentDataQuery = knex('comments')
+  return knex('comments')
     .select('msgName', 'name', 'comment')
     .whereIn('msgName', msgNames);
-  return commentDataQuery;
 }
 
 function getOtherEnvErrorNum(knex, event, msgNames, interval) {
@@ -67,6 +78,10 @@ function getOtherEnvErrorNum(knex, event, msgNames, interval) {
   if (event.data.env) {
     otherEnvQuery = otherEnvQuery
       .whereNot('env', event.data.env);
+  }
+  if (event.data.role) {
+    otherEnvQuery = otherEnvQuery
+      .whereNot('role', event.data.role);
   }
   return otherEnvQuery;
 }

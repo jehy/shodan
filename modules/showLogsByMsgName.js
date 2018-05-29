@@ -1,5 +1,7 @@
+const Promise = require('bluebird');
+
 function showLogsByMsgName(knex, socket, event) {
-  const {msgName, name, env} = event.data;
+  const {msgName, name, env, role} = event.data;
   let queryData = knex('logs')
     .where('msgName', msgName)
     .where('name', name);
@@ -7,6 +9,10 @@ function showLogsByMsgName(knex, socket, event) {
   if (env) {
     queryData = queryData
       .where('env', env);
+  }
+  if (role) {
+    queryData = queryData
+      .where('role', role);
   }
   queryData = queryData.select('eventDate', 'name', 'type', 'msgId', 'env', 'host', 'role', 'message')
     .orderBy('id', 'desc')
@@ -22,6 +28,10 @@ function showLogsByMsgName(knex, socket, event) {
   if (env) {
     queryGraph = queryGraph
       .where('env', env);
+  }
+  if (role) {
+    queryGraph = queryGraph
+      .where('role', role);
   }
   queryGraph = queryGraph.groupByRaw('CONCAT(DATE_FORMAT(eventDate, "%Y %m %d %H")," ",FLOOR(DATE_FORMAT(eventDate, "%i")/10)*10)');
 

@@ -5,19 +5,22 @@ const Utils = require('../utils');
 const fetchErrorsAlert = $('#fetchErrors');
 
 function formatErrorDeltaTD(row) {
-  let errorDelta = row.count - row.preHour;
-  if (errorDelta > 0) {
-    errorDelta = `+${errorDelta}`;
+  if (!row.preHour) {
+    return '<td class="warning">N/A</td>';
   }
-  let errorDivide = 3;
-  if (row.preHour) {
-    errorDivide = row.count / row.preHour;
+  const currentPercent = parseInt(row.count / (row.preHour / 100), 10);
+  let errorDelta;
+  if (currentPercent > 100) {
+    errorDelta = `+${currentPercent - 100}`;
+  }
+  else {
+    errorDelta = `-${100 - currentPercent}`;
   }
   let tdClass = '';
-  if (errorDivide >= 2) {
+  if (currentPercent >= 300) {
     tdClass = 'danger';
   }
-  else if (errorDivide < 0.5) {
+  else if (currentPercent < 50) {
     tdClass = 'success';
   }
   return `<td class="${tdClass}">${errorDelta}</td>`;
@@ -27,10 +30,10 @@ function formatFirstMetTD(row) {
   const firstMet = moment().diff(moment(row.firstMet), 's');
   let tdClass = '';
   const appearDiff = moment().diff(moment(row.firstMet), 'h');
-  if (appearDiff < 2) {
+  if (appearDiff < 4) {
     tdClass = 'danger';
   }
-  else if (appearDiff < 4) {
+  else if (appearDiff < 8) {
     tdClass = 'warning';
   }
   return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;
@@ -44,7 +47,7 @@ function formatErrorsOtherEnv(row, showErorrsOtherEnv) {
 }
 
 function formatLastMetTD(row) {
-  const lastMet = moment().diff(moment(row.lastMet), 's');
+  /* const lastMet = moment().diff(moment(row.lastMet), 's');
   let tdClass = '';
   const metDiff = moment().diff(moment(row.lastMet), 'm');
   if (metDiff < 5) {
@@ -53,7 +56,9 @@ function formatLastMetTD(row) {
   else if (metDiff < 15) {
     tdClass = 'warning';
   }
-  return `<td class="${tdClass}">${Utils.showDiff(lastMet)}</td>`;
+  return `<td class="${tdClass}">${Utils.showDiff(lastMet)}</td>`; */
+  const lastMet = moment().diff(moment(row.lastMet), 's');
+  return `<td>${Utils.showDiff(lastMet)}</td>`;
 }
 
 function formatMessageName(row) {
@@ -76,7 +81,7 @@ function formatComment(comment, config) {
   const matches = comment.match(/[A-Z]{2,4}-[0-9]{2,5}/);
   if (matches.length) {
     matches.forEach((m) => {
-      comment = comment.replace(m, `<a href="${config.ui.display.jiraUrl}${m}">${m}</a>`);
+      comment = comment.replace(m, `<a target="_blank" href="${config.ui.display.jiraUrl}${m}">${m}</a>`);
     });
   }
   return comment;
@@ -89,12 +94,18 @@ function updateTopErrors(data, fetchErrors, socket, config) {
   else {
     fetchErrorsAlert.hide();
   }
-  const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval', 'Other env count', 'Comment'];
+  const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval, %', 'Other env count', 'Comment'];
   const showErorrsOtherEnv = data.some(row => row.otherEnv);
   const tbody = $('<tbody/>');
   data.forEach((row) => {
     const tr = $('<tr/>');
     tr.click(() => {
+      const container = $('<div class="progress">' +
+        '<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45"' +
+        ' aria-valuemin="0" aria-valuemax="100" style="width: 45%">' +
+        '<span class="sr-only">45% Complete</span>' +
+        '</div></div>');
+      Utils.showModal(row.msgName, container);
       const errorData = {
         name: 'showLogsByMsgName',
         data: {

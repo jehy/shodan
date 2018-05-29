@@ -104,16 +104,22 @@ function displayErrByMessage(data, fetchErrors, socket) {
   const thead = $('<thead>');
   const headerTds = needFields.map(key => `<th>${key}</th>`);
   thead.append(headerTds);
-  const table = $('<table class="table table-striped"/>');
+  const table = $('<table class="table"/>');
   table.append(thead);
   const tbody = $('<tbody>');
+  let needStripe = true;
   data.errors.forEach((err) => {
+    needStripe = !needStripe;
+    let trStyle = '';
+    if (needStripe) {
+      trStyle = ' style="background-color: #f0f0f0;"';
+    }
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
     const meta = needFields.map(key => `<td>${err[key]}</td>`).join('');
     const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(err.message);
     // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
-    tbody.append(`<tr>${meta}</tr>`);
-    tbody.append($('<tr>').append(message));
+    tbody.append(`<tr${trStyle}>${meta}</tr>`);
+    tbody.append($(`<tr${trStyle}>`).append(message));
   });
   table.append(tbody);
   const commentInput = $('<input type="text" class="form-control" id="comment">');

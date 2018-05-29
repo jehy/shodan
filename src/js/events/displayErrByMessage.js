@@ -1,9 +1,11 @@
 'use strict';
 
-const moment = require('moment');
-const Highcharts = require('highcharts');
-const Utils = require('../utils');
-require('highcharts/modules/exporting')(Highcharts);
+import Highcharts from 'highcharts';
+import boost from 'highcharts/modules/boost';
+import moment from 'moment';
+import Utils from '../utils';
+
+boost(Highcharts);
 
 function displayErrByMessage(data, fetchErrors, socket) {
 

@@ -1,4 +1,4 @@
-const $ = require('jquery');
+'use strict';
 
 const modalTitle = $('#modal .modal-title');
 const modalBody = $('#modal .modal-body');

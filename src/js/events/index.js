@@ -1,3 +1,5 @@
+'use strict';
+
 const updateTopErrors = require('./updateTopErrors');
 const displayErrByMessage = require('./displayErrByMessage');
 

@@ -1,4 +1,5 @@
-const $ = require('jquery');
+'use strict';
+
 const moment = require('moment');
 const Highcharts = require('highcharts');
 const Utils = require('../utils');

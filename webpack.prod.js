@@ -22,6 +22,7 @@ module.exports = {
     ],
   },
   plugins: [
+    new webpack.ProvidePlugin({$: 'jquery', jQuery: 'jquery' }),
     new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(ru|en)$/), // https://github.com/webpack/webpack/issues/87
     new BundleAnalyzerPlugin({analyzerMode: 'static', openAnalyzer: false}),
     new ExtractTextPlugin('styles.css'),

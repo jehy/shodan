@@ -1,7 +1,6 @@
 'use strict';
 
 const socket = require('socket.io-client')();
-const $ = require('jquery');
 const events = require('./events');
 
 let timeoutId = null;

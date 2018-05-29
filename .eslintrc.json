@@ -11,11 +11,12 @@
   "overrides": [
     {
       "files": [
-        "src/js/**.js"
+        "src/js/**/*.js"
       ],
       "env": {
         "browser": true,
-        "node": true
+        "node": true,
+        "jquery": true
       },
       "parserOptions": {
         "sourceType": "module"

@@ -1,4 +1,5 @@
-const $ = require('jquery');
+'use strict';
+
 const moment = require('moment');
 const Utils = require('../utils');
 

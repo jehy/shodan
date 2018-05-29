@@ -8,6 +8,7 @@ module.exports = {
   entry: './src/js/index.js',
   devtool: 'source-map',
   cache: true,
+  mode: 'development',
   plugins: [
     new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(ru|en)$/), // https://github.com/webpack/webpack/issues/87
     new ExtractTextPlugin('styles.css'),

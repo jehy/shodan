@@ -5,11 +5,22 @@ const path = require('path'),
   ExtractTextPlugin = require('extract-text-webpack-plugin'),
   {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
   entry: './src/js/index.js',
   devtool: 'source-map',
   cache: true,
+  mode: 'production',
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: true,
+      }),
+    ],
+  },
   plugins: [
     new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(ru|en)$/), // https://github.com/webpack/webpack/issues/87
     new BundleAnalyzerPlugin({analyzerMode: 'static', openAnalyzer: false}),
@@ -17,18 +28,6 @@ module.exports = {
     new webpack.LoaderOptionsPlugin({
       minimize: true,
       debug: false,
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      beautify: false,
-      mangle: {
-        screw_ie8: true,
-        keep_fnames: true,
-      },
-      compress: {
-        screw_ie8: true,
-      },
-      comments: false,
-      sourceMap: true,
     }),
     new CleanWebpackPlugin(['dist']),
     new HtmlWebpackPlugin({

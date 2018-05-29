@@ -8,6 +8,7 @@ const knex = require('knex')(config.db);
 require('./modules/knex-timings')(knex, false);
 const showLogsByMsgName = require('./modules/showLogsByMsgName');
 const showTopErrors = require('./modules/showTopErrors');
+const updateMessageComment = require('./modules/updateMessageComment');
 
 if (config.ui.auth && config.ui.auth.enabled) {
 // eslint-disable-next-line global-require
@@ -24,8 +25,25 @@ setInterval(() => {
   debug(`Current users connected: ${Object.keys(io.sockets.connected).length}`);
 }, 5000);
 
+function sendClinetConfig(socket) {
+  const eventData = {
+    name: 'updateConfig',
+    data: {
+      config:
+        {
+          ui: {
+            display: config.ui.display,
+          },
+        },
+    },
+  };
+  socket.emit('event', eventData);
+}
+
 io.on('connection', (socket) => {
   debug(`A user connected (${socket.request.user && socket.request.user.displayName || 'unknown'})`);
+
+  sendClinetConfig(socket);
 
   socket.on('event', (event) => {
     debug(`event ${event.name} fired: ${JSON.stringify(event)}`);
@@ -39,6 +57,9 @@ io.on('connection', (socket) => {
     }
     if (event.name === 'showTopErrors') {
       showTopErrors(knex, socket, event);
+    }
+    else if (event.name === 'updateMessageComment') {
+      updateMessageComment(knex, socket, event);
     }
     else if (event.name === 'showLogsByMsgName') {
       showLogsByMsgName(knex, socket, event);

@@ -24,9 +24,23 @@ function showLogsByMsgName(knex, socket, event) {
       .where('env', env);
   }
   queryGraph = queryGraph.groupByRaw('CONCAT(DATE_FORMAT(eventDate, "%Y %m %d %H")," ",FLOOR(DATE_FORMAT(eventDate, "%i")/10)*10)');
-  Promise.all([queryGraph, queryData])
-    .then(([graphData, data]) => {
-      socket.emit('event', {name: 'displayErrByMessage', data: {errors: data, graph: graphData, msgName}});
+
+  const commentQuery = knex('comments')
+    .where('msgName', msgName)
+    .where('name', name)
+    .limit(1);
+  Promise.all([queryGraph, queryData, commentQuery])
+    .then(([graphData, data, commentData]) => {
+      socket.emit('event', {
+        name: 'displayErrByMessage',
+        data: {
+          errors: data,
+          graph: graphData,
+          msgName,
+          name,
+          comment: commentData[0] && commentData.comment,
+        },
+      });
     });
 }
 

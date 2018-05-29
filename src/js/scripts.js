@@ -7,6 +7,14 @@ const events = require('./events');
 let timeoutId = null;
 const progressBar = $('.progress');
 
+const config = {
+  ui: {
+    display: {
+      jiraUrl: '',
+    },
+  },
+};
+
 $('#topErrors').on('keyup keypress', (e) => {
   const keyCode = e.keyCode || e.which;
   if (keyCode === 13) {
@@ -31,6 +39,8 @@ function reloader() {
 }
 
 
+progressBar.show(); // show it while connecting for the first time
+
 socket.on('connect', () => {
   console.log('client connected');
   socket.sendBuffer = [];
@@ -44,8 +54,12 @@ socket.on('connect', () => {
 socket.on('event', (event) => {
   $('.progress').hide();
   console.log(`received event ${event.name}`);
-  if (events[event.name]) {
-    events[event.name](event.data, event.fetchErrors, socket);
+  if (event.name === 'updateConfig') {
+    Object.assign(config, event.data.config);
+    console.log(`Received new config: ${JSON.stringify(config)}`);
+  }
+  else if (events[event.name]) {
+    events[event.name](event.data, event.fetchErrors, socket, config);
   }
   else {
     console.log(`unknown event ${event.name}`);

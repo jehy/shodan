@@ -66,7 +66,20 @@ function formatMessageName(row) {
   return `<td class="${tdClass}">${displayName}</td>`;
 }
 
-function updateTopErrors(data, fetchErrors, socket) {
+function formatComment(comment, config) {
+  if (!comment || !config.ui.display.jiraUrl) {
+    return comment;
+  }
+  const matches = comment.match(/[A-Z]{2,4}-[0-9]{2,5}/);
+  if (matches.length) {
+    matches.forEach((m) => {
+      comment = comment.replace(m, `<a href="${config.ui.display.jiraUrl}${m}">${m}</a>`);
+    });
+  }
+  return comment;
+}
+
+function updateTopErrors(data, fetchErrors, socket, config) {
   if (fetchErrors && fetchErrors.length) {
     fetchErrorsAlert.empty().append(fetchErrors.join('<br>')).show();
   }
@@ -93,7 +106,8 @@ function updateTopErrors(data, fetchErrors, socket) {
       .append(formatFirstMetTD(row))
       .append(formatLastMetTD(row))
       .append(formatErrorDeltaTD(row))
-      .append(formatErrorsOtherEnv(row));
+      .append(formatErrorsOtherEnv(row))
+      .append(`<td>${formatComment(row.comment, config)}</td>`);
     tbody.append(tr);
   });
   $('#topErrors tbody').replaceWith(tbody);

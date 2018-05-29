@@ -7,9 +7,6 @@ require('highcharts/modules/exporting')(Highcharts);
 function displayErrByMessage(data, fetchErrors, socket) {
 
   const graph = $('<div/>');
-  // //////
-  // console.log('graph');
-  // console.log(event.data.graph);
   const graphData = data.graph
     .map((item) => {
       if (item.eventDate.length < 16) {
@@ -102,25 +99,45 @@ function displayErrByMessage(data, fetchErrors, socket) {
 
   // //
   // eventDate, name,type,msgId,env,host,role,message
-  const needFilelds = Object.keys(data.errors[0]).filter(key => key !== 'message');
+  const needFields = Object.keys(data.errors[0]).filter(key => key !== 'message');
   const header = data.msgName;
   const thead = $('<thead>');
-  const headerTds = needFilelds.map(key => `<th>${key}</th>`);
+  const headerTds = needFields.map(key => `<th>${key}</th>`);
   thead.append(headerTds);
   const table = $('<table class="table table-striped"/>');
   table.append(thead);
   const tbody = $('<tbody>');
   data.errors.forEach((err) => {
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
-    const meta = needFilelds.map(key => `<td>${err[key]}</td>`).join('');
-    const message = $(`<td colspan=${needFilelds.length} class="err-msg">`).text(err.message);
+    const meta = needFields.map(key => `<td>${err[key]}</td>`).join('');
+    const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(err.message);
     // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
     tbody.append(`<tr>${meta}</tr>`);
     tbody.append($('<tr>').append(message));
   });
   table.append(tbody);
+  const commentInput = $('<input type="text" class="form-control" id="comment">');
+  commentInput.val(data.comment);
+  const commentGroup = $('<div class="input-group" style="margin-top:20px;margin-bottom: 20px;">');
+  commentGroup.append('<span class="input-group-addon">Comment</span>');
+  commentGroup.append(commentInput);
+  const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
+
+  commentBtn.click(() => {
+    const eventData = {
+      name: 'updateMessageComment',
+      data: {
+        msgName: data.msgName,
+        name: data.name,
+        comment: $('#comment').val(),
+      },
+    };
+    socket.emit('event', eventData);
+  });
+  commentGroup.append($('<span class="input-group-btn">').append(commentBtn));
   const container = $('<div/>');
   container.append(graph);
+  container.append(commentGroup);
   container.append(table);
   Utils.showModal(header, container);
 }

@@ -49,6 +49,12 @@ function getFirstLastDateMet(knex, event, msgNames) {
   return firstLastMetDataQuery;
 }
 
+function getLogComments(knex, event, msgNames) {
+  let commentDataQuery = knex('comments')
+    .select('msgName', 'name', 'comment')
+    .whereIn('msgName', msgNames);
+  return commentDataQuery;
+}
 
 function getOtherEnvErrorNum(knex, event, msgNames, interval) {
   let otherEnvQuery = knex('logs')
@@ -111,13 +117,14 @@ function showTopErrors(knex, socket, event) {
       const msgNames = topErrors.map(err => err.msgName);
       const errorsPerThisHourQuery = getErrorTotal(knex);
       const firstLastMetQuery = getFirstLastDateMet(knex, event, msgNames);
+      const logCommentQuery = getLogComments(knex, event, msgNames);
       const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
       let otherEnvQuery = false;
       if (event.data.env) {
         otherEnvQuery = getOtherEnvErrorNum(knex, event, msgNames, interval);
       }
-      return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery])
-        .then(([preHourData, firstLastMetData, errorsPerHour, otherEnvErrors]) => {
+      return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery, logCommentQuery])
+        .then(([preHourData, firstLastMetData, errorsPerHour, otherEnvErrors, logComments]) => {
           if (errorsPerHour * 0.7 > config.updater.kibana.maxLogsPerHour) {
             fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour}), some may be skipped`);
           }
@@ -126,6 +133,7 @@ function showTopErrors(knex, socket, event) {
           }
           return topErrors.map((err) => {
             const preHour = preHourData.find(item => item.msgName === err.msgName && item.name === err.name);
+            const comment = logComments.find(item => item.msgName === err.msgName && item.name === err.name);
             const metData = getMetData(err, firstLastMetData);
             if (otherEnvErrors) {
               const otherEnv = otherEnvErrors.find(item => item.msgName === err.msgName && item.name === err.name);
@@ -137,6 +145,7 @@ function showTopErrors(knex, socket, event) {
               firstMet: metData.firstMet,
               lastMet: metData.lastMet,
               preHour: preHour && preHour.count || 0,
+              comment: comment && comment.comment || '',
               errors: checkErrorEntry(err),
             });
           });

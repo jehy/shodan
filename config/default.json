@@ -4,7 +4,8 @@
     "host": "localhost",
     "display":
     {
-      "errorsNumber": 100
+      "errorsNumber": 100,
+      "jiraUrl": "https://smth.atlassian.net/browse/"
     },
     "auth": {
       "enabled": false,

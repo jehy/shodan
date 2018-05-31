@@ -33,7 +33,8 @@ function reloader() {
     const env = $('#topErrors-env').val();
     const period = $('#topErrors-period').val();
     const role = $('#topErrors-role').val();
-    socket.emit('event', {name: 'showTopErrors', data: {env, period, role}});
+    const pid = $('#topErrors-pid').val();
+    socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid}});
     timeoutId = setTimeout(reloader, interval * 1000);
   }
 }
@@ -48,6 +49,7 @@ socket.on('connect', () => {
   $('#topErrors-role').change(() => reloader());
   $('#topErrors-env').change(() => reloader());
   $('#topErrors-period').change(() => reloader());
+  $('#topErrors-pid').change(() => reloader());
   $('#reload-interval').change(() => reloader());
   reloader();
 });

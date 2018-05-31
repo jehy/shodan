@@ -17,6 +17,10 @@ function getLastIntervalTopErrors(knex, event, interval) {
     query = query
       .where('role', event.data.role);
   }
+  if (event.data.pid) {
+    query = query
+      .where('pid', event.data.pid);
+  }
   query = query
     .groupBy('msgName', 'name')
     .count('msgName as count')
@@ -39,6 +43,10 @@ function getPrevIntervalErrorStats(knex, event, interval) {
     hourPreQuery = hourPreQuery
       .where('role', event.data.role);
   }
+  if (event.data.pid) {
+    hourPreQuery = hourPreQuery
+      .where('pid', event.data.pid);
+  }
   return hourPreQuery;
 }
 
@@ -57,6 +65,10 @@ function getFirstLastDateMet(knex, event, msgNames) {
   if (event.data.role) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('role', event.data.role);
+  }
+  if (event.data.pid) {
+    firstLastMetDataQuery = firstLastMetDataQuery
+      .where('pid', event.data.pid);
   }
   return firstLastMetDataQuery;
 }
@@ -78,6 +90,10 @@ function getOtherEnvErrorNum(knex, event, msgNames, interval) {
   if (event.data.env) {
     otherEnvQuery = otherEnvQuery
       .whereNot('env', event.data.env);
+  }
+  if (event.data.pid) {
+    otherEnvQuery = otherEnvQuery
+      .whereNot('pid', event.data.pid);
   }
   if (event.data.role) {
     otherEnvQuery = otherEnvQuery

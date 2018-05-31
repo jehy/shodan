@@ -92,6 +92,7 @@ function fixLogEntry(logEntry) {
     name: logEntry._source.fields.name,
     eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),
     level: logEntry._source.fields.type,
+    pid: logEntry._source.fields.pid,
     message: message.trim(),
     msgName: messageName.trim(),
     msgId: logEntry._source.msgId || 'NONE',

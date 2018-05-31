@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 
 function showLogsByMsgName(knex, socket, event) {
-  const {msgName, name, env, role} = event.data;
+  const {msgName, name, env, role, pid} = event.data;
   let queryData = knex('logs')
     .where('msgName', msgName)
     .where('name', name);
@@ -14,7 +14,7 @@ function showLogsByMsgName(knex, socket, event) {
     queryData = queryData
       .where('role', role);
   }
-  queryData = queryData.select('eventDate', 'name', 'type', 'msgId', 'env', 'host', 'role', 'message')
+  queryData = queryData.select('eventDate', 'name', 'type', 'msgId', 'env', 'host', 'role', 'message', 'pid')
     .orderBy('id', 'desc')
     .limit(50);
 
@@ -28,6 +28,10 @@ function showLogsByMsgName(knex, socket, event) {
   if (env) {
     queryGraph = queryGraph
       .where('env', env);
+  }
+  if (pid) {
+    queryGraph = queryGraph
+      .where('pid', pid);
   }
   if (role) {
     queryGraph = queryGraph

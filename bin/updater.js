@@ -11,7 +11,12 @@ require('../modules/knex-timings')(knex, false);
 
 let lastRemovedLogs = null;
 
-
+/**
+ * @deprecated
+ * @param queryFrom
+ * @param queryTo
+ * @returns {*}
+ */
 function getIndex(queryFrom, queryTo) {
   // request current index
   const kibanaUrl = config.updater.kibana.url;
@@ -46,7 +51,11 @@ function getIndex(queryFrom, queryTo) {
     json: true,
     body: dataString,
   };
-  return rp(options);
+  return rp(options)
+    .catch((err) => {
+      debug(`failed to send request ${JSON.stringify(options)}`);
+      throw err;
+    });
 }
 
 
@@ -83,6 +92,8 @@ function getData(queryFrom, queryTo, index) {
           },
         }],
         must_not: [],
+        // must_not: [{match_phrase: {msgName: {query: 'privatefares_1'}}},
+        // {match_phrase: {msgName: {query: 'privatefares_0'}}}],
       },
     },
     _source: {excludes: []},
@@ -115,11 +126,13 @@ function getData(queryFrom, queryTo, index) {
       return result;
     })
     .catch((err) => {
-      debug(`request data fail: ${err}`);
+      debug(`failed to send request ${JSON.stringify(options)}`);
+      throw err;
     });
 }
 
 function fetchData(queryFrom, queryTo) {
+  /*
   return getIndex(queryFrom, queryTo)
     .then((data) => {
       let indexes = Object.keys(data.indices);
@@ -137,6 +150,8 @@ function fetchData(queryFrom, queryTo) {
       const promises = indices.map(index => getData(queryFrom, queryTo, index));
       return Promise.all(promises);
     })
+    */
+  return Promise.all([getData(queryFrom, queryTo, config.updater.kibana.index)])
     .then((dataArray) => {
       return dataArray.map((element) => {
         let data;
@@ -184,7 +199,7 @@ function getLogUpdateInterval() {
       }
       let queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
 
-      const dateString = queryTo.format('YYYY-MM-DD HH:mm:ss');
+      const dateString = queryFrom.format('YYYY-MM-DD HH:mm:ss');
       return knex('logs').count()
         .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.updater.kibana.searchFor} HOUR) and  "${dateString}"`)
         .then((reply) => {

@@ -76,6 +76,14 @@ function getData(queryFrom, queryTo, index) {
   };
 
   const dataString1 = {index: [index], ignore_unavailable: true, preference: config.updater.kibana.preference};
+  const excludeIndexes = config.updater.kibana.indexFilterOut.map(indexExclude =>
+    ({
+      match_phrase: {
+        _index: {
+          query: indexExclude,
+        },
+      },
+    }));
   const dataString2 = {
     version: true,
     size: config.updater.kibana.fetchNum,
@@ -91,9 +99,9 @@ function getData(queryFrom, queryTo, index) {
             },
           },
         }],
-        must_not: [],
         // must_not: [{match_phrase: {msgName: {query: 'privatefares_1'}}},
         // {match_phrase: {msgName: {query: 'privatefares_0'}}}],
+        must_not: excludeIndexes,
       },
     },
     _source: {excludes: []},

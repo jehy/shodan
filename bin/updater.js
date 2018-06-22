@@ -31,8 +31,15 @@ function getIndex(queryFrom, queryTo) {
     Referer: `${kibanaUrl}/app/kibana`,
     Connection: 'keep-alive',
     'Save-Data': 'on',
-    Cookie: config.updater.kibana.cookie,
   };
+  if (config.updater.kibana.auth.cookie)
+  {
+    headers.Cookie = config.updater.kibana.auth.cookie;
+  }
+  if (config.updater.kibana.auth.basic)
+  {
+    headers.Authorization = `Basic ${config.updater.kibana.auth.basic}`;
+  }
 
   const dataString = {
     fields: ['@timestamp'],
@@ -72,8 +79,15 @@ function getData(queryFrom, queryTo, index) {
     Referer: `${kibanaUrl}/app/kibana?`,
     Connection: 'close',
     'Save-Data': 'on',
-    Cookie: config.updater.kibana.cookie,
   };
+  if (config.updater.kibana.auth.cookie)
+  {
+    headers.Cookie = config.updater.kibana.auth.cookie;
+  }
+  if (config.updater.kibana.auth.basic)
+  {
+    headers.Authorization = `Basic ${config.updater.kibana.auth.basic}`;
+  }
 
   const dataString1 = {index: [index], ignore_unavailable: true, preference: config.updater.kibana.preference};
   const excludeIndexes = config.updater.kibana.indexFilterOut.map(indexExclude =>

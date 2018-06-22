@@ -35,7 +35,7 @@ function auth(app, io, knex) {
     {
       clientID: config.ui.auth.google.id,
       clientSecret: config.ui.auth.google.secret,
-      callbackURL: `http://${config.ui.host}:${config.ui.port}/auth/google/callback`,
+      callbackURL: `http://${config.ui.host}:${config.ui.externalPort || config.ui.port}/auth/google/callback`,
     },
     ((accessToken, refreshToken, profile, done) => {
 

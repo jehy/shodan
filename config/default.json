@@ -2,6 +2,7 @@
   "ui":{
     "port": 3000,
     "externalPort": 80,
+    "externalHttps": true,
     "host": "localhost",
     "display":
     {

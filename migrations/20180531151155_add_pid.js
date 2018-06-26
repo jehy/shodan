@@ -6,6 +6,6 @@ exports.up = (knex) => {
 
 exports.down = (knex) => {
   return knex.schema.alterTable('logs', (t) => {
-    // return t.dropColumn('pid');
+    return t.dropColumn('pid');
   });
 };

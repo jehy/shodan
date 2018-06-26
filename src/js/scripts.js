@@ -4,7 +4,7 @@ const socket = require('socket.io-client')();
 const events = require('./events');
 
 let timeoutId = null;
-const progressBar = $('.progress');
+const progressBar = $('#progressMain');
 
 const config = {
   ui: {
@@ -42,8 +42,24 @@ function reloader() {
 
 progressBar.show(); // show it while connecting for the first time
 
+
+let starting = true;
 socket.on('connect', () => {
   console.log('client connected');
+  if (starting) {
+    const hash = window.location.hash.substr(1);
+    console.log(`hash: ${hash}`);
+    const params = new URLSearchParams(hash);
+    let data = params.get('data');
+    if (data) {
+      data = JSON.parse(decodeURIComponent(data));
+    }
+    if (params.get('action') === 'event') {
+      socket.emit('event', data);
+    }
+  }
+  starting = false;
+
   socket.sendBuffer = [];
   // $('#topErrors-show').click(() => showTopErrors());
   $('#topErrors-role').change(() => reloader());
@@ -61,7 +77,7 @@ socket.on('event', (event) => {
     console.log(`Received new config: ${JSON.stringify(config)}`);
   }
   else if (events[event.name]) {
-    $('.progress').hide();
+    progressBar.hide();
     events[event.name](event.data, event.fetchErrors, socket, config);
   }
   else {

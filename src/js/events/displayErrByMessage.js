@@ -126,9 +126,15 @@ function displayErrByMessage(data, fetchErrors, socket) {
   });
   table.append(tbody);
   const commentInput = $('<input type="text" class="form-control" id="comment">');
-  commentInput.val(data.comment);
+  if (data.comment) {
+    commentInput.val(data.comment.comment);
+  }
   const commentGroup = $('<div class="input-group" style="margin-top:20px;margin-bottom: 20px;">');
   commentGroup.append('<span class="input-group-addon">Comment</span>');
+  if (data.comment) {
+    commentGroup.append(`<span class="input-group-addon">${data.comment.added}</span>`);
+    commentGroup.append(`<span class="input-group-addon">${data.comment.author}</span>`);
+  }
   commentGroup.append(commentInput);
   const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
 

@@ -115,6 +115,7 @@ function updateTopErrors(data, fetchErrors, socket, config) {
           env: row.env,
         },
       };
+      window.location.href = `#action=event&data=${encodeURIComponent(JSON.stringify(errorData))}`;
       socket.emit('event', errorData);
     });
     tr.append(`<td>${row.name}</td>`)

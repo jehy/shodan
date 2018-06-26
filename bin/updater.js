@@ -5,7 +5,7 @@ const debug = require('debug')('shodan:updater');
 const config = require('config');
 const moment = require('moment');
 const knex = require('knex')(config.db);
-const {fixLogEntry} = require('../utils');
+const {fixLogEntry} = require('../modules/utils');
 
 require('../modules/knex-timings')(knex, false);
 

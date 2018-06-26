@@ -12,7 +12,7 @@ const updateMessageComment = require('./modules/updateMessageComment');
 
 if (config.ui.auth && config.ui.auth.enabled) {
 // eslint-disable-next-line global-require
-  require('./auth.js')(app, io, knex);
+  require('./modules/auth.js')(app, io, knex);
 }
 
 app.get('/', (req, res) => {

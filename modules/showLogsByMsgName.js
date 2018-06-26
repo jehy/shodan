@@ -42,7 +42,7 @@ function showLogsByMsgName(knex, socket, event) {
   const commentQuery = knex('comments')
     .where('msgName', msgName)
     .where('name', name)
-    .limit(1);
+    .limit(1).first();
   Promise.all([queryGraph, queryData, commentQuery])
     .then(([graphData, data, commentData]) => {
       socket.emit('event', {
@@ -52,7 +52,7 @@ function showLogsByMsgName(knex, socket, event) {
           graph: graphData,
           msgName,
           name,
-          comment: commentData[0] && commentData[0].comment,
+          comment: commentData,
         },
       });
     });

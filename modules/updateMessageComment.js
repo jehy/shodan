@@ -8,12 +8,19 @@ function updateMessageComment(knex, socket, event) {
     .where('name', name)
     .limit(1);
 
+  let author = 'Anonymous';
+  try {
+    author = socket.request.user.displayName;
+  }
+  catch (err) {
+    debug('Could not identify comment user!');
+  }
   queryData.then((data) => {
     if (data[0] && data[0].id) {
       knex('comments')
         .where('id', data[0].id)
         .update({comment})
-        .then(()=>{
+        .then(() => {
           debug('comment updated');
         });
     }
@@ -23,6 +30,7 @@ function updateMessageComment(knex, socket, event) {
           comment,
           name,
           msgName,
+          author
         })
         .then(()=>{
           debug('comment added');

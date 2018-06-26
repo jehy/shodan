@@ -70,7 +70,11 @@ function formatMessageName(row) {
   } */
   let displayName = row.msgName;
   if (row.errors && row.errors.length) {
-    displayName = `${row.msgName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
+    displayName = `${displayName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
+  }
+  if (displayName.indexOf('AUTO ') === 0) {
+    displayName = displayName.replace('AUTO ', '');
+    displayName = `${displayName} <span class="label label-default">auto</span>`;
   }
   return `<td class="${tdClass}">${displayName}</td>`;
 }

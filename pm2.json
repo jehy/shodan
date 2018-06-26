@@ -1,0 +1,14 @@
+{
+  "apps": [
+    {
+      "name": "shodan-server",
+      "script": "npm",
+      "args": "run server"
+    },
+    {
+      "name": "shodan-updater",
+      "script": "npm",
+      "args": "run updater"
+    }
+  ]
+}

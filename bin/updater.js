@@ -270,6 +270,21 @@ function doUpdateLogs() {
             // debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
             debug(`Failed to add ${failed} items`);
           }
+        })
+        .then(()=>{
+          return knex.transaction((trx)=>{
+            knex('first_last_met').transacting(trx).del()
+              .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,' +
+              'max(`eventDate`) as `lastMet`, `name`, `msgName`  from `logs`  group by `msgName`, `name`'))
+              .then(() => {
+                trx.commit();
+                debug('updated met data');
+              })
+              .catch((err)=>{
+                trx.rollback();
+                debug(`failed to update met data: ${err}`);
+              });
+          });
         });
     });
 }

@@ -51,13 +51,9 @@ function getPrevIntervalErrorStats(knex, event, interval) {
 }
 
 function getFirstLastDateMet(knex, event, msgNames) {
-  let firstLastMetDataQuery = knex('logs')
-    .select('msgName', 'name')
-    .min('eventDate as firstMet')
-    .max('eventDate as lastMet')
-    .whereIn('msgName', msgNames)
-    // .whereIn('msgName', knex.raw(`SELECT DISTINCT msgName from logs where eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`))
-    .groupBy('msgName', 'name');
+  let firstLastMetDataQuery = knex('first_last_met')
+    .select()
+    .whereIn('msgName', msgNames);
   if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('env', event.data.env);

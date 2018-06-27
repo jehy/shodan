@@ -8,9 +8,9 @@ const modal = $('#modal');
 function showModal(header, data) {
   modalTitle.empty().append(header);
   modalBody.empty().append(data);
-  modal.on('hidden.bs.modal',  ()=>{
-    window.location.href = '#';
-  });
+  //modal.on('hidden.bs.modal',  ()=>{
+  //  window.location.href = '#';
+  ///});
   modal.modal();
 }
 

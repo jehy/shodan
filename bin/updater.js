@@ -275,7 +275,7 @@ function doUpdateLogs() {
           return knex.transaction((trx)=>{
             knex('first_last_met').transacting(trx).del()
               .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,' +
-              'max(`eventDate`) as `lastMet`, `name`, `msgName`  from `logs`  group by `msgName`, `name`'))
+              'max(`eventDate`) as `lastMet`, `name`, `msgName`, `env`  from `logs`  group by `msgName`, `name`, `env`'))
               .then(() => {
                 trx.commit();
                 debug('updated met data');

@@ -54,10 +54,10 @@ function getFirstLastDateMet(knex, event, msgNames) {
   let firstLastMetDataQuery = knex('first_last_met')
     .select()
     .whereIn('msgName', msgNames);
-  /*if (event.data.env) {
+  if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('env', event.data.env);
-  }
+  }/*
   if (event.data.role) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('role', event.data.role);

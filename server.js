@@ -51,6 +51,10 @@ io.on('connection', (socket) => {
   socket.on('event', (event) => {
     debug(`event ${event.name} fired: ${JSON.stringify(event)}`);
 
+    if (!event.data.index) {
+      debug(`No index for request ${JSON.stringify(event.data)}, setting to default`);
+      event.data.index = 'twapi-avia-*';
+    }
     if (config.ui.auth && config.ui.auth.enabled) {
       if (!socket.request.user || !socket.request.user.logged_in) {
         debug('user not authorized!');

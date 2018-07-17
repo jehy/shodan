@@ -5,6 +5,7 @@ const events = require('./events');
 
 let timeoutId = null;
 const progressBar = $('#progressMain');
+const indexSelector = $('#topErrors-index');
 
 const config = {
   ui: {
@@ -34,7 +35,8 @@ function reloader() {
     const period = $('#topErrors-period').val();
     const role = $('#topErrors-role').val();
     const pid = $('#topErrors-pid').val();
-    socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid}});
+    const index = indexSelector.val();
+    socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid, index}});
     timeoutId = setTimeout(reloader, interval * 1000);
   }
 }
@@ -67,7 +69,6 @@ socket.on('connect', () => {
   $('#topErrors-period').change(() => reloader());
   $('#topErrors-pid').change(() => reloader());
   $('#reload-interval').change(() => reloader());
-  reloader();
 });
 
 socket.on('event', (event) => {
@@ -75,6 +76,12 @@ socket.on('event', (event) => {
   if (event.name === 'updateConfig') {
     Object.assign(config, event.data.config);
     console.log(`Received new config: ${JSON.stringify(config)}`);
+    indexSelector.children().remove();
+    config.updater.indexes.forEach((index)=>{
+      indexSelector.append(`<option value="${index}">${index}</option>`);
+    });
+    indexSelector.change(() => reloader());
+    reloader();
   }
   else if (events[event.name]) {
     progressBar.hide();

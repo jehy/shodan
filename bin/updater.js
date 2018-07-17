@@ -1,5 +1,4 @@
 /* eslint-disable no-underscore-dangle */
-const Promise = require('bluebird');
 const rp = require('request-promise');
 const debug = require('debug')('shodan:updater');
 const config = require('config');
@@ -66,7 +65,7 @@ function getIndex(queryFrom, queryTo) {
 }
 
 
-function getData(queryFrom, queryTo, index) {
+function getData(queryFrom, queryTo) {
   const kibanaUrl = config.updater.kibana.url;
   const headers = {
     Origin: kibanaUrl,
@@ -89,7 +88,7 @@ function getData(queryFrom, queryTo, index) {
     headers.Authorization = `Basic ${config.updater.kibana.auth.basic}`;
   }
 
-  const dataString1 = {index: [index], ignore_unavailable: true, preference: config.updater.kibana.preference};
+  const dataString1 = {index: ['*-*'], ignore_unavailable: true, preference: config.updater.kibana.preference};
   const excludeIndexes = config.updater.kibana.indexFilterOut.map(indexExclude =>
     ({
       match_phrase: {
@@ -98,6 +97,7 @@ function getData(queryFrom, queryTo, index) {
         },
       },
     }));
+  const includeIndexes = config.updater.kibana.indexes.map(includeIndex=>({match_phrase: {_index: includeIndex}}));
   const dataString2 = {
     version: true,
     size: config.updater.kibana.fetchNum,
@@ -116,6 +116,8 @@ function getData(queryFrom, queryTo, index) {
         // must_not: [{match_phrase: {msgName: {query: 'privatefares_1'}}},
         // {match_phrase: {msgName: {query: 'privatefares_0'}}}],
         must_not: excludeIndexes,
+        minimum_should_match: 1,
+        should: includeIndexes,
       },
     },
     _source: {excludes: []},
@@ -173,30 +175,28 @@ function fetchData(queryFrom, queryTo) {
       return Promise.all(promises);
     })
     */
-  return Promise.all([getData(queryFrom, queryTo, config.updater.kibana.index)])
-    .then((dataArray) => {
-      return dataArray.map((element) => {
-        let data;
-        try {
-          data = JSON.parse(element);
-        } catch (e) {
-          debug('malformed json!', e, element);
-          return null;
-        }
-        try {
-          data = data.responses[0].hits.hits;
-        } catch (e) { // data has no... data
-          debug('No hits.hits:', data);
-          return null;
-        }
-        return data;
-      })
-        .reduce((res, el) => {
-          return res.concat(el);
-        }, [])
-        .filter(item => item)
-        .map(fixLogEntry);
+  return getData(queryFrom, queryTo)
+    .then((element) => {
+      let data;
+      try {
+        data = JSON.parse(element);
+      } catch (e) {
+        debug('malformed json!', e, element);
+        return null;
+      }
+      try {
+        data = data.responses[0].hits.hits;
+      } catch (e) { // data has no... data
+        debug('No hits.hits:', data);
+        return null;
+      }
+      return data;
     })
+    .reduce((res, el) => {
+      return res.concat(el);
+    }, [])
+    .filter(item => item)
+    .map(fixLogEntry)
     .then((data) => {
       return {count: data.length, data};
     });
@@ -275,7 +275,7 @@ function doUpdateLogs() {
           return knex.transaction((trx)=>{
             knex('first_last_met').transacting(trx).del()
               .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,' +
-              'max(`eventDate`) as `lastMet`, `name`, `msgName`  from `logs`  group by `msgName`, `name`'))
+              'max(`eventDate`) as `lastMet`, `name`, `msgName`, `index` from `logs`  group by `msgName`, `name`, `index`'))
               .then(() => {
                 trx.commit();
                 debug('updated met data');

@@ -1,11 +1,12 @@
 const debug = require('debug')('shodan:server');
 
 function updateMessageComment(knex, socket, event) {
-  const {msgName, name, comment} = event.data;
+  const {msgName, name, comment, index} = event.data;
   const queryData = knex('comments')
     .select('id')
     .where('msgName', msgName)
     .where('name', name)
+    .where('index', index)
     .limit(1);
 
   let author = 'Anonymous';
@@ -30,7 +31,8 @@ function updateMessageComment(knex, socket, event) {
           comment,
           name,
           msgName,
-          author
+          author,
+          index,
         })
         .then(()=>{
           debug('comment added');

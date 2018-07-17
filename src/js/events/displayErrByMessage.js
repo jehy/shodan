@@ -144,6 +144,7 @@ function displayErrByMessage(data, fetchErrors, socket) {
       data: {
         msgName: data.msgName,
         name: data.name,
+        index: data.index,
         comment: $('#comment').val(),
       },
     };

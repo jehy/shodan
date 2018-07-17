@@ -42,8 +42,8 @@ Error details:
     * `"searchFor": 1,` new entries are fetched 1 last hour
     * `"crawlDelay": 1` delay by 1 minute to avoid ignoring entries which were added to the past
     * `"preference": 1521709471107,` some preference id from kibana requests, dunno wtf
-    * `"index": "some-app",` index name to search for
-    * `"indexFilterOut": "",` filter for indices
+    * `"indexes": ["some-app"],` index names to search for
+    * `"indexFilterOut": ["some-app-extra"],` filter for indices
     * `"fetchNum": 500,` max entries to fetch
     * `"updateInterval": 30,`how often we should fetch updates, in seconds
     * `"storeLogsFor": 7` for how many days do you want to store logs

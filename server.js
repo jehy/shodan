@@ -31,6 +31,9 @@ function sendClinetConfig(socket) {
     data: {
       config:
         {
+          updater: {
+            indexes: config.updater.kibana.indexes,
+          },
           ui: {
             display: config.ui.display,
           },

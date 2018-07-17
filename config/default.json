@@ -29,7 +29,7 @@
       "firstSearchFor": 24,
       "crawlDelay": 1,
       "preference": 1521709471107,
-      "index": "",
+      "indexes": ["*-*"],
       "fetchNum": 500,
       "updateInterval": 10,
       "storeLogsFor": 8,

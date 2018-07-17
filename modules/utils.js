@@ -88,6 +88,7 @@ function fixLogEntry(logEntry) {
   }
   return {
     guid: `${logEntry._index}${logEntry._id}`,
+    index: `${logEntry._index}`,
     type: logEntry._type,
     name: logEntry._source.fields.name,
     eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),

@@ -6,8 +6,9 @@ const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.t
 function getLastIntervalTopErrors(knex, event, interval) {
 
   let query = knex('logs')
-    .select('msgName', 'name')
+    .select('msgName', 'name', 'index')
     .select(knex.raw('MAX(LOCATE("... CUT", message, 1999)) as tooLong'))
+    .where('index', 'like', event.data.index.replace('*', '%'))
     .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
     query = query
@@ -22,7 +23,7 @@ function getLastIntervalTopErrors(knex, event, interval) {
       .where('pid', event.data.pid);
   }
   query = query
-    .groupBy('msgName', 'name')
+    .groupBy('msgName', 'name', 'index')
     .count('msgName as count')
     .orderByRaw('count(msgName) desc, name, msgName')
     .limit(config.ui.display.errorsNumber);
@@ -34,6 +35,7 @@ function getPrevIntervalErrorStats(knex, event, interval) {
     .select('msgName', 'name')
     .count('msgName as count')
     .groupBy('msgName', 'name')
+    .where('index', 'like', event.data.index.replace('*', '%'))
     .whereRaw(`eventDate BETWEEN DATE_SUB(NOW(),INTERVAL 2 ${interval}) AND DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
     hourPreQuery = hourPreQuery
@@ -53,6 +55,7 @@ function getPrevIntervalErrorStats(knex, event, interval) {
 function getFirstLastDateMet(knex, event, msgNames) {
   let firstLastMetDataQuery = knex('first_last_met')
     .select()
+    .where('index', 'like', event.data.index.replace('*', '%'))
     .whereIn('msgName', msgNames);
   if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
@@ -71,6 +74,7 @@ function getFirstLastDateMet(knex, event, msgNames) {
 
 function getLogComments(knex, event, msgNames) {
   return knex('comments')
+    .where('index', 'like', event.data.index.replace('*', '%'))
     .select('msgName', 'name', 'comment')
     .whereIn('msgName', msgNames);
 }
@@ -78,6 +82,7 @@ function getLogComments(knex, event, msgNames) {
 function getOtherEnvErrorNum(knex, event, msgNames, interval) {
   let otherEnvQuery = knex('logs')
     .select('msgName', 'name')
+    .where('index', 'like', event.data.index.replace('*', '%'))
     .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`)
     .whereIn('msgName', msgNames)
     // .whereIn('msgName', knex.raw(`SELECT DISTINCT msgName from logs where eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`))

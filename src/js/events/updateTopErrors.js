@@ -117,6 +117,7 @@ function updateTopErrors(data, fetchErrors, socket, config) {
           msgName: row.msgName,
           name: row.name,
           env: row.env,
+          index: row.index,
         },
       };
       window.location.href = `#action=event&data=${encodeURIComponent(JSON.stringify(errorData))}`;

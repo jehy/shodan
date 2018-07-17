@@ -3,5 +3,6 @@ exports.up = (knex) => {
   return knex.raw('OPTIMIZE TABLE logs');
 };
 
-exports.down = (knex, Promise) => {
+exports.down = () => {
+  return Promise.resolve();
 };

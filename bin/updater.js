@@ -89,14 +89,13 @@ function getData(queryFrom, queryTo) {
   }
 
   const dataString1 = {index: ['*-*'], ignore_unavailable: true, preference: config.updater.kibana.preference};
-  const excludeIndexes = config.updater.kibana.indexFilterOut.map(indexExclude =>
-    ({
-      match_phrase: {
-        _index: {
-          query: indexExclude,
-        },
+  const excludeIndexes = config.updater.kibana.indexFilterOut.map(indexExclude => ({
+    match_phrase: {
+      _index: {
+        query: indexExclude,
       },
-    }));
+    },
+  }));
   const includeIndexes = config.updater.kibana.indexes.map(includeIndex=>({match_phrase: {_index: includeIndex}}));
   const dataString2 = {
     version: true,
@@ -274,8 +273,9 @@ function doUpdateLogs() {
         .then(()=>{
           return knex.transaction((trx)=>{
             knex('first_last_met').transacting(trx).del()
-              .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,' +
-              'max(`eventDate`) as `lastMet`, `name`, `msgName`, `index` from `logs`  group by `msgName`, `name`, `index`'))
+              .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,'
+              + 'max(`eventDate`) as `lastMet`, `name` as` name`, `msgName` as `msgName`, `env` as `env`, `index` as `index`  from `logs`'
+                + '  group by `msgName`, `name`, `env`, `index`'))
               .then(() => {
                 trx.commit();
                 debug('updated met data');

@@ -4,4 +4,3 @@ const webpackDev = require('./webpack.dev'),
 const webpack = {dev: webpackDev, prod: webpackProd};
 
 module.exports = env => webpack[env];
-

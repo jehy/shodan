@@ -1,7 +1,7 @@
 const config = require('config');
-const knex = require('knex')(config.db);
-const {getMessageName} = require('../utils');
 const Promise = require('bluebird');
+const knex = require('knex')(config.db);
+const {getMessageName} = require('../modules/utils');
 
 require('../modules/knex-timings')(knex, false);
 

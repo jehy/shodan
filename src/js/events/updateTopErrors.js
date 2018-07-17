@@ -4,6 +4,7 @@ const moment = require('moment');
 const Utils = require('../utils');
 
 const fetchErrorsAlert = $('#fetchErrors');
+const indexSelector = $('#topErrors-index');
 
 function formatErrorDeltaTD(row) {
   if (!row.preHour) {
@@ -105,19 +106,20 @@ function updateTopErrors(data, fetchErrors, socket, config) {
   data.forEach((row) => {
     const tr = $('<tr/>');
     tr.click(() => {
-      const container = $('<div class="progress">' +
-        '<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45"' +
-        ' aria-valuemin="0" aria-valuemax="100" style="width: 45%">' +
-        '<span class="sr-only">45% Complete</span>' +
-        '</div></div>');
+      const container = $('<div class="progress">'
+        + '<div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45"'
+        + ' aria-valuemin="0" aria-valuemax="100" style="width: 45%">'
+        + '<span class="sr-only">45% Complete</span>'
+        + '</div></div>');
       Utils.showModal(row.msgName, container);
+      const index = indexSelector.val();
       const errorData = {
         name: 'showLogsByMsgName',
         data: {
           msgName: row.msgName,
           name: row.name,
           env: row.env,
-          index: row.index,
+          index,
         },
       };
       window.location.href = `#action=event&data=${encodeURIComponent(JSON.stringify(errorData))}`;

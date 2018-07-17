@@ -77,4 +77,3 @@ io.on('connection', (socket) => {
 http.listen(config.ui.port, () => {
   debug(`listening on *:${config.ui.port}`);
 });
-

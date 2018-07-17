@@ -6,7 +6,7 @@ const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.t
 function getLastIntervalTopErrors(knex, event, interval) {
 
   let query = knex('logs')
-    .select('msgName', 'name', 'index')
+    .select('msgName', 'name')
     .select(knex.raw('MAX(LOCATE("... CUT", message, 1999)) as tooLong'))
     .where('index', 'like', event.data.index.replace('*', '%'))
     .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
@@ -57,10 +57,11 @@ function getFirstLastDateMet(knex, event, msgNames) {
     .select()
     .where('index', 'like', event.data.index.replace('*', '%'))
     .whereIn('msgName', msgNames);
+  debug(`event.data.index: ${event.data.index}`);
   if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('env', event.data.env);
-  }
+  } /*
   if (event.data.role) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('role', event.data.role);
@@ -68,7 +69,7 @@ function getFirstLastDateMet(knex, event, msgNames) {
   if (event.data.pid) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('pid', event.data.pid);
-  }
+  } */
   return firstLastMetDataQuery;
 }
 

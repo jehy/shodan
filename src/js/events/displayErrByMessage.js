@@ -6,6 +6,7 @@ import moment from 'moment';
 import Utils from '../utils';
 
 boost(Highcharts);
+const indexSelector = $('#topErrors-index');
 
 function displayErrByMessage(data, fetchErrors, socket) {
 
@@ -51,8 +52,8 @@ function displayErrByMessage(data, fetchErrors, socket) {
     },
     subtitle: {
       // eslint-disable-next-line no-undef
-      text: document.ontouchstart === undefined ?
-        'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in',
+      text: document.ontouchstart === undefined
+        ? 'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in',
     },
     xAxis: {
       type: 'datetime',
@@ -138,13 +139,14 @@ function displayErrByMessage(data, fetchErrors, socket) {
   commentGroup.append(commentInput);
   const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
 
+  const index = indexSelector.val();
   commentBtn.click(() => {
     const eventData = {
       name: 'updateMessageComment',
       data: {
         msgName: data.msgName,
         name: data.name,
-        index: data.index,
+        index,
         comment: $('#comment').val(),
       },
     };

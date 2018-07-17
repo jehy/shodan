@@ -12,7 +12,7 @@ function getStackStart(msg) {
   if (stackBegin1 && stackBegin2 && stackBegin3) {
     return Math.min(stackBegin1, stackBegin2, stackBegin3);
   }
-  else if (stackBegin1 || stackBegin2 || stackBegin3) {
+  if (stackBegin1 || stackBegin2 || stackBegin3) {
     return stackBegin1 || stackBegin2 || stackBegin3;
   }
   return -1;

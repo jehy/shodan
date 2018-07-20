@@ -272,17 +272,17 @@ function doUpdateLogs() {
         })
         .then(()=>{
           return knex.transaction((trx)=>{
-            knex('first_last_met').transacting(trx).del()
+            return knex('first_last_met').transacting(trx).del()
               .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,'
-              + 'max(`eventDate`) as `lastMet`, `name` as` name`, `msgName` as `msgName`, `env` as `env`, `index` as `index`  from `logs`'
+                + 'max(`eventDate`) as `lastMet`, `name` as` name`, `msgName` as `msgName`, `env` as `env`, `index` as `index`  from `logs`'
                 + '  group by `msgName`, `name`, `env`, `index`'))
               .then(() => {
-                trx.commit();
-                debug('updated met data');
+                return trx.commit()
+                  .then(() => debug('updated met data'));
               })
-              .catch((err)=>{
-                trx.rollback();
-                debug(`failed to update met data: ${err}`);
+              .catch((err) => {
+                return trx.rollback()
+                  .then(() => debug(`failed to update met data: ${err}`));
               });
           });
         });

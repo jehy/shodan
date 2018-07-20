@@ -20,7 +20,7 @@ function updateMessageComment(knex, socket, event) {
     if (data[0] && data[0].id) {
       knex('comments')
         .where('id', data[0].id)
-        .update({comment})
+        .update({comment, author})
         .then(() => {
           debug('comment updated');
         });

@@ -6,7 +6,7 @@ function updateMessageComment(knex, socket, event) {
     .select('id')
     .where('msgName', msgName)
     .where('name', name)
-    .where('index', index)
+    .where('index', index.replace('-*', ''))
     .limit(1);
 
   let author = 'Anonymous';
@@ -32,7 +32,7 @@ function updateMessageComment(knex, socket, event) {
           name,
           msgName,
           author,
-          index,
+          index: index.replace('-*', ''),
         })
         .then(()=>{
           debug('comment added');

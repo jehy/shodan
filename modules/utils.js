@@ -86,9 +86,18 @@ function fixLogEntry(logEntry) {
     debug(`TOO long message (${message.length / 1000} KB)!!! msgName: ${messageName}, start: ${message.substr(0, 100)}`);
     message = `${message.substr(0, 2000)}... CUT (${message.length / 1000} KB)`;
   }
+  let index = logEntry._index.split('-');
+  if (index.length > 2) { // remove date from index
+    const isItDate = index[index.length - 1];
+    if (isItDate.split('.').length === 3) {
+      index.splice(index.length - 1);
+    }
+  }
+  index = index.join('-');
+
   return {
     guid: `${logEntry._index}${logEntry._id}`,
-    index: `${logEntry._index}`,
+    index,
     type: logEntry._type,
     name: logEntry._source.fields.name,
     eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),

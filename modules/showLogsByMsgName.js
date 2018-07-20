@@ -4,7 +4,7 @@ function showLogsByMsgName(knex, socket, event) {
   const {msgName, name, env, role, pid, index} = event.data;
   let queryData = knex('logs')
     .where('msgName', msgName)
-    .where('index', 'like', index.replace('*', '%'))
+    .where('index', index.replace('-*', ''))
     .where('name', name);
 
   if (env) {
@@ -23,7 +23,7 @@ function showLogsByMsgName(knex, socket, event) {
     .count('eventDate as count')
     .select(knex.raw('CONCAT(DATE_FORMAT(eventDate, "%Y %m %d %H")," ", FLOOR(DATE_FORMAT(eventDate, "%i")/10)*10)  as eventDate'))
     .where('msgName', msgName)
-    .where('index', 'like', index.replace('*', '%'))
+    .where('index', index.replace('-*', ''))
     .whereRaw('eventDate > DATE_SUB(NOW(), INTERVAL 1 DAY)')
     .where('name', name);
 
@@ -43,7 +43,7 @@ function showLogsByMsgName(knex, socket, event) {
 
   const commentQuery = knex('comments')
     .where('msgName', msgName)
-    .where('index', 'like', index.replace('*', '%'))
+    .where('index', index.replace('-*', ''))
     .where('name', name)
     .limit(1).first();
   Promise.all([queryGraph, queryData, commentQuery])

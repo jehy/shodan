@@ -1,4 +1,4 @@
-.err-msg{
+.err-msg {
     max-width: 900px;
     -ms-word-break: break-all;
     word-break: break-all;
@@ -13,7 +13,11 @@
     padding-bottom: 20px;
 }
 
-#topErrors .input-group
-{
+#topErrors .input-group {
     margin-top: 20px;
+}
+
+.input-group-addon {
+    min-width: 150px;
+    text-align: left;
 }

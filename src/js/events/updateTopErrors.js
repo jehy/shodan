@@ -5,27 +5,50 @@ const Utils = require('../utils');
 
 const fetchErrorsAlert = $('#fetchErrors');
 const indexSelector = $('#topErrors-index');
+/**
+ * Корректировка округления десятичных дробей.
+ * https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Math/floor
+ * @param {String}  type  Тип корректировки.
+ * @param {Number}  value Число.
+ * @param {Integer} exp   Показатель степени (десятичный логарифм основания корректировки).
+ * @returns {Number} Скорректированное значение.
+ */
+function decimalAdjust(type, value, exp) {
+  // Если степень не определена, либо равна нулю...
+  if (typeof exp === 'undefined' || +exp === 0) {
+    return Math[type](value);
+  }
+  value = +value;
+  exp = +exp;
+  // Если значение не является числом, либо степень не является целым числом...
+  if (Number.isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+    return NaN;
+  }
+  // Сдвиг разрядов
+  value = value.toString().split('e');
+  value = Math[type](+(`${value[0]}e${value[1] ? (+value[1] - exp) : -exp}`));
+  // Обратный сдвиг
+  value = value.toString().split('e');
+  return +(`${value[0]}e${value[1] ? (+value[1] + exp) : exp}`);
+}
+
+function round10(value, exp = -1) {
+  return decimalAdjust('round', value, exp);
+}
 
 function formatErrorDeltaTD(row) {
   if (!row.preHour) {
     return '<td class="warning">N/A</td>';
   }
-  const currentPercent = parseInt(row.count / (row.preHour / 100), 10);
-  let errorDelta;
-  if (currentPercent > 100) {
-    errorDelta = `+${currentPercent - 100}`;
-  }
-  else {
-    errorDelta = `-${100 - currentPercent}`;
-  }
+  const koef = round10(row.count / row.preHour);
   let tdClass = '';
-  if (currentPercent >= 300) {
+  if (koef >= 3) {
     tdClass = 'danger';
   }
-  else if (currentPercent < 50) {
+  else if (koef < 0.5) {
     tdClass = 'success';
   }
-  return `<td class="${tdClass}">${errorDelta}</td>`;
+  return `<td class="${tdClass}">${koef}</td>`;
 }
 
 function formatFirstMetTD(row) {
@@ -100,7 +123,7 @@ function updateTopErrors(data, fetchErrors, socket, config) {
   else {
     fetchErrorsAlert.hide();
   }
-  const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval, %', 'Other env count', 'Comment'];
+  const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval', 'Other env count', 'Comment'];
   const showErorrsOtherEnv = data.some(row => row.otherEnv);
   const tbody = $('<tbody/>');
   data.forEach((row) => {

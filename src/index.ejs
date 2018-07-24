@@ -12,34 +12,44 @@
 
     <form id="topErrors">
         <div class="form-group">
-            <label for="topErrors-env">Choose env:</label>
-            <select id="topErrors-env" class="form-control">
-                <option selected value="">--</option>
-                <option value="production-a">production-a</option>
-                <option value="production-b">production-b</option>
-                <option value="staging">staging</option>
-            </select>
-            <label for="topErrors-env">Choose index:</label>
-            <select id="topErrors-index" class="form-control">
-            </select>
-            <label for="topErrors-env">Choose role:</label>
-            <select id="topErrors-role" class="form-control">
-                <option selected value="">--</option>
-                <option value="avia-backoffice">avia-backoffice</option>
-                <option value="avia-common">avia-common</option>
-                <option value="avia-order">avia-order</option>
-                <option value="avia-render">avia-render</option>
-                <option value="avia-search">avia-search</option>
-            </select>
-            <label for="topErrors-period">Choose period:</label>
-            <select id="topErrors-period" class="form-control">
-                <option selected value="hour">hour</option>
-                <option value="day">day</option>
-            </select>
-            <label for="reload-interval">Reload interval, sec:</label>
-            <input id="reload-interval" type="text" class="form-control" value="30"/>
-            <label for="topErrors-pid">Choose Process id (PID):</label>
-            <input id="topErrors-pid" type="text" class="form-control" value=""/>
+            <div class="input-group">
+                <span class="input-group-addon">Env</span>
+                <select id="topErrors-env" class="form-control">
+                    <option selected value="">--</option>
+                    <option value="production-a">production-a</option>
+                    <option value="production-b">production-b</option>
+                    <option value="staging">staging</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">Index</span>
+                <select id="topErrors-index" class="form-control">
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">Role</span>
+                <select id="topErrors-role" class="form-control">
+                    <option selected value="">--</option>
+                    <option value="avia-backoffice">avia-backoffice</option>
+                    <option value="avia-common">avia-common</option>
+                    <option value="avia-order">avia-order</option>
+                    <option value="avia-render">avia-render</option>
+                    <option value="avia-search">avia-search</option>
+                </select></div>
+            <div class="input-group">
+                <span class="input-group-addon">Period</span>
+                <select id="topErrors-period" class="form-control">
+                    <option selected value="hour">hour</option>
+                    <option value="day">day</option>
+                </select></div>
+            <div class="input-group">
+                <span class="input-group-addon">Reload interval, sec</span>
+                <input id="reload-interval" type="text" class="form-control" value="30"/>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">Process id (PID)</span>
+                <input id="topErrors-pid" type="text" class="form-control" value=""/>
+            </div>
             <!--<button type="button" class="btn btn-default" id="topErrors-show">Show</button>-->
         </div>
     </form>

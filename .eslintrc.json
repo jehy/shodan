@@ -35,7 +35,8 @@
           "test/**.js",
           "webpack.config",
           "webpack.dev.js",
-          "webpack.prod.js"
+          "webpack.prod.js",
+          "src/js/**/*.js"
         ]
       }
     ],

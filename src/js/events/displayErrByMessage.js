@@ -6,8 +6,44 @@ import moment from 'moment';
 import Utils from '../utils';
 
 boost(Highcharts);
+Highcharts.setOptions({
+  global: {
+    useUTC: false,
+  },
+});
+
+
 const indexSelector = $('#topErrors-index');
 
+
+function fillWithZeros(graphData)
+{
+
+  const timingInterval = 60 * 1000 * 10;// 10 minutes step on graph
+  // fill with zeros when there were no errors
+  const zeroFilled = graphData.reduce((res, cur, index, arr) => {
+    const next = arr[index + 1];
+    res.push(cur);
+    if (!next) {
+      return res;
+    }
+    let val = cur[0];
+    while (val < next[0] - timingInterval) {
+      val += timingInterval;
+      res.push([val, 0]);
+    }
+    return res;
+  }, []);
+  // fill with zeros up to now
+  const nowMillis = parseInt(moment().format('x'), 10);
+  const fillUpTo = nowMillis - timingInterval * 2;
+  let lastTiming = zeroFilled[zeroFilled.length - 1][0];
+  while (lastTiming < fillUpTo) {
+    lastTiming += timingInterval;
+    zeroFilled.push([lastTiming, 0]);
+  }
+  return zeroFilled;
+}
 function displayErrByMessage(data, fetchErrors, socket) {
 
   const graph = $('<div/>');
@@ -16,26 +52,10 @@ function displayErrByMessage(data, fetchErrors, socket) {
       if (item.eventDate.length < 16) {
         item.eventDate = `${item.eventDate}0`;
       }
-      return [parseInt(moment.utc(item.eventDate, 'YYYY MM DD HH mm')
+      return [parseInt(moment(item.eventDate, 'YYYY MM DD HH mm')
         .format('x'), 10), item.count];
     });
-  // console.log('data');
-  // console.log(data);
-  const zeroFilled = graphData.reduce((res, cur, index, arr) => {
-    const next = arr[index + 1];
-    res.push(cur);
-    if (!next) {
-      return res;
-    }
-    let val = cur[0];
-    while (val < next[0] - 600000) {
-      val += 600000;
-      res.push([val, 0]);
-    }
-    return res;
-  }, []);
-  // console.log('zeroFilled');
-  // console.log(zeroFilled);
+  const zeroFilled = fillWithZeros(graphData);
   Highcharts.chart({
     chart: {
       type: 'area',
@@ -62,6 +82,7 @@ function displayErrByMessage(data, fetchErrors, socket) {
       title: {
         text: 'Errors number',
       },
+      min: 0,
     },
     legend: {
       enabled: false,

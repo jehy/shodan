@@ -4,12 +4,14 @@ const path = require('path'),
   webpack = require('webpack'),
   ExtractTextPlugin = require('extract-text-webpack-plugin');
 
+
 module.exports = {
   entry: './src/js/index.js',
   devtool: 'source-map',
   cache: true,
   mode: 'development',
   plugins: [
+    new webpack.ProvidePlugin({$: 'jquery', jQuery: 'jquery' }),
     new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(ru|en)$/), // https://github.com/webpack/webpack/issues/87
     new ExtractTextPlugin('styles.css'),
     new CleanWebpackPlugin(['dist']),
@@ -27,9 +29,20 @@ module.exports = {
     tls: 'empty',
     fs: 'empty',
     net: 'empty',
+    console: true,
   },
   module: {
     rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['env'],
+          },
+        },
+      },
       {
         test: /\.css$/,
         use: ExtractTextPlugin.extract({

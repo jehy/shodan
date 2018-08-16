@@ -271,20 +271,23 @@ function doUpdateLogs() {
           }
         })
         .then(()=>{
-          return knex.transaction((trx)=>{
-            return knex('first_last_met').transacting(trx).del()
-              .then(() => trx.raw('insert into first_last_met select min(`eventDate`) as `firstMet`,'
-                + 'max(`eventDate`) as `lastMet`, `name` as` name`, `msgName` as `msgName`, `env` as `env`, `index` as `index`  from `logs`'
-                + '  group by `msgName`, `name`, `env`, `index`'))
-              .then(() => {
-                return trx.commit()
-                  .then(() => debug('updated met data'));
-              })
-              .catch((err) => {
-                return trx.rollback()
-                  .then(() => debug(`failed to update met data: ${err}`));
+          return knex.raw('insert into first_last_met_tmp select min(`eventDate`) as `firstMet`,'
+            + 'max(`eventDate`) as `lastMet`, `name` as` name`, `msgName` as `msgName`, `env` as `env`, `index` as `index`  from `logs`'
+            + '  group by `msgName`, `name`, `env`, `index`')
+            .then(() => {
+              return knex.transaction((trx) => {
+                return knex('first_last_met').transacting(trx).del()
+                  .then(() => trx.raw('insert into first_last_met select * from first_last_met_tmp'))
+                  .then(() => {
+                    return trx.commit()
+                      .then(() => debug('updated met data'));
+                  })
+                  .catch((err) => {
+                    return trx.rollback()
+                      .then(() => debug(`failed to update met data: ${err}`));
+                  });
               });
-          });
+            });
         });
     });
 }

@@ -287,6 +287,12 @@ function doUpdateLogs() {
                       .then(() => debug(`failed to update met data: ${err}`));
                   });
               });
+            })
+            .then(()=>{
+              knex('first_last_met_tmp').truncate();
+            })
+            .catch((err) => {
+              debug(`failed to update temporary table: ${err}`);
             });
         });
     });

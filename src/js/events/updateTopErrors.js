@@ -137,10 +137,9 @@ function updateTopErrors(data, fetchErrors, socket, config) {
       Utils.showModal(row.msgName, container);
       const index = indexSelector.val();
       const errorData = {
-        name: 'showLogsByMsgName',
+        name: 'showLogsByErrorId',
         data: {
-          msgName: row.msgName,
-          name: row.name,
+          errorId: row.id,
           env: row.env,
           index,
         },

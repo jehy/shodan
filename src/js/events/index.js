@@ -1,7 +1,7 @@
 'use strict';
 
 const updateTopErrors = require('./updateTopErrors');
-const displayErrByMessage = require('./displayErrByMessage');
+const displayErrByMessage = require('./displayErrById');
 
 module.exports = {
   updateTopErrors,

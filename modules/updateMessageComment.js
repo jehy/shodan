@@ -1,13 +1,12 @@
 const debug = require('debug')('shodan:server');
 
 function updateMessageComment(knex, socket, event) {
-  const {msgName, name, comment, index} = event.data;
+  const {errorId, comment} = event.data;
   const queryData = knex('comments')
     .select('id')
-    .where('msgName', msgName)
-    .where('name', name)
-    .where('index', index.replace('-*', ''))
-    .limit(1);
+    .where('error_id', errorId)
+    .limit(1)
+    .first();
 
   let author = 'Anonymous';
   try {
@@ -17,9 +16,9 @@ function updateMessageComment(knex, socket, event) {
     debug('Could not identify comment user!');
   }
   queryData.then((data) => {
-    if (data[0] && data[0].id) {
+    if (data && data.id) {
       knex('comments')
-        .where('id', data[0].id)
+        .where('id', data.id)
         .update({comment, author})
         .then(() => {
           debug('comment updated');
@@ -29,10 +28,8 @@ function updateMessageComment(knex, socket, event) {
       knex('comments')
         .insert({
           comment,
-          name,
-          msgName,
+          error_id: errorId,
           author,
-          index: index.replace('-*', ''),
         })
         .then(()=>{
           debug('comment added');

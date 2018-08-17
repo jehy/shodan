@@ -3,67 +3,13 @@ const rp = require('request-promise');
 const debug = require('debug')('shodan:updater');
 const config = require('config');
 const moment = require('moment');
+const Promise = require('bluebird');
 const knex = require('knex')(config.db);
 const {fixLogEntry} = require('../modules/utils');
 
 require('../modules/knex-timings')(knex, false);
 
 let lastRemovedLogs = null;
-
-/**
- * @deprecated
- * @param queryFrom
- * @param queryTo
- * @returns {*}
- */
-function getIndex(queryFrom, queryTo) {
-  // request current index
-  const kibanaUrl = config.updater.kibana.url;
-  const headers = {
-    Origin: kibanaUrl,
-    'Accept-Encoding': 'none',
-    'Accept-Language': 'en-US,en;q=0.8,ru;q=0.6',
-    'kbn-version': config.updater.kibana.version,
-    'User-Agent': config.updater.userAgent,
-    'Content-Type': 'application/json;charset=UTF-8',
-    Accept: 'application/json, text/plain, */*',
-    Referer: `${kibanaUrl}/app/kibana`,
-    Connection: 'keep-alive',
-    'Save-Data': 'on',
-  };
-  if (config.updater.kibana.auth.cookie)
-  {
-    headers.Cookie = config.updater.kibana.auth.cookie;
-  }
-  if (config.updater.kibana.auth.basic)
-  {
-    headers.Authorization = `Basic ${config.updater.kibana.auth.basic}`;
-  }
-
-  const dataString = {
-    fields: ['@timestamp'],
-    index_constraints: {
-      '@timestamp': {
-        max_value: {gte: queryFrom/* 1494395361553 */, format: 'epoch_millis'},
-        min_value: {lte: queryTo/* 1494398961553 */, format: 'epoch_millis'},
-      },
-    },
-  };
-
-  const options = {
-    url: `${kibanaUrl}/elasticsearch/${config.updater.kibana.index}-*/_field_stats?level=indices`,
-    method: 'POST',
-    headers,
-    json: true,
-    body: dataString,
-  };
-  return rp(options)
-    .catch((err) => {
-      debug(`failed to send request ${JSON.stringify(options)}`);
-      throw err;
-    });
-}
-
 
 function getData(queryFrom, queryTo) {
   const kibanaUrl = config.updater.kibana.url;
@@ -79,12 +25,10 @@ function getData(queryFrom, queryTo) {
     Connection: 'close',
     'Save-Data': 'on',
   };
-  if (config.updater.kibana.auth.cookie)
-  {
+  if (config.updater.kibana.auth.cookie) {
     headers.Cookie = config.updater.kibana.auth.cookie;
   }
-  if (config.updater.kibana.auth.basic)
-  {
+  if (config.updater.kibana.auth.basic) {
     headers.Authorization = `Basic ${config.updater.kibana.auth.basic}`;
   }
 
@@ -96,7 +40,7 @@ function getData(queryFrom, queryTo) {
       },
     },
   }));
-  const includeIndexes = config.updater.kibana.indexes.map(includeIndex=>({match_phrase: {_index: includeIndex}}));
+  const includeIndexes = config.updater.kibana.indexes.map(includeIndex => ({match_phrase: {_index: includeIndex}}));
   const dataString2 = {
     version: true,
     size: config.updater.kibana.fetchNum,
@@ -155,25 +99,6 @@ function getData(queryFrom, queryTo) {
 }
 
 function fetchData(queryFrom, queryTo) {
-  /*
-  return getIndex(queryFrom, queryTo)
-    .then((data) => {
-      let indexes = Object.keys(data.indices);
-      if (config.updater.kibana.indexFilterOut) {
-        indexes = Object.keys(data.indices).filter(index => !index.includes(config.updater.kibana.indexFilterOut));
-      }
-      if (!indexes || !indexes.length) {
-        throw new Error('Failed to fetch indexes!');
-      }
-      debug('indexes:', indexes);
-      return indexes;
-    })
-    // .then(indexes=> getData(userQuery, queryFrom, queryTo, indexes[0]))
-    .then((indices) => {
-      const promises = indices.map(index => getData(queryFrom, queryTo, index));
-      return Promise.all(promises);
-    })
-    */
   return getData(queryFrom, queryTo)
     .then((element) => {
       let data;
@@ -236,6 +161,20 @@ function getLogUpdateInterval() {
     });
 }
 
+const errorIdCache = {};
+
+function setItemErrorId(item, id) {
+
+  if (parseInt(id, 10) !== id) {
+    debug(`WRONG ID ${JSON.stringify(id)}`);
+    process.exit(1);
+  }
+  item.error_id = id;
+  delete item.name;
+  delete item.msgName;
+  delete item.index;
+}
+
 function doUpdateLogs() {
   return getLogUpdateInterval()
     .then(({queryFrom, queryTo}) => {
@@ -251,18 +190,48 @@ function doUpdateLogs() {
         return true;
       }
       debug(`Adding ${data.count} items`);
-      /* let duplicates = 0;
-      const entries = data.data.map(entry => knex('logs').insert(entry).catch((err) => {
-        if (!err.message.includes('Duplicate entry')) {
-          debug(`Failed add: ${err}`);
+      return Promise.map(data.data, (item) => {
+        const errorHash = `${item.name}.${item.msgName}.${item.index}`;
+        if (errorIdCache[errorHash]) {
+          setItemErrorId(item, errorIdCache[errorHash]);
+          return true;
         }
-        else {
-          duplicates++;
-        }
-        return false;
-      }));
-      return Promise.all(entries) */
-      return knex.raw(knex('logs').insert(data.data).toString().replace('insert', 'INSERT IGNORE'))
+        return knex('errors').select('id')
+          .where('name', item.name)
+          .where('msgName', item.msgName)
+          .where('index', item.index)
+          .first()
+          .then((res) => {
+
+            if (res && parseInt(res.id, 10) !== res.id) {
+              debug(`WRONG ID 2${JSON.stringify(res.id)}`);
+              process.exit(1);
+            }
+            if (res && res.id) {
+              setItemErrorId(item, res.id);
+              errorIdCache[errorHash] = res.id;
+              return true;
+            }
+            return knex.insert({
+              name: item.name,
+              msgName: item.msgName,
+              index: item.index,
+            })
+              .returning('id')
+              .into('errors')
+              .then(([autoIncrementId]) => {
+                debug(`Auto increment id: ${JSON.stringify(autoIncrementId)}`);
+                setItemErrorId(item, autoIncrementId);
+                errorIdCache[errorHash] = autoIncrementId;
+              });
+          });
+      }, {concurrency: 4})
+        .then(() => data);
+    })
+    .then((data) => {
+      debug('Got all error IDs');
+      const query = knex('logs').insert(data.data).toString();
+      return knex.raw(query.replace('insert', 'INSERT IGNORE'))
         .then((res) => {
           const failed = res.filter(item => !item).length;
           if (failed !== 0) {
@@ -270,30 +239,37 @@ function doUpdateLogs() {
             debug(`Failed to add ${failed} items`);
           }
         })
-        .then(()=>{
-          return knex.raw('insert into first_last_met_tmp select min(`eventDate`) as `firstMet`,'
-            + 'max(`eventDate`) as `lastMet`, `name` as` name`, `msgName` as `msgName`, `env` as `env`, `index` as `index`  from `logs`'
-            + '  group by `msgName`, `name`, `env`, `index`')
-            .then(() => {
-              return knex.transaction((trx) => {
-                return knex('first_last_met').transacting(trx).del()
-                  .then(() => trx.raw('insert into first_last_met select * from first_last_met_tmp'))
-                  .then(() => {
-                    return trx.commit()
-                      .then(() => debug('updated met data'));
-                  })
-                  .catch((err) => {
-                    return trx.rollback()
-                      .then(() => debug(`failed to update met data: ${err}`));
-                  });
+        .then(() => {
+          debug('Items added, updating met data');
+          const updateMetData = data.data.reduce((res, item) => {
+            const itemDate = moment(item.eventDate, 'YYYY-MM-DD HH:mm:ss.SSS');
+            if (!res[item.error_id] || itemDate.isAfter(res[item.error_id].met)) {
+              res[item.error_id] = {met: itemDate, item};
+            }
+            return res;
+          }, {});
+          return Promise.map(Object.entries(updateMetData), ([errorId, metData]) => {
+            return knex('first_last_met')
+              .where('error_id', errorId)
+              .where('env', metData.item.env)
+              .update({lastMet: metData.item.eventDate})
+              .then((affectedRows) => {
+                if (affectedRows === 1) {
+                  return true;
+                }
+                if (affectedRows > 1) {
+                  debug(`WTF, ${affectedRows} were affected`);
+                }
+                return knex.insert({
+                  firstMet: metData.item.eventDate,
+                  lastMet: metData.item.eventDate,
+                  error_id: metData.item.error_id,
+                  env: metData.item.env,
+                })
+                  .into('first_last_met');
               });
-            })
-            .then(()=>{
-              knex('first_last_met_tmp').truncate();
-            })
-            .catch((err) => {
-              debug(`failed to update temporary table: ${err}`);
-            });
+          }, {concurrency: 10})
+            .then(() => debug('updated met data'));
         });
     });
 }

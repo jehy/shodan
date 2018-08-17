@@ -6,61 +6,64 @@ const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.t
 function getLastIntervalTopErrors(knex, event, interval) {
 
   let query = knex('logs')
-    .select('msgName', 'name')
-    .select(knex.raw('MAX(LOCATE("... CUT", message, 1999)) as tooLong'))
-    .where('index', event.data.index.replace('-*', ''))
-    .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
+    .join('errors', 'logs.error_id', 'errors.id')
+    .select('errors.msgName', 'errors.name', 'errors.id')
+    .select(knex.raw('MAX(LOCATE("... CUT", logs.message, 1999)) as tooLong'))
+    .where('errors.index', event.data.index.replace('-*', ''))
+    .whereRaw(`logs.eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
     query = query
-      .where('env', event.data.env);
+      .where('logs.env', event.data.env);
   }
   if (event.data.role) {
     query = query
-      .where('role', event.data.role);
+      .where('logs.role', event.data.role);
   }
   if (event.data.pid) {
     query = query
-      .where('pid', event.data.pid);
+      .where('logs.pid', event.data.pid);
   }
   query = query
-    .groupBy('msgName', 'name', 'index')
-    .count('msgName as count')
-    .orderByRaw('count(msgName) desc, name, msgName')
+    .groupBy('errors.id')
+    .count('errors.id as count')
+    .orderByRaw('count(errors.msgName) desc, errors.name, errors.msgName')
     .limit(config.ui.display.errorsNumber);
   return query;
 }
 
 function getPrevIntervalErrorStats(knex, event, interval) {
   let hourPreQuery = knex('logs')
-    .select('msgName', 'name')
-    .count('msgName as count')
-    .groupBy('msgName', 'name')
-    .where('index', event.data.index.replace('-*', ''))
-    .whereRaw(`eventDate BETWEEN DATE_SUB(NOW(),INTERVAL 2 ${interval}) AND DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
+    .join('errors', 'logs.error_id', 'errors.id')
+    .select('errors.msgName', 'errors.name', 'errors.id')
+    .count('errors.id as count')
+    .groupBy('errors.id')
+    .where('errors.index', event.data.index.replace('-*', ''))
+    .whereRaw(`logs.eventDate BETWEEN DATE_SUB(NOW(),INTERVAL 2 ${interval}) AND DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
     hourPreQuery = hourPreQuery
-      .where('env', event.data.env);
+      .where('logs.env', event.data.env);
   }
   if (event.data.role) {
     hourPreQuery = hourPreQuery
-      .where('role', event.data.role);
+      .where('logs.role', event.data.role);
   }
   if (event.data.pid) {
     hourPreQuery = hourPreQuery
-      .where('pid', event.data.pid);
+      .where('logs.pid', event.data.pid);
   }
   return hourPreQuery;
 }
 
-function getFirstLastDateMet(knex, event, msgNames) {
+function getFirstLastDateMet(knex, event, errorIds) {
   let firstLastMetDataQuery = knex('first_last_met')
-    .select()
-    .where('index', event.data.index.replace('-*', ''))
-    .whereIn('msgName', msgNames);
+    .join('errors', 'first_last_met.error_id', 'errors.id')
+    .select('errors.msgName', 'errors.name', 'first_last_met.firstMet', 'first_last_met.lastMet', 'errors.id')
+    .where('errors.index', event.data.index.replace('-*', ''))
+    .whereIn('errors.id', errorIds);
   debug(`event.data.index: ${event.data.index}`);
   if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
-      .where('env', event.data.env);
+      .where('first_last_met.env', event.data.env);
   } /*
   if (event.data.role) {
     firstLastMetDataQuery = firstLastMetDataQuery
@@ -73,33 +76,35 @@ function getFirstLastDateMet(knex, event, msgNames) {
   return firstLastMetDataQuery;
 }
 
-function getLogComments(knex, event, msgNames) {
+function getLogComments(knex, event, errorIds) {
   return knex('comments')
-    .where('index', event.data.index.replace('-*', ''))
-    .select('msgName', 'name', 'comment')
-    .whereIn('msgName', msgNames);
+    .join('errors', 'comments.error_id', 'errors.id')
+    .where('errors.index', event.data.index.replace('-*', ''))
+    .select('errors.msgName', 'errors.name', 'comments.comment')
+    .whereIn('error_id', errorIds);
 }
 
-function getOtherEnvErrorNum(knex, event, msgNames, interval) {
+function getOtherEnvErrorNum(knex, event, errorIds, interval) {
   let otherEnvQuery = knex('logs')
-    .select('msgName', 'name')
-    .where('index', event.data.index.replace('-*', ''))
-    .whereRaw(`eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`)
-    .whereIn('msgName', msgNames)
+    .join('errors', 'logs.error_id', 'errors.id')
+    .select('errors.msgName', 'errors.name')
+    .where('errors.index', event.data.index.replace('-*', ''))
+    .whereRaw(`logs.eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`)
+    .whereIn('error_id', errorIds)
     // .whereIn('msgName', knex.raw(`SELECT DISTINCT msgName from logs where eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`))
-    .groupBy('msgName', 'name')
-    .count('msgName as count');
+    .groupBy('errors.id')
+    .count('errors.id as count');
   if (event.data.env) {
     otherEnvQuery = otherEnvQuery
-      .whereNot('env', event.data.env);
+      .whereNot('logs.env', event.data.env);
   }
   if (event.data.pid) {
     otherEnvQuery = otherEnvQuery
-      .whereNot('pid', event.data.pid);
+      .whereNot('logs.pid', event.data.pid);
   }
   if (event.data.role) {
     otherEnvQuery = otherEnvQuery
-      .whereNot('role', event.data.role);
+      .whereNot('logs.role', event.data.role);
   }
   return otherEnvQuery;
 }
@@ -127,9 +132,9 @@ function checkErrorEntry(err) {
 function getMetData(err, firstLastMetData) {
 
   let metData = firstLastMetData
-    .find(item => item.msgName === err.msgName && item.name === err.name);
+    .find(item => item.id === err.id);
   if (!metData) {
-    debug(`ERR: not found met data for msgName "${err.msgName}" and name "${err.name}" 
+    debug(`ERR: not found met data for id "${err.id}" msgName "${err.msgName}" and name "${err.name}" 
                   in object ${JSON.stringify(firstLastMetData, null, 3)}`);
     metData = {firstMet: 0, lastMet: 0};
   }
@@ -147,14 +152,14 @@ function showTopErrors(knex, socket, event) {
 
   getLastIntervalTopErrors(knex, event, interval)
     .then((topErrors) => {
-      const msgNames = topErrors.map(err => err.msgName);
+      const errorIds = topErrors.map(err => err.id);
       const errorsPerThisHourQuery = getErrorTotal(knex);
-      const firstLastMetQuery = getFirstLastDateMet(knex, event, msgNames);
-      const logCommentQuery = getLogComments(knex, event, msgNames);
+      const firstLastMetQuery = getFirstLastDateMet(knex, event, errorIds);
+      const logCommentQuery = getLogComments(knex, event, errorIds);
       const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
       let otherEnvQuery = false;
       if (event.data.env) {
-        otherEnvQuery = getOtherEnvErrorNum(knex, event, msgNames, interval);
+        otherEnvQuery = getOtherEnvErrorNum(knex, event, errorIds, interval);
       }
       return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery, logCommentQuery])
         .then(([preHourData, firstLastMetData, errorsPerHour, otherEnvErrors, logComments]) => {

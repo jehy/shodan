@@ -12,12 +12,7 @@ Highcharts.setOptions({
   },
 });
 
-
-const indexSelector = $('#topErrors-index');
-
-
-function fillWithZeros(graphData)
-{
+function fillWithZeros(graphData) {
 
   const timingInterval = 60 * 1000 * 10;// 10 minutes step on graph
   // fill with zeros when there were no errors
@@ -44,7 +39,8 @@ function fillWithZeros(graphData)
   }
   return zeroFilled;
 }
-function displayErrByMessage(data, fetchErrors, socket) {
+
+function displayErrById(data, fetchErrors, socket) {
 
   const graph = $('<div/>');
   const graphData = data.graph
@@ -124,7 +120,9 @@ function displayErrByMessage(data, fetchErrors, socket) {
 
   // //
   // eventDate, name,type,msgId,env,host,role,message
-  const needFields = Object.keys(data.errors[0]).filter(key => key !== 'message');
+  const notNeededFields = ['message', 'name', 'msgName', 'index'];
+  const needFields = Object.keys(data.errors[0])
+    .filter(key => !notNeededFields.includes(key));
   const header = data.msgName;
   const thead = $('<thead>');
   const headerTds = needFields.map(key => `<th>${key}</th>`);
@@ -160,14 +158,11 @@ function displayErrByMessage(data, fetchErrors, socket) {
   commentGroup.append(commentInput);
   const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
 
-  const index = indexSelector.val();
   commentBtn.click(() => {
     const eventData = {
       name: 'updateMessageComment',
       data: {
-        msgName: data.msgName,
-        name: data.name,
-        index,
+        errorId: data.errors[0].id,
         comment: $('#comment').val(),
       },
     };
@@ -175,10 +170,18 @@ function displayErrByMessage(data, fetchErrors, socket) {
   });
   commentGroup.append($('<span class="input-group-btn">').append(commentBtn));
   const container = $('<div/>');
+  container.append(`
+            <table class="table">
+            <thead><th>name</th><th>msgName</th><th>index</th></thead>
+            <tbody><tr><td>${data.errors[0].name}</td>
+            <td>${data.errors[0].msgName}</td>
+            <td>${data.errors[0].index}</td>
+            </tr></tbody>
+            </table>`);
   container.append(graph);
   container.append(commentGroup);
   container.append(table);
   Utils.showModal(header, container);
 }
 
-module.exports = displayErrByMessage;
+module.exports = displayErrById;

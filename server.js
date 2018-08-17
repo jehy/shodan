@@ -6,7 +6,7 @@ const debug = require('debug')('shodan:server');
 const config = require('config');
 const knex = require('knex')(config.db);
 require('./modules/knex-timings')(knex, false);
-const showLogsByMsgName = require('./modules/showLogsByMsgName');
+const showLogsByErrorId = require('./modules/showLogsByErrorId');
 const showTopErrors = require('./modules/showTopErrors');
 const updateMessageComment = require('./modules/updateMessageComment');
 
@@ -68,8 +68,8 @@ io.on('connection', (socket) => {
     else if (event.name === 'updateMessageComment') {
       updateMessageComment(knex, socket, event);
     }
-    else if (event.name === 'showLogsByMsgName') {
-      showLogsByMsgName(knex, socket, event);
+    else if (event.name === 'showLogsByErrorId') {
+      showLogsByErrorId(knex, socket, event);
     }
     else {
       debug(`dunno event name ${event.name}`);

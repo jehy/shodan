@@ -134,8 +134,8 @@ function getMetData(err, firstLastMetData) {
   let metData = firstLastMetData
     .find(item => item.id === err.id);
   if (!metData) {
-    debug(`ERR: not found met data for id "${err.id}" msgName "${err.msgName}" and name "${err.name}" 
-                  in object ${JSON.stringify(firstLastMetData, null, 3)}`);
+    debug(`ERR: not found met data for id "${err.id}" msgName "${err.msgName}" and name "${err.name}" `);
+    //              in object ${JSON.stringify(firstLastMetData, null, 3)}`);
     metData = {firstMet: 0, lastMet: 0};
   }
   return metData;

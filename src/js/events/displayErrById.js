@@ -156,7 +156,7 @@ function displayErrById(data, fetchErrors, socket) {
     commentGroup.append(`<span class="input-group-addon">${data.comment.author}</span>`);
   }
   commentGroup.append(commentInput);
-  const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
+  const commentBtn = $('<button type="button" class="btn btn-primary">Save</button>');
 
   commentBtn.click(() => {
     const eventData = {

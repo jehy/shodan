@@ -13,7 +13,9 @@
     <form id="topErrors">
         <div class="form-group">
             <div class="input-group">
-                <span class="input-group-addon">Env</span>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Env</span>
+                </div>
                 <select id="topErrors-env" class="form-control">
                     <option selected value="">--</option>
                     <option value="production-a">production-a</option>
@@ -22,12 +24,16 @@
                 </select>
             </div>
             <div class="input-group">
-                <span class="input-group-addon">Index</span>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Index</span>
+                </div>
                 <select id="topErrors-index" class="form-control">
                 </select>
             </div>
             <div class="input-group">
-                <span class="input-group-addon">Role</span>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Role</span>
+                </div>
                 <select id="topErrors-role" class="form-control">
                     <option selected value="">--</option>
                     <option value="avia-backoffice">avia-backoffice</option>
@@ -37,17 +43,23 @@
                     <option value="avia-search">avia-search</option>
                 </select></div>
             <div class="input-group">
-                <span class="input-group-addon">Period</span>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Period</span>
+                </div>
                 <select id="topErrors-period" class="form-control">
                     <option selected value="hour">hour</option>
                     <option value="day">day</option>
                 </select></div>
             <div class="input-group">
-                <span class="input-group-addon">Reload interval, sec</span>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Reload interval, sec</span>
+                </div>
                 <input id="reload-interval" type="text" class="form-control" value="30"/>
             </div>
             <div class="input-group">
-                <span class="input-group-addon">Process id (PID)</span>
+                <div class="input-group-prepend">
+                    <span class="input-group-text">PID</span>
+                </div>
                 <input id="topErrors-pid" type="text" class="form-control" value=""/>
             </div>
             <!--<button type="button" class="btn btn-default" id="topErrors-show">Show</button>-->
@@ -83,7 +95,7 @@
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
             </div>
         </div>
 

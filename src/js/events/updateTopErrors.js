@@ -38,15 +38,15 @@ function round10(value, exp = -1) {
 
 function formatErrorDeltaTD(row) {
   if (!row.preHour) {
-    return '<td class="warning">N/A</td>';
+    return '<td class="bg-warning">N/A</td>';
   }
   const koef = round10(row.count / row.preHour);
   let tdClass = '';
   if (koef >= 3) {
-    tdClass = 'danger';
+    tdClass = 'bg-danger';
   }
   else if (koef < 0.5) {
-    tdClass = 'success';
+    tdClass = 'bg-success';
   }
   return `<td class="${tdClass}">${koef}</td>`;
 }
@@ -56,10 +56,10 @@ function formatFirstMetTD(row) {
   let tdClass = '';
   const appearDiff = moment().diff(moment(row.firstMet), 'h');
   if (appearDiff < 4) {
-    tdClass = 'danger';
+    tdClass = 'bg-danger';
   }
   else if (appearDiff < 8) {
-    tdClass = 'warning';
+    tdClass = 'bg-warning';
   }
   return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;
 }
@@ -94,11 +94,11 @@ function formatMessageName(row) {
   } */
   let displayName = row.msgName;
   if (row.errors && row.errors.length) {
-    displayName = `${displayName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
+    displayName = `${displayName} <span class="badge badge-danger">${row.errors.join(', ')}</span>`;
   }
   if (displayName.indexOf('AUTO ') === 0) {
     displayName = displayName.replace('AUTO ', '');
-    displayName = `${displayName} <span class="label label-default">auto</span>`;
+    displayName = `${displayName} <span class="badge badge-secondary">auto</span>`;
   }
   return `<td class="${tdClass}">${displayName}</td>`;
 }

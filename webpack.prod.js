@@ -3,7 +3,9 @@ const path = require('path'),
   CleanWebpackPlugin = require('clean-webpack-plugin'),
   webpack = require('webpack'),
   ExtractTextPlugin = require('extract-text-webpack-plugin'),
-  {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
+  {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer'),
+  precss = require('precss'),
+  autoprefixer =   require('autoprefixer');
 
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
@@ -49,6 +51,26 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.(scss)$/,
+        use: [{
+          loader: 'style-loader', // inject CSS to page
+        }, {
+          loader: 'css-loader', // translates CSS into CommonJS modules
+        }, {
+          loader: 'postcss-loader', // Run post css actions
+          options: {
+            plugins() { // post css plugins, can be exported to postcss.config.js
+              return [
+                precss,
+                autoprefixer,
+              ];
+            },
+          },
+        }, {
+          loader: 'sass-loader', // compiles Sass to CSS
+        }],
+      },
       {
         test: /\.js$/,
         exclude: /node_modules/,

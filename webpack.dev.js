@@ -2,7 +2,9 @@ const path = require('path'),
   HtmlWebpackPlugin = require('html-webpack-plugin'),
   CleanWebpackPlugin = require('clean-webpack-plugin'),
   webpack = require('webpack'),
-  ExtractTextPlugin = require('extract-text-webpack-plugin');
+  ExtractTextPlugin = require('extract-text-webpack-plugin'),
+  precss = require('precss'),
+  autoprefixer =   require('autoprefixer');
 
 
 module.exports = {
@@ -33,6 +35,26 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.(scss)$/,
+        use: [{
+          loader: 'style-loader', // inject CSS to page
+        }, {
+          loader: 'css-loader', // translates CSS into CommonJS modules
+        }, {
+          loader: 'postcss-loader', // Run post css actions
+          options: {
+            plugins() { // post css plugins, can be exported to postcss.config.js
+              return [
+                precss,
+                autoprefixer,
+              ];
+            },
+          },
+        }, {
+          loader: 'sass-loader', // compiles Sass to CSS
+        }],
+      },
       {
         test: /\.js$/,
         exclude: /node_modules/,

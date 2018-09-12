@@ -1,5 +1,10 @@
 # Shodan
 
+[![Build Status](https://travis-ci.org/jehy/shodan.svg?branch=master)](https://travis-ci.org/jehy/shodan)
+[![dependencies Status](https://david-dm.org/jehy/shodan/status.svg)](https://david-dm.org/jehy/shodan)
+[![devDependencies Status](https://david-dm.org/jehy/shodan/dev-status.svg)](https://david-dm.org/jehy/shodan?type=dev)
+[![Known Vulnerabilities](https://snyk.io/test/github/jehy/shodan/badge.svg)](https://snyk.io/test/github/jehy/shodan)
+
 Advanced error monitoring using kibana logs.
 
 ## Screenshots

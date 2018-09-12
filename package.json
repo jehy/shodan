@@ -1,6 +1,6 @@
 {
   "name": "shodan",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "build-dev": "node ./node_modules/webpack/bin/webpack.js --env=dev --progress --profile --colors",
     "build": "node ./node_modules/webpack/bin/webpack.js --env=prod --progress --profile --colors",
     "prepare": "npm run build",
-    "test": "npm run build && mocha --exit",
+    "test": "npm run build && npm run unit-test",
+    "unit-test": "mocha --exit",
     "migrate": "./node_modules/.bin/knex migrate:latest"
   },
   "author": "Jehy",

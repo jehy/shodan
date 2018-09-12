@@ -16,6 +16,7 @@ describe('Message name generator', () => {
         msgName: 'uncaughtException_0',
         fields: {},
       },
+      _index: 'some-index',
     };
     const fixed = parsingUtils.fixLogEntry(logEntry);
     assert.equal(fixed.msgName, 'uncaughtException_0 TypeError: Cannot read property \'length\' of undefined at Function.');
@@ -36,6 +37,7 @@ describe('Message name generator', () => {
         msgName: 'uncaughtException',
         fields: {},
       },
+      _index: 'some-index',
     };
     const fixed = parsingUtils.fixLogEntry(logEntry);
     assert.equal(fixed.msgName, 'uncaughtException TypeError: result.services.filter is not a function at results.reduce');
@@ -59,6 +61,7 @@ describe('Message name generator', () => {
         msgName: 'uncaughtException',
         fields: {},
       },
+      _index: 'some-index',
     };
     const fixed = parsingUtils.fixLogEntry(logEntry);
     assert.equal(fixed.msgName, 'uncaughtException MyResponseError: no response');

@@ -34,7 +34,7 @@ Error details:
 3. Set up `runtime.json` config (see below)
 4. Run `npm run migrate` to set up DB
 5. Run `npm i`
-6. `npm run start`  and `npm run updater` (those are 2 different processes!)
+6. `npm run server`  and `npm run updater` (those are 2 different processes!)
 7. Enjoy!
 
 ### Configuration

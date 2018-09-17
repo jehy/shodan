@@ -26,6 +26,10 @@ function showDiff(sec) {
       if (data > 24) {
         data /= 24;
         unit = 'day';
+        if (data > 30) {
+          data /= 30;
+          unit = 'month';
+        }
       }
     }
   }

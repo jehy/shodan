@@ -11,7 +11,7 @@ require('../modules/knex-timings')(knex, false);
 
 let lastRemovedLogs = null;
 
-function getData(queryFrom, queryTo) {
+async function getData(queryFrom, queryTo) {
   const kibanaUrl = config.updater.kibana.url;
   const headers = {
     Origin: kibanaUrl,
@@ -87,78 +87,71 @@ function getData(queryFrom, queryTo) {
     body: dataString,
   };
   // debug(options);
-  return rp(options)
-    .then((result) => {
-      debug('request data ok');
-      return result;
-    })
-    .catch((err) => {
-      debug(`failed to send request ${JSON.stringify(options)}`);
-      throw err;
-    });
+  try
+  {
+    const result = await rp(options);
+    debug('request data ok');
+    return result;
+  }
+  catch (err) {
+    debug(`failed to send request ${JSON.stringify(options)}`);
+    throw err;
+  }
 }
 
-function fetchData(queryFrom, queryTo) {
-  return getData(queryFrom, queryTo)
-    .then((element) => {
-      let data;
-      try {
-        data = JSON.parse(element);
-      } catch (e) {
-        debug('malformed json!', e, element);
-        return null;
-      }
-      try {
-        data = data.responses[0].hits.hits;
-      } catch (e) { // data has no... data
-        debug('No hits.hits:', data);
-        return null;
-      }
-      return data;
-    })
+async function fetchData(queryFrom, queryTo) {
+  const element = await getData(queryFrom, queryTo);
+  let data;
+  try {
+    data = JSON.parse(element);
+  } catch (e) {
+    debug('malformed json!', e, element);
+    return null;
+  }
+  try {
+    data = data.responses[0].hits.hits;
+  } catch (e) { // data has no... data
+    debug('No hits.hits:', data);
+    return null;
+  }
+  data = data
     .reduce((res, el) => {
       return res.concat(el);
     }, [])
     .filter(item => item)
-    .map(fixLogEntry)
-    .then((data) => {
-      return {count: data.length, data};
-    });
+    .map(fixLogEntry);
+  return {count: data.length, data};
 }
 
-function getLogUpdateInterval() {
-  return knex('logs')
+async function getLogUpdateInterval() {
+  const res = await knex('logs')
     .select('eventDate')
-    .orderBy('eventDate', 'desc').limit(1)
-    .then(([res]) => res && res.eventDate)
-    .then((lastDate) => {
-      let queryFrom;
-      if (!lastDate) {
-        queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
-      }
-      else {
-        queryFrom = moment(lastDate);
-      }
-      const now = moment();
-      if (config.updater.kibana.crawlDelay) {
-        now.subtract(config.updater.kibana.crawlDelay, 'm');
-      }
-      let queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
+    .orderBy('eventDate', 'desc').limit(1).first();
+  const lastDate = res && res.eventDate;
+  let queryFrom;
+  if (!lastDate) {
+    queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
+  }
+  else {
+    queryFrom = moment(lastDate);
+  }
+  const now = moment();
+  if (config.updater.kibana.crawlDelay) {
+    now.subtract(config.updater.kibana.crawlDelay, 'm');
+  }
+  let queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
 
-      const dateString = queryFrom.format('YYYY-MM-DD HH:mm:ss');
-      return knex('logs').count()
-        .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.updater.kibana.searchFor} HOUR) and  "${dateString}"`)
-        .then((reply) => {
-          const logsForLastHour = Object.values(reply[0])[0];
-          debug(`Logs in base for hour: ${logsForLastHour}`);
-          if (logsForLastHour > config.updater.kibana.maxLogsPerHour * config.updater.kibana.searchFor) {
-            debug('Too many logs for this hour, I will skip some...');
-            queryFrom = moment.min(now.clone().subtract(5, 'm'), queryFrom.clone().add(1, 'h'));
-            queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
-          }
-          return {queryFrom, queryTo};
-        });
-    });
+  const dateString = queryFrom.format('YYYY-MM-DD HH:mm:ss');
+  const reply = await knex('logs').count()
+    .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.updater.kibana.searchFor} HOUR) and  "${dateString}"`);
+  const logsForLastHour = Object.values(reply[0])[0];
+  debug(`Logs in base for hour: ${logsForLastHour}`);
+  if (logsForLastHour > config.updater.kibana.maxLogsPerHour * config.updater.kibana.searchFor) {
+    debug('Too many logs for this hour, I will skip some...');
+    queryFrom = moment.min(now.clone().subtract(5, 'm'), queryFrom.clone().add(1, 'h'));
+    queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
+  }
+  return {queryFrom, queryTo};
 }
 
 const errorIdCache = {};
@@ -175,123 +168,118 @@ function setItemErrorId(item, id) {
   delete item.index;
 }
 
-function doUpdateLogs() {
-  return getLogUpdateInterval()
-    .then(({queryFrom, queryTo}) => {
-      debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
-      return fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
-    })
-    .then((data) => {
-      /* if (data.count === config.kibana.fetchNum) {
-        full = true;
-      } */
-      if (data.count === 0) {
-        debug('No new items to add');
-        return true;
-      }
-      debug(`Adding ${data.count} items`);
-      return Promise.map(data.data, (item) => {
-        const errorHash = `${item.name}.${item.msgName}.${item.index}`;
-        if (errorIdCache[errorHash]) {
-          setItemErrorId(item, errorIdCache[errorHash]);
-          return true;
-        }
-        return knex('errors').select('id')
-          .where('name', item.name)
-          .where('msgName', item.msgName)
-          .where('index', item.index)
-          .first()
-          .then((res) => {
+async function addItem(item) {
+  const errorHash = `${item.name}.${item.msgName}.${item.index}`;
+  if (errorIdCache[errorHash]) {
+    setItemErrorId(item, errorIdCache[errorHash]);
+    return true;
+  }
+  const res = await knex('errors').select('id')
+    .where('name', item.name)
+    .where('msgName', item.msgName)
+    .where('index', item.index)
+    .first();
 
-            if (res && parseInt(res.id, 10) !== res.id) {
-              debug(`WRONG ID 2${JSON.stringify(res.id)}`);
-              process.exit(1);
-            }
-            if (res && res.id) {
-              setItemErrorId(item, res.id);
-              errorIdCache[errorHash] = res.id;
-              return true;
-            }
-            return knex.insert({
-              name: item.name,
-              msgName: item.msgName,
-              index: item.index,
-            })
-              .returning('id')
-              .into('errors')
-              .then(([autoIncrementId]) => {
-                debug(`Auto increment id: ${JSON.stringify(autoIncrementId)}`);
-                setItemErrorId(item, autoIncrementId);
-                errorIdCache[errorHash] = autoIncrementId;
-              });
-          })
-          .catch((err)=>{
-            debug(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
-          });
-      }, {concurrency: 4})
-        .then(() => data);
-    })
-    .then((data) => {
-      debug('Got all error IDs');
-      const query = knex('logs').insert(data.data).toString();
-      return knex.raw(query.replace('insert', 'INSERT IGNORE'))
-        .then((res) => {
-          const failed = res.filter(item => !item).length;
-          if (failed !== 0) {
-            // debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
-            debug(`Failed to add ${failed} items`);
-          }
-        })
-        .then(() => {
-          debug('Items added, updating met data');
-          const updateMetData = data.data.reduce((res, item) => {
-            const itemDate = moment(item.eventDate, 'YYYY-MM-DD HH:mm:ss.SSS');
-            if (!res[item.error_id] || itemDate.isAfter(res[item.error_id].met)) {
-              res[item.error_id] = {met: itemDate, item};
-            }
-            return res;
-          }, {});
-          return Promise.map(Object.entries(updateMetData), ([errorId, metData]) => {
-            return knex('first_last_met')
-              .where('error_id', errorId)
-              .where('env', metData.item.env)
-              .update({lastMet: metData.item.eventDate})
-              .then((affectedRows) => {
-                if (affectedRows === 1) {
-                  return true;
-                }
-                if (affectedRows > 1) {
-                  debug(`WTF, ${affectedRows} were affected`);
-                }
-                return knex.insert({
-                  firstMet: metData.item.eventDate,
-                  lastMet: metData.item.eventDate,
-                  error_id: metData.item.error_id,
-                  env: metData.item.env,
-                })
-                  .into('first_last_met');
-              });
-          }, {concurrency: 10})
-            .then(() => debug('updated met data'));
-        });
-    });
+  if (res && parseInt(res.id, 10) !== res.id) {
+    debug(`WRONG ID 2${JSON.stringify(res.id)}`);
+    process.exit(1);
+  }
+  if (res && res.id) {
+    setItemErrorId(item, res.id);
+    errorIdCache[errorHash] = res.id;
+    return true;
+  }
+  const insertResult = await knex.insert({
+    name: item.name,
+    msgName: item.msgName,
+    index: item.index,
+  })
+    .returning('id')
+    .into('errors');
+  const [autoIncrementId] = insertResult;
+  debug(`Auto increment id: ${JSON.stringify(autoIncrementId)}`);
+  setItemErrorId(item, autoIncrementId);
+  errorIdCache[errorHash] = autoIncrementId;
+  return true;
 }
 
-function updateLogs() {
+async function updateMetData(options)
+{
+  const [errorId, metData] = options;
+  const affectedRows = await knex('first_last_met')
+    .where('error_id', errorId)
+    .where('env', metData.item.env)
+    .update({lastMet: metData.item.eventDate});
+  if (affectedRows === 1) {
+    return true;
+  }
+  if (affectedRows > 1) {
+    debug(`WTF, ${affectedRows} were affected`);
+  }
+  return knex.insert({
+    firstMet: metData.item.eventDate,
+    lastMet: metData.item.eventDate,
+    error_id: metData.item.error_id,
+    env: metData.item.env,
+  })
+    .into('first_last_met');
+}
+
+async function doUpdateLogs() {
+  const {queryFrom, queryTo} = await getLogUpdateInterval();
+  debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
+  const data = await fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
+  /* if (data.count === config.kibana.fetchNum) {
+        full = true;
+      } */
+  if (data.count === 0) {
+    debug('No new items to add');
+    return true;
+  }
+  debug(`Adding ${data.count} items`);
+  await Promise.map(data.data, async (item)=>{
+    try
+    {
+      await addItem(item);
+    } catch (err)
+    {
+      debug(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
+    }
+  }, {concurrency: 4});
+  debug('Got all error IDs');
+  const query = knex('logs').insert(data.data).toString();
+  const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));
+  const failed = insertRes.filter(item => !item).length;
+  if (failed !== 0) {
+    // debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
+    debug(`Failed to add ${failed} items`);
+  }
+  debug('Items added, updating met data');
+  const dataForUpdate = data.data.reduce((res, item) => {
+    const itemDate = moment(item.eventDate, 'YYYY-MM-DD HH:mm:ss.SSS');
+    if (!res[item.error_id] || itemDate.isAfter(res[item.error_id].met)) {
+      res[item.error_id] = {met: itemDate, item};
+    }
+    return res;
+  }, {});
+  await Promise.map(Object.entries(dataForUpdate), updateMetData, {concurrency: 10});
+  debug('updated met data');
+  return true;
+}
+
+async function updateLogs() {
 
   const today = parseInt(moment().format('DD'), 10);
   if (lastRemovedLogs === null || lastRemovedLogs !== today) {
     debug('Removing old logs');
     lastRemovedLogs = today;
-    knex('logs')
+    const count = await knex('logs')
       .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
-      .del()
-      .then((count) => {
-        debug(`Removed ${count} old logs`);
-      });
+      .del();
+    debug(`Removed ${count} old logs`);
   }
 
-  return doUpdateLogs()
+  return Promise.resolve(doUpdateLogs())
     .catch((err) => {
       debug(err);
     })

@@ -99,7 +99,7 @@ function fixLogEntry(logEntry) {
     guid: `${logEntry._index}${logEntry._id}`,
     index,
     type: logEntry._type,
-    name: logEntry._source.fields.name,
+    name: logEntry._source.fields.name || logEntry._source.name || 'NONE',
     eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),
     level: logEntry._source.fields.type,
     pid: logEntry._source.fields.pid,

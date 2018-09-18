@@ -224,6 +224,9 @@ function doUpdateLogs() {
                 setItemErrorId(item, autoIncrementId);
                 errorIdCache[errorHash] = autoIncrementId;
               });
+          })
+          .catch((err)=>{
+            debug(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
           });
       }, {concurrency: 4})
         .then(() => data);

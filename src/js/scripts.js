@@ -1,11 +1,13 @@
 'use strict';
 
 const socket = require('socket.io-client')();
+const uuid = require('nanoid');
 const events = require('./events');
 
 let timeoutId = null;
 const progressBar = $('#progressMain');
 const indexSelector = $('#topErrors-index');
+let needUpdateId = null;
 
 const config = {
   ui: {
@@ -36,7 +38,8 @@ function reloader() {
     const role = $('#topErrors-role').val();
     const pid = $('#topErrors-pid').val();
     const index = indexSelector.val();
-    socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid, index}});
+    needUpdateId = uuid();
+    socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid, index}, id: needUpdateId});
     timeoutId = setTimeout(reloader, interval * 1000);
   }
 }
@@ -84,6 +87,14 @@ socket.on('event', (event) => {
     reloader();
   }
   else if (events[event.name]) {
+    if (event.name === 'updateTopErrors')
+    {
+      if (event.id !== needUpdateId)
+      {
+        console.log(`This update is already not needed(${event.id} while waiting for ${needUpdateId}), skipping`);
+        return;
+      }
+    }
     progressBar.hide();
     events[event.name](event.data, event.fetchErrors, socket, config);
   }

@@ -66,4 +66,19 @@ describe('Message name generator', () => {
     const fixed = parsingUtils.fixLogEntry(logEntry);
     assert.equal(fixed.msgName, 'uncaughtException MyResponseError: no response');
   });
+
+  it('should make message name from data with email', () => {
+    const err = 'logMailEvents - error saving event - email: 2987782@mail.ru 21112005@bk.ru '
+      + 'jehy@gmail.com vasya@pupkin@mail.ru msgId: undefined event: open';
+
+    const logEntry = {
+      _source: {
+        message: err,
+        fields: {},
+      },
+      _index: 'some-index',
+    };
+    const fixed = parsingUtils.fixLogEntry(logEntry);
+    assert.equal(fixed.msgName, 'AUTO logMailEvents - error saving event - email: EMAIL...');
+  });
 });

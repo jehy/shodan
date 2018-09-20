@@ -54,6 +54,7 @@ function getMessageName(messageName, message, force) {
       .replace(/js:\d+:\d+/g, 'js:xx:xx')// remove stack traces
       .replace(/{.+}/g, '{OBJ}')// remove json objects
       .replace(/releases\/\d+\//g, 'DATE')// remove release dates
+      .replace(/[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/g, 'EMAIL')// remove emails
       .replace(/http:\/\/.+ /g, 'http://addr')// remove http addresses
       .replace(/https:\/\/.+ /g, 'https://addr')// remove https addresses
       .replace(/\d+ ms/g, 'xx ms')// remove timings

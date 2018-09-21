@@ -7,11 +7,11 @@
     "updater": "DEBUG=shodan:updater node --use-strict ./bin/updater.js",
     "server": "DEBUG=shodan:server,shodan:knex-data,shodan:auth node --use-strict ./server.js",
     "start": "DEBUG=shodan:server,shodan:updater,shodan:auth node --use-strict ./index.js",
-    "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js server.js webpack.config.js webpack.dev.js webpack.dev.js mugrations bin knexfile.js modules",
+    "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js server.js webpack.config.js webpack.dev.js webpack.dev.js migrations bin knexfile.js modules",
     "build-dev": "node ./node_modules/webpack/bin/webpack.js --env=dev --progress --profile --colors",
     "build": "node ./node_modules/webpack/bin/webpack.js --env=prod --progress --profile --colors",
     "prepare": "npm run build",
-    "test": "npm run build && npm run unit-test",
+    "test": "npm run lint && npm run build && npm run unit-test",
     "unit-test": "mocha --exit",
     "migrate": "./node_modules/.bin/knex migrate:latest"
   },

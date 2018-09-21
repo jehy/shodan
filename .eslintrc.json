@@ -25,7 +25,8 @@
   ],
   "plugins": [
     "standard",
-    "promise"
+    "promise",
+    "import"
   ],
   "rules": {
     "import/no-extraneous-dependencies": [

@@ -245,7 +245,7 @@ async function doUpdateLogs() {
     {
       debug(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
     }
-  }, {concurrency: 4});
+  }, {concurrency: 1}); // no more concurrency because there will be duplicates of error messages
   debug('Got all error IDs');
   const query = knex('logs').insert(data.data).toString();
   const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));

@@ -233,7 +233,7 @@ async function updateMetData(options)
 
 async function doUpdateLogs() {
   const {queryFrom, queryTo} = await getLogUpdateInterval();
-  debug(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
+  debug(`\nFetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
   const data = await fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
   /* if (data.count === config.kibana.fetchNum) {
         full = true;

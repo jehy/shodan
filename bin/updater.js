@@ -169,11 +169,16 @@ function setItemErrorId(item, id) {
   delete item.index;
 }
 
+/**
+ *
+ * @param item
+ * @returns {Promise<boolean>} true if it is a new error, false otherwise
+ */
 async function addItem(item) {
   const errorHash = `${item.name}.${item.msgName}.${item.index}`;
   if (errorIdCache[errorHash]) {
     setItemErrorId(item, errorIdCache[errorHash]);
-    return true;
+    return false;
   }
   const res = await knex('errors').select('id')
     .where('name', item.name)
@@ -188,7 +193,7 @@ async function addItem(item) {
   if (res && res.id) {
     setItemErrorId(item, res.id);
     errorIdCache[errorHash] = res.id;
-    return true;
+    return false;
   }
   const insertResult = await knex.insert({
     name: item.name,
@@ -198,7 +203,7 @@ async function addItem(item) {
     .returning('id')
     .into('errors');
   const [autoIncrementId] = insertResult;
-  debug(`Auto increment id: ${JSON.stringify(autoIncrementId)}`);
+  // debug(`Auto increment id: ${JSON.stringify(autoIncrementId)}`);
   setItemErrorId(item, autoIncrementId);
   errorIdCache[errorHash] = autoIncrementId;
   return true;
@@ -238,21 +243,25 @@ async function doUpdateLogs() {
     return true;
   }
   debug(`Adding ${data.count} items`);
+  let newErrors = 0;
   await Promise.map(data.data, async (item)=>{
     try
     {
-      await addItem(item);
+      const isNew = await addItem(item);
+      if (isNew)
+      {
+        newErrors++;
+      }
     } catch (err)
     {
       debug(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
     }
   }, {concurrency: 1}); // no more concurrency because there will be duplicates of error messages
-  debug('Got all error IDs');
+  debug(`Got all error IDs, new errors: ${newErrors}`);
   const query = knex('logs').insert(data.data).toString();
   const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));
   const failed = insertRes.filter(item => !item).length;
-  if (failed !== 0) {
-    // debug(`Failed to add ${failed} items (${duplicates} duplicates)`);
+  if (failed > 1) { // 1 is usually a duplicate
     debug(`Failed to add ${failed} items`);
   }
   debug('Items added, updating met data');

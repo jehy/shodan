@@ -8,7 +8,6 @@ function getLastIntervalTopErrors(knex, event, interval) {
   let query = knex('logs')
     .join('errors', 'logs.error_id', 'errors.id')
     .select('errors.msgName', 'errors.name', 'errors.id')
-    .select(knex.raw('MAX(LOCATE("... CUT", logs.message, 1999)) as tooLong'))
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereRaw(`logs.eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
@@ -26,6 +25,7 @@ function getLastIntervalTopErrors(knex, event, interval) {
   query = query
     .groupBy('errors.id')
     .count('errors.id as count')
+    .max('messageLength as messageLength')
     .orderByRaw('count(errors.msgName) desc, errors.name, errors.msgName')
     .limit(config.ui.display.errorsNumber);
   return query;
@@ -119,7 +119,7 @@ function getErrorTotal(knex) {
 
 function checkErrorEntry(err) {
   const errors = [];
-  if (parseInt(err.tooLong, 10) !== 0) {
+  if (err.messageLength >= config.updater.maxErrorLength) {
     errors.push('Too long');
   }
 

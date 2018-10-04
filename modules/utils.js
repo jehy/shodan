@@ -81,11 +81,12 @@ function getMessageName(messageName, message, force) {
 
 function fixLogEntry(logEntry) {
   let message = logEntry._source.message || 'none';
+  const messageLength = message.length;
   let messageName = logEntry._source.msgName;
   messageName = getMessageName(messageName, message);
   if (message.length > config.updater.maxErrorLength) {
-    debug(`TOO long message (${message.length / 1000} KB)!!! msgName: ${messageName}, start: ${message.substr(0, 100)}`);
-    message = `${message.substr(0, 2000)}... CUT (${message.length / 1000} KB)`;
+    // debug(`TOO long message (${message.length / 1000} KB)!!! msgName: ${messageName}, start: ${message.substr(0, 100)}`);
+    message = `${message.substr(0, 2000)} ... CUT`;
   }
   let index = logEntry._index.split('-');
   if (index.length > 2) { // remove date from index
@@ -101,6 +102,7 @@ function fixLogEntry(logEntry) {
     index,
     type: logEntry._type,
     name: logEntry._source.fields.name || logEntry._source.name || 'NONE',
+    messageLength,
     eventDate: moment(logEntry._source['@timestamp']).format('YYYY-MM-DD HH:mm:ss.SSS'),
     level: logEntry._source.fields.type,
     pid: logEntry._source.fields.pid,

@@ -131,6 +131,7 @@ async function getLogUpdateInterval() {
   let queryFrom;
   if (!lastDate) {
     queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
+    debug('First time update, fetching data from ', queryFrom.format('YYYY-MM-DD HH:mm:ss'));
   }
   else {
     queryFrom = moment(lastDate);

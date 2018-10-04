@@ -14,7 +14,7 @@ function showLogsByErrorId(knex, socket, event) {
     queryData = queryData
       .where('logs.role', role);
   }
-  queryData = queryData.select('errors.id', 'logs.eventDate', 'errors.name', 'errors.msgName', 'logs.type',
+  queryData = queryData.select('errors.id', 'logs.messageLength', 'logs.eventDate', 'errors.name', 'errors.msgName', 'logs.type',
     'logs.env', 'logs.host', 'logs.role', 'logs.message', 'logs.pid', 'errors.index')
     .orderBy('logs.id', 'desc')
     .limit(50);

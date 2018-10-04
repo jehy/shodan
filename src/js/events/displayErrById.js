@@ -152,7 +152,12 @@ function displayErrById(data, fetchErrors, socket) {
     }
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
     const meta = needFields.map(key => `<td>${err[key]}</td>`).join('');
-    const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(err.message);
+    let errMessage = err.message;
+    if (errMessage.length === 2007 && errMessage.includes('CUT'))
+    {
+      errMessage += ` (${Math.floor(err.messageLength / 1024)} KB)`;
+    }
+    const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(errMessage);
     // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
     tbody.append(`<tr${trStyle}>${meta}</tr>`);
     tbody.append($(`<tr${trStyle}>`).append(message));

@@ -209,13 +209,12 @@ async function addItem(item) {
   return true;
 }
 
-async function updateMetData(options)
+async function updateMetData(item)
 {
-  const [errorId, metData] = options;
   const affectedRows = await knex('first_last_met')
-    .where('error_id', errorId)
-    .where('env', metData.item.env)
-    .update({lastMet: metData.item.eventDate});
+    .where('error_id', item.error_id)
+    .where('env', item.env)
+    .update({lastMet: item.eventDate});
   if (affectedRows === 1) {
     return true;
   }
@@ -223,10 +222,10 @@ async function updateMetData(options)
     debug(`WTF, ${affectedRows} were affected`);
   }
   return knex.insert({
-    firstMet: metData.item.eventDate,
-    lastMet: metData.item.eventDate,
-    error_id: metData.item.error_id,
-    env: metData.item.env,
+    firstMet: item.eventDate,
+    lastMet: item.eventDate,
+    error_id: item.error_id,
+    env: item.env,
   })
     .into('first_last_met');
 }
@@ -266,13 +265,14 @@ async function doUpdateLogs() {
   }
   debug('Items added, updating met data');
   const dataForUpdate = data.data.reduce((res, item) => {
-    const itemDate = moment(item.eventDate, 'YYYY-MM-DD HH:mm:ss.SSS');
-    if (!res[item.error_id] || itemDate.isAfter(res[item.error_id].met)) {
-      res[item.error_id] = {met: itemDate, item};
+    item.eventDateObject = moment(item.eventDate, 'YYYY-MM-DD HH:mm:ss.SSS');
+    const hash = `${item.env}.${item.error_id}`; // last met data in unique for each env
+    if (!res[hash] || item.eventDateObject.isAfter(res[hash].eventDateObject)) {
+      res[hash] = item;
     }
     return res;
   }, {});
-  await Promise.map(Object.entries(dataForUpdate), updateMetData, {concurrency: 10});
+  await Promise.map(Object.values(dataForUpdate), updateMetData, {concurrency: 10});
   debug('updated met data');
   return true;
 }

@@ -2,12 +2,20 @@
 
 const socket = require('socket.io-client')();
 const uuid = require('nanoid');
+const Promise = require('bluebird');
 const events = require('./events');
 
-let timeoutId = null;
 const progressBar = $('#progressMain');
 const indexSelector = $('#topErrors-index');
+const reloadInterval = $('#reload-interval');
+const topErrorsEnv = $('#topErrors-env');
+const topErrorsPeriod = $('#topErrors-period');
+const topErrorsRole = $('#topErrors-role');
+const topErrorsPid = $('#topErrors-pid');
+
 let needUpdateId = null;
+let timeForUpdate = 0;
+let canUpdate = true;
 
 const config = {
   ui: {
@@ -17,6 +25,7 @@ const config = {
   },
 };
 
+// prevent submitting form
 $('#topErrors').on('keyup keypress', (e) => {
   const keyCode = e.keyCode || e.which;
   if (keyCode === 13) {
@@ -26,27 +35,88 @@ $('#topErrors').on('keyup keypress', (e) => {
   return true;
 });
 
-function reloader() {
-  const interval = parseInt($('#reload-interval').val(), 10);
-  if (interval) {
-    if (timeoutId !== null) {
-      clearTimeout(timeoutId);
+function reload() {
+  canUpdate = false;
+  progressBar.show();
+  const env = topErrorsEnv.val();
+  const period = topErrorsPeriod.val();
+  const role = topErrorsRole.val();
+  const pid = topErrorsPid.val();
+  const index = indexSelector.val();
+  const myId = uuid();
+  needUpdateId = myId;
+  console.log(`Adding event ${myId} to reload events`);
+  socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid, index}, id: needUpdateId});
+  let iteration = 0;
+  const progressSpan = progressBar.find('span');
+  const progressDiv = progressBar.find('div');
+  function iterate()
+  {
+    console.log(`checking ${myId} for finish`);
+    if (needUpdateId !== myId) {
+      console.log(`${myId} is not main, exiting`);
+      return;
     }
-    progressBar.show();
-    const env = $('#topErrors-env').val();
-    const period = $('#topErrors-period').val();
-    const role = $('#topErrors-role').val();
-    const pid = $('#topErrors-pid').val();
-    const index = indexSelector.val();
-    needUpdateId = uuid();
-    socket.emit('event', {name: 'showTopErrors', data: {env, period, role, pid, index}, id: needUpdateId});
-    timeoutId = setTimeout(reloader, interval * 1000);
+    if (canUpdate) {
+      console.log(`${myId} seems to finish, exiting`);
+      return;
+    }
+    progressSpan.text(`${iteration} seconds`);
+    if (iteration > 20)
+    {
+      progressDiv.removeClass('progress-bar-warning');
+      progressDiv.removeClass('progress-bar-info');
+      progressDiv.addClass('progress-bar-danger');
+    }
+    else if (iteration > 10)
+    {
+      progressDiv.removeClass('progress-bar-info');
+      progressDiv.removeClass('progress-bar-danger');
+      progressDiv.addClass('progress-bar-warning');
+    }
+    else
+    {
+      progressDiv.removeClass('progress-bar-warning');
+      progressDiv.removeClass('progress-bar-danger');
+      progressDiv.addClass('progress-bar-info');
+    }
+    iteration++;
+
+    // eslint-disable-next-line no-await-in-loop
+    Promise.delay(1000).then(()=>iterate());
   }
+  iterate();
 }
 
+function runReloader() {
+  function waitCanUpdate()
+  {
+    if (canUpdate)
+    {
+      return Promise.resolve(true);
+    }
+    return Promise.delay(3000).then(()=>waitCanUpdate());
+  }
 
-progressBar.show(); // show it while connecting for the first time
+  waitCanUpdate().timeout(80 * 1000)
+    .catch(()=>{
+      console.log('Timeout while waiting for updating, requesting again');
+    })
+    .then(()=>{
+      const now = Math.round((new Date()).getTime() / 1000);
+      if (now > timeForUpdate) {
+        const interval = parseInt(reloadInterval.val(), 10);
+        timeForUpdate = now + interval;
+        reload();
+      }
+      // eslint-disable-next-line no-await-in-loop
+      console.log('running delay');
+      return Promise.delay(3000);
+    })
+    .then(()=>runReloader());
+}
 
+runReloader();
 
 let starting = true;
 socket.on('connect', () => {
@@ -65,13 +135,13 @@ socket.on('connect', () => {
   }
   starting = false;
 
-  socket.sendBuffer = [];
+  socket.sendBuffer = []; // clean up biffer on connection
   // $('#topErrors-show').click(() => showTopErrors());
-  $('#topErrors-role').change(() => reloader());
-  $('#topErrors-env').change(() => reloader());
-  $('#topErrors-period').change(() => reloader());
-  $('#topErrors-pid').change(() => reloader());
-  $('#reload-interval').change(() => reloader());
+  $('#topErrors-role').change(() => reload());
+  $('#topErrors-env').change(() => reload());
+  $('#topErrors-period').change(() => reload());
+  $('#topErrors-pid').change(() => reload());
+  $('#reload-interval').change(() => reload());
 });
 
 socket.on('event', (event) => {
@@ -83,25 +153,28 @@ socket.on('event', (event) => {
     config.updater.indexes.forEach((index)=>{
       indexSelector.append(`<option value="${index}">${index}</option>`);
     });
-    indexSelector.change(() => reloader());
-    reloader();
+    indexSelector.change(() => reload());
+    reload();
+    return;
   }
-  else if (events[event.name]) {
+  if (events[event.name]) {
     if (event.name === 'updateTopErrors')
     {
+      console.log(`${event.id} finished`);
       if (event.id !== needUpdateId)
       {
         console.log(`This update is already not needed(${event.id} while waiting for ${needUpdateId}), skipping`);
         return;
       }
+      progressBar.hide();
+      canUpdate = true;
     }
-    progressBar.hide();
     events[event.name](event.data, event.fetchErrors, socket, config);
+    return;
   }
-  else {
-    console.log(`unknown event ${event.name}`);
-  }
+  console.log(`unknown event ${event.name}`);
 });
+
 socket.on('disconnect', () => {
   console.log('client disconnected');
 });

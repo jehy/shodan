@@ -1,9 +1,9 @@
 'use strict';
 
-import Highcharts from 'highcharts';
-import boost from 'highcharts/modules/boost';
-import moment from 'moment';
-import Utils from '../utils';
+const Highcharts = require('highcharts');
+const boost = require('highcharts/modules/boost');
+const moment = require('moment');
+const Utils = require('../utils');
 
 boost(Highcharts);
 Highcharts.setOptions({

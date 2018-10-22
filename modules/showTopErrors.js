@@ -159,7 +159,7 @@ function showTopErrors(knex, socket, event) {
       const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
       let otherEnvQuery = false;
       if (event.data.env) {
-        otherEnvQuery = getOtherEnvErrorNum(knex, event, errorIds, interval);
+        // otherEnvQuery = getOtherEnvErrorNum(knex, event, errorIds, interval);
       }
       return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery, logCommentQuery])
         .then(([preHourData, firstLastMetData, errorsPerHour, otherEnvErrors, logComments]) => {

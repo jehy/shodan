@@ -2,13 +2,17 @@ const express = require('express');
 const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const debug = require('debug')('shodan:server');
+// const debug = require('debug')('shodan:server');
 const config = require('config');
+const bunyan = require('bunyan');
 const knex = require('knex')(config.db);
 require('./modules/knex-timings')(knex, false);
+
 const showLogsByErrorId = require('./modules/showLogsByErrorId');
 const showTopErrors = require('./modules/showTopErrors');
 const updateMessageComment = require('./modules/updateMessageComment');
+
+const log = bunyan.createLogger({name: 'shodan:server'});
 
 if (config.ui.auth && config.ui.auth.enabled) {
 // eslint-disable-next-line global-require
@@ -22,7 +26,7 @@ app.get('/', (req, res) => {
 app.use(express.static('dist'));
 
 setInterval(() => {
-  debug(`Current users connected: ${Object.keys(io.sockets.connected).length}`);
+  log.info(`Current users connected: ${Object.keys(io.sockets.connected).length}`);
 }, 5000);
 
 function sendClinetConfig(socket) {
@@ -44,20 +48,20 @@ function sendClinetConfig(socket) {
 }
 
 io.on('connection', (socket) => {
-  debug(`A user connected (${socket.request.user && socket.request.user.displayName || 'unknown'})`);
+  log.info(`A user connected (${socket.request.user && socket.request.user.displayName || 'unknown'})`);
 
   sendClinetConfig(socket);
 
   socket.on('event', (event) => {
-    debug(`event ${event.name} fired: ${JSON.stringify(event)}`);
+    log.info(`event ${event.name} fired: ${JSON.stringify(event)}`);
 
     if (!event.data.index) {
-      debug(`No index for request ${JSON.stringify(event.data)}, setting to default`);
+      log.info(`No index for request ${JSON.stringify(event.data)}, setting to default`);
       event.data.index = 'twapi-avia-*';
     }
     if (config.ui.auth && config.ui.auth.enabled) {
       if (!socket.request.user || !socket.request.user.logged_in) {
-        debug('user not authorized!');
+        log.warn('user not authorized!');
         socket.emit('event', {name: 'updateTopErrors', data: [], fetchErrors: ['Not authorized']});
         return;
       }
@@ -72,12 +76,12 @@ io.on('connection', (socket) => {
       showLogsByErrorId(knex, socket, event);
     }
     else {
-      debug(`dunno event name ${event.name}`);
+      log.error(`dunno event name ${event.name}`);
     }
   });
 
 });
 
 http.listen(config.ui.port, () => {
-  debug(`listening on *:${config.ui.port}`);
+  log.info(`listening on *:${config.ui.port}`);
 });

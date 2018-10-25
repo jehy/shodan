@@ -1,5 +1,8 @@
-const debug = require('debug')('shodan:server');
+// const debug = require('debug')('shodan:server');
 const config = require('config');
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({name: 'shodan:showTopErrors'});
 
 const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
 
@@ -60,7 +63,6 @@ function getFirstLastDateMet(knex, event, errorIds) {
     .select('errors.msgName', 'errors.name', 'first_last_met.firstMet', 'first_last_met.lastMet', 'errors.id')
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereIn('errors.id', errorIds);
-  debug(`event.data.index: ${event.data.index}`);
   if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('first_last_met.env', event.data.env);
@@ -134,7 +136,7 @@ function getMetData(err, firstLastMetData) {
   let metData = firstLastMetData
     .find(item => item.id === err.id);
   if (!metData) {
-    debug(`ERR: not found met data for id "${err.id}" msgName "${err.msgName}" and name "${err.name}" `);
+    log.warn(`Not found met data for id "${err.id}" msgName "${err.msgName}" and name "${err.name}" `);
     //              in object ${JSON.stringify(firstLastMetData, null, 3)}`);
     metData = {firstMet: 0, lastMet: 0};
   }

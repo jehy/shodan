@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 
-const debugCMP = require('debug')('shodan:updater:cmp');
-const debug = require('debug')('shodan:updater');
+// const debugCMP = require('debug')('shodan:updater:cmp');
+// const debug = require('debug')('shodan:updater');
 const moment = require('moment');
 const config = require('config');
 
@@ -72,8 +72,8 @@ function getMessageName(messageName, message, force) {
         autoMessageName = `${autoMessageName.substr(0, 50).trim()}...`;
       }
     }
-    debugCMP(`message:${message.replace(new RegExp(/\n/g), '')}`);
-    debugCMP(`messageName:${autoMessageName}`);
+    // debugCMP(`message:${message.replace(new RegExp(/\n/g), '')}`);
+    // debugCMP(`messageName:${autoMessageName}`);
     return autoMessageName;
   }
   return messageName;

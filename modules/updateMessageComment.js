@@ -1,4 +1,7 @@
-const debug = require('debug')('shodan:server');
+
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({name: 'shodan:updateMessageComment'});
 
 function updateMessageComment(knex, socket, event) {
   const {errorId, comment} = event.data;
@@ -13,7 +16,7 @@ function updateMessageComment(knex, socket, event) {
     author = socket.request.user.displayName;
   }
   catch (err) {
-    debug('Could not identify comment user!');
+    log.warn('Could not identify comment user!');
   }
   queryData.then((data) => {
     if (data && data.id) {
@@ -21,7 +24,7 @@ function updateMessageComment(knex, socket, event) {
         .where('id', data.id)
         .update({comment, author})
         .then(() => {
-          debug('comment updated');
+          log.info('comment updated');
         });
     }
     else {
@@ -32,7 +35,7 @@ function updateMessageComment(knex, socket, event) {
           author,
         })
         .then(()=>{
-          debug('comment added');
+          log.info('comment added');
         });
     }
   });

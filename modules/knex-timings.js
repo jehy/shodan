@@ -1,6 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 const now = require('performance-now');
-const debug = require('debug')('shodan:knex-data');
+// const debug = require('debug')('shodan:knex-data');
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({name: 'shodan:knex-timings'});
 
 // The map used to store the query times, where the query unique
 // identifier is the key.
@@ -18,16 +21,27 @@ function printQueryWithTime(uid, showBindings) {
 
   // I print the sql generated for a given query, as well as
   // the bindings for the queries.
-  debug(query.sql, bindings, `\nTime: ${elapsedTime.toFixed(3)} ms`);
+  if (elapsedTime > 15000)
+  {
+    log.error(query.sql, bindings, {time: Math.round(elapsedTime)});
+  }
+  else if (elapsedTime > 5000)
+  {
+    log.warn(query.sql, bindings, {time: Math.round(elapsedTime)});
+  }
+  else
+  {
+    log.debug(query.sql, bindings, {time: Math.round(elapsedTime)});
+  }
   // After I print out the query, I have no more use to it,
   // so I delete it from my map so it doesn't grow out of control.
   delete times[uid];
 }
 
 function setLogging(knex, showBindings = true) {
-  if (!debug.enabled) {
-    return;
-  }
+  // if (!debug.enabled) {
+  //  return;
+  // }
   knex.on('query', (query) => {
     const uid = query.__knexQueryUid;
     times[uid] = {

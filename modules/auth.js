@@ -5,7 +5,10 @@ const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const KnexSessionStore = require('connect-session-knex')(session);
-const debug = require('debug')('shodan:auth');
+// const debug = require('debug')('shodan:auth');
+const bunyan = require('bunyan');
+
+const log = bunyan.createLogger({name: 'shodan:auth'});
 
 function auth(app, io, knex) {
   const store = new KnexSessionStore({
@@ -40,15 +43,15 @@ function auth(app, io, knex) {
     },
     ((accessToken, refreshToken, profile, done) => {
 
-      debug(`User ${profile.displayName} is logging in`);
+      log.info(`User ${profile.displayName} is logging in`);
       // eslint-disable-next-line no-underscore-dangle
       const profileJson = profile._json;
       if (profileJson.domain !== config.ui.auth.google.domain) {
-        debug(`wrong domain ${profileJson.domain}`);
+        log.warn(`wrong domain ${profileJson.domain}`);
         done(new Error(`Wrong domain ${profileJson.domain}!`));
       } else {
         done(null, profile);
-        debug('Login ok');
+        log.info('Login ok');
       }
     }),
   ));
@@ -64,7 +67,7 @@ function auth(app, io, knex) {
   app.get('/auth/google/callback', passport.authenticate('google', {failureRedirect: '/login'}), (req, res) => res.redirect('/'));
   app.use((req, res, next) => {
     if (!req.user) {
-      debug('user not authorized, redirecting');
+      log.warn('user not authorized, redirecting');
       res.redirect('/auth/google');
       return;
     }

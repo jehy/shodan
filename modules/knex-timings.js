@@ -32,7 +32,7 @@ function printQueryWithTime(uid, showBindings) {
   }
   else
   {
-    log.info(...logTimings);
+    log.debug(...logTimings);
   }
   // After I print out the query, I have no more use to it,
   // so I delete it from my map so it doesn't grow out of control.

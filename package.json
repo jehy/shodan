@@ -13,12 +13,13 @@
     "prepare": "npm run build",
     "test": "npm run lint && npm run build && npm run unit-test",
     "unit-test": "mocha --exit",
-    "migrate": "./node_modules/.bin/knex migrate:latest"
+    "migrate": "./node_modules/.bin/knex migrate:latest",
+    "ncu": "ncu -a --reject bootstrap"
   },
   "author": "Jehy",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "~3.5.2",
+    "bluebird": "~3.5.3",
     "bunyan": "1.8.12",
     "config": "~2.0.1",
     "connect-session-knex": "~1.4.0",
@@ -38,14 +39,14 @@
     "socket.io": "^2.1.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
+    "@babel/core": "^7.1.5",
+    "@babel/preset-env": "^7.1.5",
     "babel-loader": "^8.0.4",
     "bootstrap": "3.3.7",
     "chai": "^4.2.0",
     "clean-webpack-plugin": "~0.1.19",
-    "css-loader": "~1.0.0",
-    "eslint": "^5.7.0",
+    "css-loader": "~1.0.1",
+    "eslint": "^5.8.0",
     "eslint-config-airbnb-base": "~13.1.0",
     "eslint-plugin-import": "~2.14.0",
     "eslint-plugin-promise": "~4.0.1",
@@ -56,11 +57,11 @@
     "html-webpack-plugin": "~3.2.0",
     "jquery": "^3.3.1",
     "mocha": "^5.2.0",
-    "nanoid": "^1.3.1",
+    "nanoid": "^2.0.0",
     "socket.io-client": "^2.1.1",
     "style-loader": "~0.23.1",
     "uglifyjs-webpack-plugin": "^2.0.1",
-    "webpack": "^4.22.0",
+    "webpack": "^4.25.1",
     "webpack-bundle-analyzer": "~3.0.3",
     "webpack-cli": "^3.1.2"
   }

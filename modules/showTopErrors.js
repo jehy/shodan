@@ -60,13 +60,21 @@ function getPrevIntervalErrorStats(knex, event, interval) {
 function getFirstLastDateMet(knex, event, errorIds) {
   let firstLastMetDataQuery = knex('first_last_met')
     .join('errors', 'first_last_met.error_id', 'errors.id')
-    .select('errors.msgName', 'errors.name', 'first_last_met.firstMet', 'first_last_met.lastMet', 'errors.id')
+    .select('errors.id')
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereIn('errors.id', errorIds);
   if (event.data.env) {
     firstLastMetDataQuery = firstLastMetDataQuery
-      .where('first_last_met.env', event.data.env);
-  } /*
+      .where('first_last_met.env', event.data.env)
+      .select('first_last_met.firstMet', 'first_last_met.lastMet');
+  }
+  else {
+    firstLastMetDataQuery = firstLastMetDataQuery
+      .groupBy('errors.id')
+      .min('first_last_met.firstMet as firstMet')
+      .max('first_last_met.lastMet as lastMet');
+  }
+  /*
   if (event.data.role) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('role', event.data.role);

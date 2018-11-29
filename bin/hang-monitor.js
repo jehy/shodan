@@ -22,14 +22,19 @@ function md5(data)
   return crypto.createHash('md5').update(data).digest('hex');
 }
 
-function generateRequest(time, after = false)
+function generateRequest(time, env, host, role, pid, after = false)
 {
   const request = {
     version: true,
     size: 20,
     query: {
       bool: {
-        must: [{match_all: {}}],
+        must: [
+          {match_all: {}},
+          {match_phrase: {chef_environment: {query: env}}},
+          {match_phrase: {'beat.hostname': {query: host}}},
+          {match_phrase: {'fields.pid': {query: pid}}},
+          {match_phrase: {role: {query: role}}}],
         filter: [],
         should: [],
         must_not: [],
@@ -101,8 +106,8 @@ async function getNearHangedLogs(index, date, env, host, role, pid) // todo use 
 
   const dataString1 = {index: [`${index}-*`], ignore_unavailable: true, preference: config.updater.kibana.preference};
   log.info(`Fetching data around ${moment(date).format('YYYY-MM-DD HH:mm:ss')}`);
-  const dataString2After = generateRequest(date, true);
-  const dataString2Before = generateRequest(date, false);
+  const dataString2After = generateRequest(date, env, host, role, pid, true);
+  const dataString2Before = generateRequest(date, env, host, role, pid, false);
 
   const dataStringFinal1 = `${JSON.stringify(dataString1)}\n${JSON.stringify(dataString2After)}\n`;
   const dataStringFinal2 = `${JSON.stringify(dataString1)}\n${JSON.stringify(dataString2Before)}\n`;
@@ -115,8 +120,6 @@ async function getNearHangedLogs(index, date, env, host, role, pid) // todo use 
   };
   const options2 = Object.assign({}, options1, {body: dataStringFinal2});
   const options = [options1, options2];
-  log.info(options);
-  // debug(options);
   try
   {
     const results = await Promise.map(options, option=>rp(option), {concurrency: 1});
@@ -162,7 +165,7 @@ async function doAddHangedLogs()
     .first();
   if (!newLogErrorData)
   {
-    log.verbose('No new hangs, horray!');
+    log.info('No new hangs, horray!');
     return;
   }
   const responses = await getNearHangedLogs(newLogErrorData.index, newLogErrorData.eventDate, newLogErrorData.env, newLogErrorData.host,
@@ -174,41 +177,57 @@ async function doAddHangedLogs()
     log.warn('malformed json!', e, responses);
     return;
   }
-  console.log(JSON.stringify(data));
   try {
     data = data.map(d=>d.responses[0].hits.hits);
   } catch (e) { // data has no... data
     log.warn('No hits.hits:', data);
     return;
   }
-  console.log(JSON.stringify(data));
   data = data
     .reduce((res, el) => {
       return res.concat(el);
     }, [])
     .filter(item => item)
-    .map(fixLogEntry)
     .map((entry)=>{
-      delete entry.host;
-      delete entry.role;
-      delete entry.env;
-      delete entry.pid;
-      delete entry.index;
-      delete entry.messageLength;
-      const messageGeneric = getMessageName('', entry.message, true);
-      return Object.assign(entry, {
+      // eslint-disable-next-line no-underscore-dangle
+      if (!entry._source.message && entry._source.data)
+      {
+        // eslint-disable-next-line no-underscore-dangle
+        entry._source.message = JSON.stringify(entry._source.data);
+        // eslint-disable-next-line no-underscore-dangle
+        entry._source.message = entry._source.message.substr(1, entry._source.message.length - 2);
+      }
+      const standard = fixLogEntry(entry);
+      delete standard.host;
+      delete standard.role;
+      delete standard.env;
+      delete standard.pid;
+      delete standard.index;
+      delete standard.messageLength;
+      const messageGeneric = getMessageName('', standard.message, true);
+      return Object.assign(standard, {
         messageGeneric: messageGeneric || entry.name,
         messageGenericHash: md5(`${entry.name}${messageGeneric}`),
         logId: newLogErrorData.id,
       });
     });
-  console.log(JSON.stringify(data));
+  log.info(`Adding ${data.length} items`);
   const query = knex('hanged_logs').insert(data).toString();
   const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));
   const failed = insertRes.filter(item => !item).length;
   if (failed > 1) { // 1 is usually a duplicate
     log.info(`Failed to add ${failed} items`);
   }
+  const distinct  = await knex('hanged_logs')
+    .select('messageGenericHash as hash')
+    .count('messageGenericHash as count')
+    .groupBy('messageGenericHash')
+    .having(knex.raw('count(messageGenericHash) > 1'));
+  await Promise.map(distinct, (hashData)=>{
+    return knex('hanged_logs')
+      .update({score: hashData.count})
+      .where('messageGenericHash', hashData.hash);
+  });
   log.info('Hanged logs updated');
 }
 
@@ -237,7 +256,7 @@ async function addHangedLogs() {
   {
     log.error(err);
   }
-  setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 10000);
+  setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 1000);
 }
 
 addHangedLogs();

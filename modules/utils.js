@@ -80,7 +80,10 @@ function getMessageName(messageName, message, force) {
 }
 
 function fixLogEntry(logEntry) {
-  let message = logEntry._source.message || 'none';
+  let message = logEntry._source.message
+    || logEntry._source.data && logEntry._source.data.event
+    || logEntry._source.data && JSON.stringify(logEntry._source.data)
+    || 'none';
   const messageLength = message.length;
   let messageName = logEntry._source.msgName;
   messageName = getMessageName(messageName, message);

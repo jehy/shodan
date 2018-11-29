@@ -60,6 +60,7 @@ function showHanged(data) {
       {
         trStyle = ' class = "danger"';
       }
+      err.msgName = Utils.formatMessageName(err);
       err.eventDate = moment(err.eventDate).format('HH:mm:ss');
       const meta = needFields.map(key => `<td>${err[key]}</td>`).join('');
       let errMessage = err.message;
@@ -68,7 +69,6 @@ function showHanged(data) {
         errMessage += ` (${Math.floor(err.messageLength / 1024)} KB)`;
       }
       const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(errMessage);
-      // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
       tbody.append(`<tr${trStyle}>${meta}</tr>`);
       tbody.append($(`<tr${trStyle}>`).append(message));
     });
@@ -81,9 +81,6 @@ function showHanged(data) {
     panel.append(header);
     panel.append(body);
     container.append(panel);
-    // container.append(common);
-    // container.append(table);
-    // container.append('<br><br>');
   });
   const header = 'Last hangs';
   Utils.showModal(header, container);

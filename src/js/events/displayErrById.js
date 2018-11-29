@@ -40,19 +40,6 @@ function fillWithZeros(graphData) {
   return zeroFilled;
 }
 
-
-function formatMessageName(row) {
-  let displayName = row.msgName;
-  if (row.errors && row.errors.length) {
-    displayName = `${displayName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
-  }
-  if (displayName.indexOf('AUTO ') === 0) {
-    displayName = displayName.replace('AUTO ', '');
-    displayName = `${displayName} <span class="label label-default">auto</span>`;
-  }
-  return displayName;
-}
-
 function displayErrById(data, socket) {
 
   const graph = $('<div/>');
@@ -192,7 +179,7 @@ function displayErrById(data, socket) {
             <table class="table">
             <thead><th>name</th><th>msgName</th><th>index</th></thead>
             <tbody><tr><td>${data.errors[0].name}</td>
-            <td>${formatMessageName(data.errors[0])}</td>
+            <td>${Utils.formatMessageName(data.errors[0])}</td>
             <td>${data.errors[0].index}</td>
             </tr></tbody>
             </table>`);

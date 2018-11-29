@@ -14,6 +14,28 @@ function showModal(header, data) {
   modal.modal();
 }
 
+function addAutoBadge(error)
+{
+  if (error.indexOf('AUTO ') === 0) {
+    return `${error.replace('AUTO ', '')} <span class="label label-default">auto</span>`;
+  }
+  return error;
+}
+
+function addErrorBadges(row)
+{
+
+  const displayName = row.msgName;
+  if (row.errors && row.errors.length) {
+    return `${displayName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
+  }
+  return displayName;
+}
+
+function formatMessageName(row) {
+  return addAutoBadge(addErrorBadges(row));
+}
+
 function showDiff(sec) {
   let unit = 'sec';
   let data = sec;
@@ -39,4 +61,7 @@ function showDiff(sec) {
 module.exports = {
   showDiff,
   showModal,
+  addAutoBadge,
+  addErrorBadges,
+  formatMessageName,
 };

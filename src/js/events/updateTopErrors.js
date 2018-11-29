@@ -85,23 +85,6 @@ function formatLastMetTD(row) {
   return `<td>${Utils.showDiff(lastMet)}</td>`;
 }
 
-function formatMessageName(row) {
-  const tdClass = '';
-  /* const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
-  if (veryBadMessages.some(bad => row.msgName.toLowerCase().includes(bad))) {
-    tdClass = 'danger';
-  } */
-  let displayName = row.msgName;
-  if (row.errors && row.errors.length) {
-    displayName = `${displayName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
-  }
-  if (displayName.indexOf('AUTO ') === 0) {
-    displayName = displayName.replace('AUTO ', '');
-    displayName = `${displayName} <span class="label label-default">auto</span>`;
-  }
-  return `<td class="${tdClass}">${displayName}</td>`;
-}
-
 function formatComment(comment, config) {
   if (!comment || !config.ui.display.jiraUrl) {
     return comment;
@@ -142,7 +125,7 @@ function updateTopErrors(data, socket, config) {
       socket.emit('event', errorData);
     });
     tr.append(`<td>${row.name}</td>`)
-      .append(formatMessageName(row))
+      .append(`<td>${Utils.formatMessageName(row)}</td>`)
       .append(`<td>${row.count}</td>`)
       .append(formatFirstMetTD(row))
       .append(formatLastMetTD(row))

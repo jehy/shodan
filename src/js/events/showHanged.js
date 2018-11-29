@@ -3,8 +3,14 @@
 const moment = require('moment');
 const Utils = require('../utils');
 
+const fetchErrorsAlert = $('#fetchErrors');
+
 function showHanged(data) {
 
+  if (!data || !data.length) {
+    fetchErrorsAlert.empty().append('No logs for hanging errors, please come back later').show();
+    return;
+  }
   const container = $('<div/>');
   const notNeededFields = ['logId', 'message', 'msgId', 'type'];
   const maxScore = data.reduce((res, d)=>{

@@ -3,7 +3,6 @@
 const moment = require('moment');
 const Utils = require('../utils');
 
-const fetchErrorsAlert = $('#fetchErrors');
 const indexSelector = $('#topErrors-index');
 /**
  * Корректировка округления десятичных дробей.
@@ -116,13 +115,7 @@ function formatComment(comment, config) {
   return comment;
 }
 
-function updateTopErrors(data, fetchErrors, socket, config) {
-  if (fetchErrors && fetchErrors.length) {
-    fetchErrorsAlert.empty().append(fetchErrors.join('<br>')).show();
-  }
-  else {
-    fetchErrorsAlert.hide();
-  }
+function updateTopErrors(data, socket, config) {
   const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval', 'Comment'];
   // const headerFields = ['name', 'msgName', 'Count', 'Age', 'Last met', 'previous interval', 'Other env count', 'Comment'];
   // const showErorrsOtherEnv = data.some(row => row.otherEnv);

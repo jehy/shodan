@@ -53,7 +53,7 @@ function formatMessageName(row) {
   return displayName;
 }
 
-function displayErrById(data, fetchErrors, socket) {
+function displayErrById(data, socket) {
 
   const graph = $('<div/>');
   const graphData = data.graph

@@ -15,7 +15,7 @@ const log = bunyan.createLogger({name: 'shodan:hang-monitor'});
 
 let lastRemovedLogs = null;
 
-let hangedErrorId = 0;
+let hangedErrorIds = [];
 
 function md5(data)
 {
@@ -26,7 +26,7 @@ function generateRequest(time, env, host, role, pid, after = false)
 {
   const request = {
     version: true,
-    size: 20,
+    size: 5,
     query: {
       bool: {
         must: [
@@ -61,7 +61,7 @@ function generateRequest(time, env, host, role, pid, after = false)
     request.query.bool.must.push({
       range: {
         '@timestamp': {
-          lte: parseInt(moment(time).add('10', 'minutes').format('x'), 10),
+          lte: parseInt(moment(time).add('5', 'minutes').format('x'), 10),
           gte: parseInt(moment(time).format('x'), 10),
           format: 'epoch_millis',
         },
@@ -73,7 +73,7 @@ function generateRequest(time, env, host, role, pid, after = false)
   request.query.bool.must.push({
     range: {
       '@timestamp': {
-        gte: parseInt(moment(time).subtract('10', 'minutes').format('x'), 10),
+        gte: parseInt(moment(time).subtract('5', 'minutes').format('x'), 10),
         lte: parseInt(moment(time).format('x'), 10),
         format: 'epoch_millis',
       },
@@ -135,19 +135,17 @@ async function getNearHangedLogs(index, date, env, host, role, pid) // todo use 
 
 async function doAddHangedLogs()
 {
-  if (hangedErrorId === 0)
+  if (!hangedErrorIds.length)
   {
-    hangedErrorId = await knex('errors')
+    hangedErrorIds = await knex('errors')
       .select('id')
       .where('msgName', 'HANGED')
-      .limit(1)
-      .first();
-    if (!hangedErrorId || !hangedErrorId.id)
+      .pluck('id');
+    if (!hangedErrorIds || !hangedErrorIds.length)
     {
       log.error('HANGED msgname can not be found in logs! Can`t update hang data!');
       return;
     }
-    hangedErrorId = hangedErrorId.id;
   }
   let lastHangedErrorId = await knex('hanged_logs')
     .select('logId')
@@ -160,7 +158,7 @@ async function doAddHangedLogs()
     .join('errors', 'errors.id', 'logs.error_id')
     .select('logs.id', 'logs.eventDate', 'logs.env', 'logs.host', 'logs.role', 'logs.pid', 'errors.index')
     .where('logs.id', '>', lastHangedErrorId)
-    .where('logs.error_id', hangedErrorId)
+    .whereIn('logs.error_id', hangedErrorIds)
     .orderBy('logs.id')
     .first();
   if (!newLogErrorData)
@@ -256,7 +254,7 @@ async function addHangedLogs() {
   {
     log.error(err);
   }
-  setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 1000);
+  setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 100);
 }
 
 addHangedLogs();

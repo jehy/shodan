@@ -12,6 +12,8 @@ const topErrorsEnv = $('#topErrors-env');
 const topErrorsPeriod = $('#topErrors-period');
 const topErrorsRole = $('#topErrors-role');
 const topErrorsPid = $('#topErrors-pid');
+const fetchErrorsAlert = $('#fetchErrors');
+const showHang = $('#topErrors-showHang');
 
 let needUpdateId = null;
 let timeForUpdate = 0;
@@ -33,6 +35,15 @@ $('#topErrors').on('keyup keypress', (e) => {
     return false;
   }
   return true;
+});
+
+showHang.on('click', () => {
+  const data = {
+    name: 'showHanged',
+    data: {
+    },
+  };
+  socket.emit('event', data);
 });
 
 function reload() {
@@ -157,6 +168,14 @@ socket.on('event', (event) => {
     reload();
     return;
   }
+
+  if (event.fetchErrors && event.fetchErrors.length) {
+    fetchErrorsAlert.empty().append(event.fetchErrors.join('<br>')).show();
+  }
+  else {
+    fetchErrorsAlert.hide();
+  }
+
   if (events[event.name]) {
     if (event.name === 'updateTopErrors')
     {
@@ -169,7 +188,7 @@ socket.on('event', (event) => {
       progressBar.hide();
       canUpdate = true;
     }
-    events[event.name](event.data, event.fetchErrors, socket, config);
+    events[event.name](event.data, socket, config);
     return;
   }
   console.log(`unknown event ${event.name}`);

@@ -102,12 +102,12 @@ async function getData(queryFrom, queryTo) {
 }
 
 async function fetchData(queryFrom, queryTo) {
-  const element = await getData(queryFrom, queryTo);
+  const response = await getData(queryFrom, queryTo);
   let data;
   try {
-    data = JSON.parse(element);
+    data = JSON.parse(response);
   } catch (e) {
-    log.warn('malformed json!', e, element);
+    log.warn('malformed json!', e, response);
     return null;
   }
   try {
@@ -279,52 +279,60 @@ async function doUpdateLogs() {
   return true;
 }
 
-async function updateLogs() {
+
+async function cleanUp()
+{
 
   const today = parseInt(moment().format('DD'), 10);
-  if (lastRemovedLogs === null || lastRemovedLogs !== today) {
-    log.info('Removing old logs');
-    lastRemovedLogs = today;
-    const count = await knex('logs')
-      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
-      .del();
-    log.info(`Removed ${count} old logs`);
-
-    const oldErrors = await knex.select('errors.id', 'logs.error_id').from('errors')
-      .leftJoin('logs', 'errors.id', 'logs.error_id')
-      .whereNull('logs.error_id');
-    log.info(`Removing old errors (${oldErrors.length})`);
-    const countErrors = await knex('errors').whereIn('id', oldErrors.map(el=>el.id)).del();
-    log.info(`Removed old errors (${countErrors})`);
-
-
-    const oldMetData = await knex.select('first_last_met.error_id', 'errors.id').from('first_last_met')
-      .leftJoin('errors', 'first_last_met.error_id', 'errors.id')
-      .whereNull('errors.id');
-    log.info(`Removing old met data, for not actual errors (${oldMetData.length})`);
-    const countOldMetData = await knex('first_last_met').whereIn('error_id', oldMetData.map(el=>el.error_id)).del();
-    log.info(`Removed old met data (${countOldMetData})`);
-
-
-    const count2 = await knex('first_last_met')
-      .whereRaw('lastMet < DATE_SUB(NOW(), INTERVAL 2 MONTH)')
-      .del();
-    log.info(`Removed ${count2} met data, by age`);
-
-    const oldCommentData = await knex.select('comments.error_id', 'errors.id').from('comments')
-      .leftJoin('errors', 'comments.error_id', 'errors.id')
-      .whereNull('errors.id');
-    log.info(`Removing old comments data (${oldCommentData.length})`);
-    const countOldCommentData = await knex('comments').whereIn('error_id', oldCommentData.map(el=>el.error_id)).del();
-    log.info(`Removed old comments data (${countOldCommentData})`);
-
+  if (lastRemovedLogs && lastRemovedLogs === today) {
+    return;
   }
+  log.info('Removing old logs');
+  lastRemovedLogs = today;
+  const count = await knex('logs')
+    .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
+    .del();
+  log.info(`Removed ${count} old logs`);
 
-  return Promise.resolve(doUpdateLogs())
-    .catch((err) => {
-      log.error(err);
-    })
-    .finally(() => setTimeout(() => updateLogs(), config.updater.kibana.updateInterval * 1000));
+  const oldErrors = await knex.select('errors.id', 'logs.error_id').from('errors')
+    .leftJoin('logs', 'errors.id', 'logs.error_id')
+    .whereNull('logs.error_id');
+  log.info(`Removing old errors (${oldErrors.length})`);
+  const countErrors = await knex('errors').whereIn('id', oldErrors.map(el=>el.id)).del();
+  log.info(`Removed old errors (${countErrors})`);
+
+
+  const oldMetData = await knex.select('first_last_met.error_id', 'errors.id').from('first_last_met')
+    .leftJoin('errors', 'first_last_met.error_id', 'errors.id')
+    .whereNull('errors.id');
+  log.info(`Removing old met data, for not actual errors (${oldMetData.length})`);
+  const countOldMetData = await knex('first_last_met').whereIn('error_id', oldMetData.map(el=>el.error_id)).del();
+  log.info(`Removed old met data (${countOldMetData})`);
+
+
+  const count2 = await knex('first_last_met')
+    .whereRaw('lastMet < DATE_SUB(NOW(), INTERVAL 2 MONTH)')
+    .del();
+  log.info(`Removed ${count2} met data, by age`);
+
+  const oldCommentData = await knex.select('comments.error_id', 'errors.id').from('comments')
+    .leftJoin('errors', 'comments.error_id', 'errors.id')
+    .whereNull('errors.id');
+  log.info(`Removing old comments data (${oldCommentData.length})`);
+  const countOldCommentData = await knex('comments').whereIn('error_id', oldCommentData.map(el=>el.error_id)).del();
+  log.info(`Removed old comments data (${countOldCommentData})`);
+}
+
+async function updateLogs() {
+  try {
+    await cleanUp();
+    await doUpdateLogs();
+  }
+  catch (err)
+  {
+    log.error(err);
+  }
+  setTimeout(() => updateLogs(), config.updater.kibana.updateInterval * 1000);
 }
 
 updateLogs();

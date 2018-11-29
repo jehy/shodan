@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "updater": "DEBUG=shodan:updater node --use-strict ./bin/updater.js  | ./node_modules/.bin/bunyan -o short",
+    "hang-monitor": "DEBUG=shodan:hang-monitor node --use-strict ./bin/hang-monitor.js  | ./node_modules/.bin/bunyan -o short",
     "server": "DEBUG=shodan:server,shodan:knex-data,shodan:auth node --use-strict ./server.js  | ./node_modules/.bin/bunyan -o short",
     "start": "DEBUG=shodan:server,shodan:updater,shodan:auth node --use-strict ./index.js  | ./node_modules/.bin/bunyan -o short",
     "lint": "node ./node_modules/eslint/bin/eslint.js ./src/js server.js webpack.config.js webpack.dev.js webpack.dev.js migrations bin knexfile.js modules",

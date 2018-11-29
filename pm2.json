@@ -9,6 +9,11 @@
       "name": "shodan-updater",
       "script": "npm",
       "args": "run updater"
+    },
+    {
+      "name": "shodan-hang-monitor",
+      "script": "npm",
+      "args": "run hang-monitor"
     }
   ]
 }

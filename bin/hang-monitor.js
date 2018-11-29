@@ -254,7 +254,7 @@ async function addHangedLogs() {
   {
     log.error(err);
   }
-  setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 100);
+  setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 1000);
 }
 
 addHangedLogs();

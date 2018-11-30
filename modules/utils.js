@@ -25,7 +25,7 @@ function minimalReplace(messageName) {
     .replace(/ +/g, ' ');// remove double spaces
 }
 
-function getMessageName(messageName, message, force) {
+function fixMessageName(messageName, message, force) {
   if (messageName === 'uncaughtException_0') {
     let start = message.lastIndexOf('uncaughtException');
     let realMessage = minimalReplace(message);
@@ -81,12 +81,23 @@ function getMessageName(messageName, message, force) {
 
 function fixLogEntry(logEntry) {
   let message = logEntry._source.message
-    || logEntry._source.data && logEntry._source.data.event
     || logEntry._source.data && JSON.stringify(logEntry._source.data)
     || 'none';
   const messageLength = message.length;
   let messageName = logEntry._source.msgName;
-  messageName = getMessageName(messageName, message);
+  if (!messageName && logEntry._source.data)
+  {
+    if (logEntry._source.data.event)
+    {
+      messageName = logEntry._source.data.event;
+    }
+    else
+    {
+      const tmp = JSON.stringify(logEntry._source.data);
+      messageName = tmp.substr(1, tmp.length - 2);
+    }
+  }
+  messageName = fixMessageName(messageName, message);
   if (message.length > config.updater.maxErrorLength) {
     // debug(`TOO long message (${message.length / 1000} KB)!!! msgName: ${messageName}, start: ${message.substr(0, 100)}`);
     message = `${message.substr(0, 2000)} ... CUT`;
@@ -120,5 +131,5 @@ function fixLogEntry(logEntry) {
 
 module.exports = {
   fixLogEntry,
-  getMessageName,
+  fixMessageName,
 };

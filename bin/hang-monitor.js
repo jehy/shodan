@@ -8,7 +8,7 @@ const moment = require('moment');
 const Promise = require('bluebird');
 const crypto = require('crypto');
 const knex = require('knex')(config.db);
-const {fixLogEntry, getMessageName} = require('../modules/utils');
+const {fixLogEntry, fixMessageName} = require('../modules/utils');
 require('../modules/knex-timings')(knex, false);
 
 const log = bunyan.createLogger({name: 'shodan:hang-monitor'});
@@ -202,7 +202,7 @@ async function doAddHangedLogs()
       delete standard.pid;
       delete standard.index;
       delete standard.messageLength;
-      const messageGeneric = getMessageName('', standard.message, true);
+      const messageGeneric = fixMessageName('', standard.message, true);
       return Object.assign(standard, {
         messageGeneric: messageGeneric || entry.name,
         messageGenericHash: md5(`${entry.name}${messageGeneric}`),

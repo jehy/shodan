@@ -1,9 +1,14 @@
 'use strict';
 
 const Highcharts = require('highcharts');
+// uncomment to use dark theme:
+// const theme = require('highcharts/themes/dark-unica.js');
+// theme(Highcharts);
+
 const boost = require('highcharts/modules/boost');
 const moment = require('moment');
 const Utils = require('../utils');
+
 
 boost(Highcharts);
 Highcharts.setOptions({
@@ -116,7 +121,6 @@ function displayErrById(data, socket) {
       data: zeroFilled,
     }],
   });
-
 
   // //
   // eventDate, name,type,msgId,env,host,role,message

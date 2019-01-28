@@ -204,13 +204,13 @@ function displayErrById(data, socket, config) {
   const commentGroup = getCommentGroup(data, socket);
   const container = $('<div/>');
   const msgName = Utils.formatMessageName(data.errors[0]);
-  const {index, name} = data.errors[0].index;
-  const kibanaLink = makeKibanaLink(data.errors[0].index, data.errors[0].name, msgName, config.updater.kibana.url);
+  const {index, name} = data.errors[0];
+  const kibanaLink = makeKibanaLink(index, name, msgName, config.updater.kibana.url);
   container.append(`
             <table class="table">
-            <thead><th><a href="${kibanaLink}">name</a></th><th>msgName</th><th>index</th></thead>
-            <tbody><tr><td>${name}</td>
-            <td>${msgName}</td>
+            <thead><th>name</th><th>msgName</th><th>index</th></thead>
+            <tbody><tr><td><a href="${kibanaLink}">${name}</a></td>
+            <td><a href="${kibanaLink}">${msgName}</a></td>
             <td>${index}</td>
             </tr></tbody>
             </table>`);

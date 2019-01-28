@@ -47,6 +47,8 @@ function fillWithZeros(graphData) {
 
 function makeKibanaLink(index, name, msgName, kibanaUrl)
 {
+  name = name.split('"').join();
+  msgName = msgName.split('"').join();
   return `${kibanaUrl}/app/kibana#/discover?_g=()&_a=(columns:!(message),filters:!(('$state':(store:appState),`
   + `meta:(alias:!n,disabled:!f,index:'${index}-*',key:fields.name,negate:!f,params:(query:${name},type:phrase),`
   + `type:phrase,value:${name}),query:(match:(fields.name:(query:${name},type:phrase)))),('$state':(store:appState),`

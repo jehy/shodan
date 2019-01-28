@@ -89,7 +89,7 @@ function formatComment(comment, config) {
   if (!comment || !config.ui.display.jiraUrl) {
     return comment;
   }
-  const matches = comment.match(/[A-Z]{2,4}-[0-9]{2,5}/g);
+  const matches = comment.match(/[A-Z]{2,5}-[0-9]{2,5}/g);
   if (matches && matches.length) {
     matches.forEach((m) => {
       comment = comment.replace(m, `<a target="_blank" href="${config.ui.display.jiraUrl}${m}">${m}</a>`);

@@ -121,7 +121,7 @@ function updateTopErrors(data, socket, config) {
           index,
         },
       };
-      window.location.href = `#action=event&data=${encodeURIComponent(JSON.stringify(errorData))}`;
+      // window.location.href = `#action=event&data=${encodeURIComponent(JSON.stringify(errorData))}`;
       socket.emit('event', errorData);
     });
     tr.append(`<td>${row.name}</td>`)

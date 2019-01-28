@@ -45,9 +45,20 @@ function fillWithZeros(graphData) {
   return zeroFilled;
 }
 
-function displayErrById(data, socket) {
+function makeKibanaLink(index, name, msgName, kibanaUrl)
+{
+  return `${kibanaUrl}/app/kibana#/discover?_g=()&_a=(columns:!(message),filters:!(('$state':(store:appState),`
+  + `meta:(alias:!n,disabled:!f,index:'${index}-*',key:fields.name,negate:!f,params:(query:${name},type:phrase),`
+  + `type:phrase,value:${name}),query:(match:(fields.name:(query:${name},type:phrase)))),('$state':(store:appState),`
+  + `meta:(alias:!n,disabled:!f,index:'${index}-*',key:fields.type,negate:!f,params:(query:E,type:phrase),type:phrase,value:E),`
+  + `query:(match:(fields.type:(query:E,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'${index}-*',`
+  + `key:msgName,negate:!f,params:(query:${msgName},type:phrase),type:phrase,value:${msgName}),`
+  + `query:(match:(msgName:(query:${msgName},type:phrase))))),index:'${index}-*',interval:auto,query:(language:lucene,query:''),`
+  + 'sort:!(\'@timestamp\',desc))';
+}
 
-  const graph = $('<div/>');
+function addGraph(graph, data)
+{
   const graphData = data.graph
     .map((item) => {
       if (item.eventDate.length < 16) {
@@ -121,7 +132,41 @@ function displayErrById(data, socket) {
       data: zeroFilled,
     }],
   });
+}
 
+function getCommentGroup(data, socket) {
+
+  const commentInput = $('<input type="text" class="form-control" id="comment">');
+  if (data.comment) {
+    commentInput.val(data.comment.comment);
+  }
+  const commentGroup = $('<div class="input-group" style="margin-top:20px;margin-bottom: 20px;">');
+  commentGroup.append('<span class="input-group-addon">Comment</span>');
+  if (data.comment) {
+    commentGroup.append(`<span class="input-group-addon">${data.comment.added}</span>`);
+    commentGroup.append(`<span class="input-group-addon">${data.comment.author}</span>`);
+  }
+  commentGroup.append(commentInput);
+  const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
+
+  commentBtn.click(() => {
+    const eventData = {
+      name: 'updateMessageComment',
+      data: {
+        errorId: data.errors[0].id,
+        comment: $('#comment').val(),
+      },
+    };
+    socket.emit('event', eventData);
+  });
+  commentGroup.append($('<span class="input-group-btn">').append(commentBtn));
+  return commentGroup;
+}
+
+function displayErrById(data, socket, config) {
+
+  const graph = $('<div/>');
+  addGraph(graph, data);
   // //
   // eventDate, name,type,msgId,env,host,role,message
   const notNeededFields = ['message', 'name', 'msgName', 'index', 'type'];
@@ -154,37 +199,19 @@ function displayErrById(data, socket) {
     tbody.append($(`<tr${trStyle}>`).append(message));
   });
   table.append(tbody);
-  const commentInput = $('<input type="text" class="form-control" id="comment">');
-  if (data.comment) {
-    commentInput.val(data.comment.comment);
-  }
-  const commentGroup = $('<div class="input-group" style="margin-top:20px;margin-bottom: 20px;">');
-  commentGroup.append('<span class="input-group-addon">Comment</span>');
-  if (data.comment) {
-    commentGroup.append(`<span class="input-group-addon">${data.comment.added}</span>`);
-    commentGroup.append(`<span class="input-group-addon">${data.comment.author}</span>`);
-  }
-  commentGroup.append(commentInput);
-  const commentBtn = $('<button type="button" class="btn btn-default">Save</button>');
 
-  commentBtn.click(() => {
-    const eventData = {
-      name: 'updateMessageComment',
-      data: {
-        errorId: data.errors[0].id,
-        comment: $('#comment').val(),
-      },
-    };
-    socket.emit('event', eventData);
-  });
-  commentGroup.append($('<span class="input-group-btn">').append(commentBtn));
+
+  const commentGroup = getCommentGroup(data, socket);
   const container = $('<div/>');
+  const msgName = Utils.formatMessageName(data.errors[0]);
+  const {index, name} = data.errors[0].index;
+  const kibanaLink = makeKibanaLink(data.errors[0].index, data.errors[0].name, msgName, config.updater.kibana.url);
   container.append(`
             <table class="table">
-            <thead><th>name</th><th>msgName</th><th>index</th></thead>
-            <tbody><tr><td>${data.errors[0].name}</td>
-            <td>${Utils.formatMessageName(data.errors[0])}</td>
-            <td>${data.errors[0].index}</td>
+            <thead><th><a href="${kibanaLink}">name</a></th><th>msgName</th><th>index</th></thead>
+            <tbody><tr><td>${name}</td>
+            <td>${msgName}</td>
+            <td>${index}</td>
             </tr></tbody>
             </table>`);
   container.append(graph);

@@ -38,6 +38,10 @@ function sendClinetConfig(socket) {
         {
           updater: {
             indexes: config.updater.kibana.indexes,
+            kibana:
+              {
+                url: config.updater.kibana.url,
+              },
           },
           ui: {
             display: config.ui.display,

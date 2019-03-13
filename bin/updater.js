@@ -321,6 +321,7 @@ async function cleanUp()
   log.info(`Removing old comments data (${oldCommentData.length})`);
   const countOldCommentData = await knex('comments').whereIn('error_id', oldCommentData.map(el=>el.error_id)).del();
   log.info(`Removed old comments data (${countOldCommentData})`);
+  Object.keys(errorIdCache).forEach(key=>delete errorIdCache[key]);
 }
 
 async function updateLogs() {

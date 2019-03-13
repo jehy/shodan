@@ -14,7 +14,7 @@ module.exports = {
     new webpack.ProvidePlugin({$: 'jquery', jQuery: 'jquery' }),
     new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(ru|en)$/), // https://github.com/webpack/webpack/issues/87
     new ExtractTextPlugin('styles.css'),
-    new CleanWebpackPlugin(['dist']),
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: './src/index.ejs',
       inject: true,

@@ -30,7 +30,7 @@ module.exports = {
       minimize: true,
       debug: false,
     }),
-    new CleanWebpackPlugin(['dist']),
+    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: './src/index.ejs',
       inject: true,

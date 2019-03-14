@@ -330,7 +330,7 @@ async function cleanUp()
 async function updateLogs() {
   try {
     await cleanUp();
-    await doUpdateLogs();
+    await Promise.resolve(doUpdateLogs()).timeout(30 * 1000);
   }
   catch (err)
   {

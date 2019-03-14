@@ -142,7 +142,7 @@ async function getLogUpdateInterval() {
   if (config.updater.kibana.crawlDelay) {
     now.subtract(config.updater.kibana.crawlDelay, 'm');
   }
-  let queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
+  const queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
 
   const dateString = queryFrom.format('YYYY-MM-DD HH:mm:ss');
   const reply = await knex('logs').count()
@@ -150,9 +150,12 @@ async function getLogUpdateInterval() {
   const logsForLastHour = Object.values(reply[0])[0];
   log.info(`Logs in base for hour: ${logsForLastHour}`);
   if (logsForLastHour > config.updater.kibana.maxLogsPerHour * config.updater.kibana.searchFor) {
-    log.info('Too many logs for this hour, I will skip some...');
-    queryFrom = moment.min(now.clone().subtract(5, 'm'), queryFrom.clone().add(1, 'h'));
-    queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
+    const addFiveMin = queryFrom.clone().add(5, 'm');
+    if (addFiveMin < now)
+    {
+      log.warn('Too many logs for this hour, I will skip 5 minutes...');
+      queryFrom = addFiveMin;
+    }
   }
   return {queryFrom, queryTo};
 }

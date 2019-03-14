@@ -236,9 +236,11 @@ async function updateMetData(item)
 }
 
 async function doUpdateLogs() {
-  const {queryFrom, queryTo} = await getLogUpdateInterval();
+  const {queryFrom, queryTo} = await Promise.resolve(getLogUpdateInterval()).timeout(10 * 1000);
   log.info(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
-  const data = await fetchData(parseInt(queryFrom.format('x'), 10), parseInt(queryTo.format('x'), 10));
+  const queryFromInt = parseInt(queryFrom.format('x'), 10);
+  const queryToInt = parseInt(queryTo.format('x'), 10);
+  const data = await Promise.resolve(fetchData(queryFromInt, queryToInt)).timeout(40 * 1000);
   /* if (data.count === config.kibana.fetchNum) {
         full = true;
       } */
@@ -251,7 +253,7 @@ async function doUpdateLogs() {
   await Promise.map(data.data, async (item)=>{
     try
     {
-      const isNew = await addItem(item);
+      const isNew = await Promise.resolve(addItem(item));
       if (isNew)
       {
         newErrors++;
@@ -260,10 +262,10 @@ async function doUpdateLogs() {
     {
       log.error(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
     }
-  }, {concurrency: 1}); // no more concurrency because there will be duplicates of error messages
+  }, {concurrency: 1}).timeout(20 * 1000); // no more concurrency because there will be duplicates of error messages
   log.info(`Got all error IDs, new errors: ${newErrors}`);
   const query = knex('logs').insert(data.data).toString();
-  const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));
+  const insertRes = await Promise.resolve(knex.raw(query.replace('insert', 'INSERT IGNORE'))).timeout(20 * 1000);
   const failed = insertRes.filter(item => !item).length;
   if (failed > 1) { // 1 is usually a duplicate
     log.info(`Failed to add ${failed} items`);
@@ -277,7 +279,7 @@ async function doUpdateLogs() {
     }
     return res;
   }, {});
-  await Promise.map(Object.values(dataForUpdate), updateMetData, {concurrency: 10});
+  await Promise.map(Object.values(dataForUpdate), updateMetData, {concurrency: 10}).timeout(20 * 1000);
   log.info('updated met data');
   return true;
 }
@@ -330,7 +332,7 @@ async function cleanUp()
 async function updateLogs() {
   try {
     await cleanUp();
-    await Promise.resolve(doUpdateLogs()).timeout(30 * 1000);
+    await Promise.resolve(doUpdateLogs()).timeout(60 * 1000);
   }
   catch (err)
   {

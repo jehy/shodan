@@ -14,6 +14,7 @@ const topErrorsRole = $('#topErrors-role');
 const topErrorsPid = $('#topErrors-pid');
 const fetchErrorsAlert = $('#fetchErrors');
 const showHang = $('#topErrors-showHang');
+const showSpeed = $('#showSpeed');
 
 let needUpdateId = null;
 let timeForUpdate = 0;
@@ -40,6 +41,16 @@ $('#topErrors').on('keyup keypress', (e) => {
 showHang.on('click', () => {
   const data = {
     name: 'showHanged',
+    data: {
+    },
+  };
+  socket.emit('event', data);
+});
+
+
+showSpeed.on('click', () => {
+  const data = {
+    name: 'showSpeed',
     data: {
     },
   };

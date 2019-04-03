@@ -21,3 +21,8 @@
     min-width: 150px;
     text-align: left;
 }
+
+.modal-lg
+{
+    width: 95%;
+}

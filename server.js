@@ -11,6 +11,7 @@ require('./modules/knex-timings')(knex, false);
 const showLogsByErrorId = require('./modules/showLogsByErrorId');
 const showTopErrors = require('./modules/showTopErrors');
 const showHanged = require('./modules/showHanged');
+const showSpeed = require('./modules/showSpeed');
 const updateMessageComment = require('./modules/updateMessageComment');
 
 const log = bunyan.createLogger({name: 'shodan:server'});
@@ -79,6 +80,9 @@ io.on('connection', (socket) => {
     }
     else if (event.name === 'showHanged') {
       showHanged(knex, socket, event);
+    }
+    else if (event.name === 'showSpeed') {
+      showSpeed(knex, socket, event);
     }
     else if (event.name === 'showLogsByErrorId') {
       showLogsByErrorId(knex, socket, event);

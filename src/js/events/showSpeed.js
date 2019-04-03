@@ -145,11 +145,10 @@ function showSpeed(data) {
     tbody.append(`<tr${trStyle}>${meta}</tr>`);
     table.append(tbody);
     const showBtn = $('<button type="button" class="btn btn-default">Show data</button>');
-    const message = $('<div style="display: none"/>').html(`<pre>${logMessage}</pre>`);
     showBtn.click(()=>{
       logMessage.toggle();
     });
-    container.append(table).append(graph).append(showBtn).append(message);
+    container.append(table).append(graph).append(showBtn).append(logMessage);
   });
 
 

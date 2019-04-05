@@ -169,9 +169,13 @@ async function getLogUpdateInterval() {
   return {queryFrom, queryTo};
 }
 
-async function doAddSpeedLogs()
+async function doAddSpeedLogs(force)
 {
   const {queryFrom, queryTo} = await Promise.resolve(getLogUpdateInterval()).timeout(10 * 1000);
+  if (force)
+  {
+    queryTo.add('1', 'hour');
+  }
   log.info(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
   const queryFromInt = parseInt(queryFrom.format('x'), 10);
   const queryToInt = parseInt(queryTo.format('x'), 10);
@@ -191,6 +195,11 @@ async function doAddSpeedLogs()
     log.info(`Failed to add ${failed} items`);
   }
   log.info('Added');
+  if (insertRes.length === 1) // rare case, no more logs for an hour
+  {
+    log.info('only one log, making more request');
+    await doAddSpeedLogs(true);
+  }
   return true;
 }
 

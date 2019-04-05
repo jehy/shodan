@@ -259,7 +259,14 @@ function showConditionsTimings(data, container)
   });
   const graph = $('<div/>');
   addConditionsGraph(graph, graphData);
-  container.append(graph);
+
+  const logMessage = $('<div style="display: none"/>')
+    .html(`<pre>${JSON.stringify(data, null, 3)}</pre>`);
+  const showBtn = $('<button type="button" class="btn btn-default">Show data</button>');
+  showBtn.click(()=>{
+    logMessage.toggle();
+  });
+  container.append(graph).append(showBtn).append(logMessage);
 }
 
 function showSpeed(data) {

@@ -106,24 +106,15 @@ function addGraph(graph, data)
   Highcharts.chart(options);
 }
 
-
-function showSpeed(data) {
-
-  if (!data || !data.length) {
-    fetchErrorsAlert.empty().append('No logs for slow searches, please come back later').show();
-    return;
-  }
-  // //
-  // eventDate, name,type,msgId,env,host,role,message
+function showTimeLineData(data, container)
+{
   const notNeededFields = ['message', 'name', 'index', 'type', 'guid', 'msgId', 'id'];
   const needFields = Object.keys(data[0])
     .filter(key => !notNeededFields.includes(key));
-  const header = data.msgName;
   const thead = $('<thead>');
   const headerTds = needFields.map(key => `<th>${key}</th>`);
   thead.append(headerTds);
   let needStripe = true;
-  const container = $('<div/>');
   data.forEach((log, index) => {
     const graph = $('<div/>');
     addGraph(graph, log.message);
@@ -150,9 +141,23 @@ function showSpeed(data) {
     });
     container.append(table).append(graph).append(showBtn).append(logMessage);
   });
+}
 
+function showSpeed(data) {
 
-  Utils.showModal(header, container);
+  if (!data) {
+    fetchErrorsAlert.empty().append('No logs for slow searches, please come back later').show();
+    return;
+  }
+  const container = $('<div/>');
+  container.append('<h1>Pipeline data</h1>');
+  showTimeLineData(data.pipelineData, container);
+  container.append('<h1>Total time data</h1>');
+  showTimeLineData(data.totalData, container);
+  // //
+  // eventDate, name,type,msgId,env,host,role,message
+
+  Utils.showModal('Search speed', container);
 }
 
 module.exports = showSpeed;

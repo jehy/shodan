@@ -4,26 +4,39 @@ const Promise = require('bluebird');
 
 const log = bunyan.createLogger({name: 'shodan:showSpeed'});
 
+function fixData(el)
+{
+  const fixed = Object.assign({}, el);
+  const message = el.message.replace(el.msgName, '').trim().trim();
+  fixed.message = JSON.parse(message);
+  return fixed;
+}
 
 async function showSpeed(knex, socket, event) {
 
-  const queryData1 = knex('speed_logs').select()
+  const pipelineData = await  knex('speed_logs').select()
     .where('msgName', 'SEARCH_TIMING_PIPELINE')
+    .where('level', 'W')
     .orderBy('eventDate', 'desc')
     .limit(20);
 
-  const queryData2 = knex('speed_logs').select()
+  const totalData = await knex('speed_logs').select()
     .where('msgName', 'SEARCH_TIMING_TOTAL')
+    .where('level', 'W')
     .orderBy('eventDate', 'desc')
     .limit(20);
 
-  const res = await Promise.all([queryData1, queryData2]);
-  const data = res[0].concat(res[1]).map((el) => {
-    const fixed = Object.assign({}, el);
-    const message = el.message.replace(el.msgName, '').trim().trim();
-    fixed.message = JSON.parse(message);
-    return fixed;
-  });
+
+  const conditionsTimings = await knex('speed_logs').select()
+    .where('msgName', 'CONDITIONS_TIMINGS')
+    .orderBy('eventDate', 'desc')
+    .limit(50);
+
+  const data = {
+    pipelineData: pipelineData.map(fixData),
+    totalData: totalData.map(fixData),
+    conditionsTimings: conditionsTimings.map(fixData),
+  };
   socket.emit('event', {name: 'showSpeed', data, id: event.id});
 }
 

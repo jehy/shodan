@@ -46,12 +46,13 @@ async function getData(queryFrom, queryTo) {
       bool: {
         must: [
           {match_all: {}},
-          {match_phrase: {'fields.type': {query: 'W'}}},
           {
             bool: {
               should: [
                 {match_phrase: {msgName: 'SEARCH_TIMING_PIPELINE'}},
-                {match_phrase: {msgName: 'SEARCH_TIMING_TOTAL'}}],
+                {match_phrase: {msgName: 'SEARCH_TIMING_TOTAL'}},
+                {match_phrase: {msgName: 'CONDITIONS_TIMINGS'}},
+              ],
               minimum_should_match: 1},
           },
           {

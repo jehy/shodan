@@ -219,7 +219,15 @@ function showConditionsTimings(data, container)
     parent: '',
     name: 'Conditions Timings',
   }];
-  const hosts = data.map(row=>row.host).filter((el, index, arr)=>arr.indexOf(el) === index);
+  const dataWithHashes = data.map((el)=>{
+    const hash = `${data.host}${data.pid}`;
+    return {...el, hash};
+  });
+  const dataFilterred = dataWithHashes.filter((el, index)=>{
+    const found = dataWithHashes.findIndex(el2=>el2.hash === el.hash);
+    return found !== index;
+  });
+  const hosts = dataFilterred.map(row=>row.host).filter((el, index, arr)=>arr.indexOf(el) === index);
   hosts.forEach((host)=>{
     graphData.push({
       id: host,
@@ -227,7 +235,7 @@ function showConditionsTimings(data, container)
       name: host,
     });
   });
-  data.forEach((row)=>{
+  dataFilterred.forEach((row)=>{
     const id = `${row.host}${row.pid}`;
     const pidExists = graphData.find(el=>el.id === id);
     if (!pidExists)
@@ -254,8 +262,7 @@ function showConditionsTimings(data, container)
         value: content.time,
       };
     });
-    const newData = actionsData.concat(filtersData).filter(newRow=>!graphData.some(graphRow=>graphRow.id === newRow.id));
-    graphData = graphData.concat(newData);
+    graphData = graphData.concat(actionsData).concat(filtersData);
   });
   const graph = $('<div/>');
   addConditionsGraph(graph, graphData);

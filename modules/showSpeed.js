@@ -30,7 +30,7 @@ async function showSpeed(knex, socket, event) {
   const conditionsTimings = await knex('speed_logs').select()
     .where('msgName', 'CONDITIONS_TIMINGS')
     .orderBy('eventDate', 'desc')
-    .limit(50);
+    .limit(20);
 
   const data = {
     pipelineData: pipelineData.map(fixData),

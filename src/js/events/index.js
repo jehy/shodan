@@ -1,11 +1,11 @@
 'use strict';
 
-const updateTopErrors = require('./updateTopErrors');
-const displayErrByMessage = require('./displayErrById');
-const showHanged = require('./showHanged');
-const showSpeed = require('./showSpeed');
+import updateTopErrors from './updateTopErrors';
+import displayErrByMessage  from './displayErrById';
+import showHanged  from './showHanged';
+import showSpeed from './showSpeed';
 
-module.exports = {
+export {
   updateTopErrors,
   displayErrByMessage,
   showHanged,

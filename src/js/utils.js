@@ -73,7 +73,7 @@ function makeKibanaLink(index, name, msgName, kibanaUrl)
     + 'sort:!(\'@timestamp\',desc))';
 }
 
-module.exports = {
+export {
   showDiff,
   showModal,
   addAutoBadge,

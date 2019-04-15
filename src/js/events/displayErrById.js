@@ -1,13 +1,13 @@
 'use strict';
 
-const Highcharts = require('highcharts');
+import * as Highcharts from 'highcharts';
 // uncomment to use dark theme:
 // const theme = require('highcharts/themes/dark-unica.js');
 // theme(Highcharts);
 
-const boost = require('highcharts/modules/boost');
-const moment = require('moment');
-const Utils = require('../utils');
+import * as boost from 'highcharts/modules/boost';
+import * as moment from 'moment';
+import * as Utils from  '../utils';
 
 
 boost(Highcharts);
@@ -208,4 +208,4 @@ function displayErrById(data, socket, config) {
   Utils.showModal(header, container);
 }
 
-module.exports = displayErrById;
+export default displayErrById;

@@ -1,7 +1,7 @@
 'use strict';
 
-const moment = require('moment');
-const Utils = require('../utils');
+import * as moment from 'moment';
+import * as Utils from '../utils';
 
 const fetchErrorsAlert = $('#fetchErrors');
 
@@ -86,4 +86,4 @@ function showHanged(data) {
   Utils.showModal(header, container);
 }
 
-module.exports = showHanged;
+export default showHanged;

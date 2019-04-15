@@ -32,6 +32,7 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
+      favicon: './src/images/favicon.ico',
       template: './src/index.ejs',
       inject: true,
       hash: true,
@@ -51,7 +52,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        // exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {

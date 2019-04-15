@@ -16,6 +16,7 @@ module.exports = {
     new ExtractTextPlugin('styles.css'),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
+      favicon: './src/images/favicon.ico',
       template: './src/index.ejs',
       inject: true,
       hash: true,

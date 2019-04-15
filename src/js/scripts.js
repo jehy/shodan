@@ -1,10 +1,11 @@
 'use strict';
 
-const socket = require('socket.io-client')();
-const uuid = require('nanoid');
-const Promise = require('bluebird');
-const events = require('./events');
+import * as Socket from 'socket.io-client';
+import * as uuid from 'nanoid';
+import * as Promise from 'bluebird';
+import * as events from './events';
 
+const socket = Socket();
 const progressBar = $('#progressMain');
 const indexSelector = $('#topErrors-index');
 const reloadInterval = $('#reload-interval');

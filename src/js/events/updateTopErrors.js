@@ -1,7 +1,7 @@
 'use strict';
 
-const moment = require('moment');
-const Utils = require('../utils');
+import * as moment from 'moment';
+import * as Utils from '../utils';
 
 const indexSelector = $('#topErrors-index');
 /**
@@ -142,4 +142,4 @@ function updateTopErrors(data, socket, config) {
   $('#topErrors thead').replaceWith(thead);
 }
 
-module.exports = updateTopErrors;
+export default updateTopErrors;

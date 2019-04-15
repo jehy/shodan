@@ -1,13 +1,12 @@
 'use strict';
 
-const moment = require('moment');
-const Highcharts = require('highcharts');
-const boost = require('highcharts/modules/boost');
-const HighchartsMore = require('highcharts/highcharts-more');
-const dataModule = require('highcharts/modules/data');
-const sunburst = require('highcharts/modules/sunburst.js');
-
-const Utils = require('../utils');
+import * as moment from 'moment';
+import * as Highcharts from 'highcharts';
+import * as boost from 'highcharts/modules/boost';
+import * as HighchartsMore from 'highcharts/highcharts-more';
+import * as dataModule from 'highcharts/modules/data';
+import * as sunburst from 'highcharts/modules/sunburst';
+import * as Utils from '../utils';
 
 boost(Highcharts);
 dataModule(Highcharts);
@@ -294,4 +293,4 @@ function showSpeed(data) {
   Utils.showModal('Search speed', container);
 }
 
-module.exports = showSpeed;
+export default showSpeed;

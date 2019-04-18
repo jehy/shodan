@@ -169,12 +169,12 @@ async function getLogUpdateInterval() {
   return {queryFrom, queryTo};
 }
 
-async function doAddSpeedLogs(force)
+async function doAddSpeedLogs(force = 0)
 {
   const {queryFrom, queryTo} = await Promise.resolve(getLogUpdateInterval()).timeout(10 * 1000);
   if (force)
   {
-    queryTo.add('20', 'minutes');
+    queryTo.add(20 * force, 'minutes');
   }
   log.info(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
   const queryFromInt = parseInt(queryFrom.format('x'), 10);
@@ -198,7 +198,7 @@ async function doAddSpeedLogs(force)
   if (data.count === 1 && (queryTo.clone().add(20, 'minutes') < moment())) // rare case, no more logs for an hour
   {
     log.info('only one log, making more request');
-    await doAddSpeedLogs(true);
+    await doAddSpeedLogs(force + 1);
   }
   return true;
 }

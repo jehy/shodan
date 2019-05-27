@@ -43,6 +43,7 @@ async function getData(queryFrom, queryTo) {
     },
   }));
   const includeIndexes = config.updater.kibana.indexes.map(includeIndex => ({match_phrase: {_index: includeIndex}}));
+  const tmp = [{match_phrase: {msgName: {query: 'fillDistances'}}}];
   const dataString2 = {
     version: true,
     size: config.updater.kibana.fetchNum,
@@ -58,7 +59,7 @@ async function getData(queryFrom, queryTo) {
             },
           },
         }],
-        must_not: [{match_phrase: {msgName: {query: 'fillDistances'}}}, excludeIndexes],
+        must_not: excludeIndexes.concat(tmp),
         // {match_phrase: {msgName: {query: 'privatefares_0'}}}],
         // must_not: excludeIndexes,
         minimum_should_match: 1,

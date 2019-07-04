@@ -15,7 +15,9 @@
     "test": "npm run lint && npm run build && npm run unit-test",
     "unit-test": "mocha --exit",
     "migrate": "./node_modules/.bin/knex migrate:latest",
-    "ncu": "ncu -u --reject bootstrap,bootswatch,passport-google-oauth"
+    "ncu": "ncu -u --reject bootstrap,bootswatch,passport-google-oauth",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "husky": {
     "hooks": {
@@ -49,7 +51,8 @@
     "performance-now": "~2.1.0",
     "request": "^2.88.0",
     "request-promise": "~4.2.4",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.2.0",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
@@ -80,5 +83,6 @@
     "webpack": "^4.32.2",
     "webpack-bundle-analyzer": "~3.3.2",
     "webpack-cli": "^3.3.2"
-  }
+  },
+  "snyk": true
 }

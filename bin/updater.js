@@ -205,7 +205,7 @@ async function addItem(item) {
     msgName: item.msgName,
     index: item.index,
   })
-    .returning('id')
+    // .returning('id')
     .into('errors');
   const [autoIncrementId] = insertResult;
   // debug(`Auto increment id: ${JSON.stringify(autoIncrementId)}`);

@@ -55,7 +55,6 @@ function rowToPoint(row)
 
 function addGraph(graph, data)
 {
-  console.log(data.graph);
   let graphData = data.graph.reduce((res, el)=>{
     if (!res[el.env])
     {
@@ -64,12 +63,10 @@ function addGraph(graph, data)
     res[el.env].push(rowToPoint(el));
     return res;
   }, {});
-  console.log(graphData);
   graphData = Object.entries(graphData).reduce((res, [env, item])=>{
     res[env] = fillWithZeros(item);
     return res;
   }, {});
-  console.log(graphData);
   const series = Object.entries(graphData).reduce((res, [env, zeroFilled])=>{
     return res.concat({
       type: 'area',
@@ -77,7 +74,6 @@ function addGraph(graph, data)
       data: zeroFilled,
     });
   }, []);
-  console.log(series);
   Highcharts.chart({
     chart: {
       type: 'area',
@@ -107,7 +103,7 @@ function addGraph(graph, data)
       min: 0,
     },
     legend: {
-      enabled: false,
+      enabled: true,
     },
     plotOptions: {
       area: {

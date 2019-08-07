@@ -209,6 +209,11 @@ async function doAddHangedLogs()
         logId: newLogErrorData.id,
       });
     });
+  if (data.length === 0)
+  {
+    log.info('No new items to add');
+    return;
+  }
   log.info(`Adding ${data.length} items`);
   const query = knex('hanged_logs').insert(data).toString();
   const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));

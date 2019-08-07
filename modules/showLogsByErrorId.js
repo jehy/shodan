@@ -23,7 +23,7 @@ function showLogsByErrorId(knex, socket, event) {
     .join('errors', 'logs.error_id', 'errors.id')
     .count('logs.eventDate as count')
     .select(knex.raw('CONCAT(DATE_FORMAT(logs.eventDate, "%Y %m %d %H")," ",'
-      + ' FLOOR(DATE_FORMAT(logs.eventDate, "%i")/10)*10)  as eventDate'))
+      + ' FLOOR(DATE_FORMAT(logs.eventDate, "%i")/10)*10)  as eventDate, logs.env'))
     .where('errors.id', errorId)
     .whereRaw('logs.eventDate > DATE_SUB(NOW(), INTERVAL 1 DAY)');
 
@@ -39,7 +39,8 @@ function showLogsByErrorId(knex, socket, event) {
     queryGraph = queryGraph
       .where('role', role);
   }
-  queryGraph = queryGraph.groupByRaw('CONCAT(DATE_FORMAT(eventDate, "%Y %m %d %H")," ",FLOOR(DATE_FORMAT(eventDate, "%i")/10)*10)');
+  queryGraph = queryGraph.groupByRaw('CONCAT(DATE_FORMAT(logs.eventDate, "%Y %m %d %H")," ",FLOOR(DATE_FORMAT(logs.eventDate, "%i")/10)*10)'
+    + ', logs.env');
 
   const commentQuery = knex('comments')
     .where('error_id', errorId)

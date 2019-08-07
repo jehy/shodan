@@ -44,18 +44,40 @@ function fillWithZeros(graphData) {
   }
   return zeroFilled;
 }
+function rowToPoint(row)
+{
+  const eventDate = row.eventDate.padEnd(16, '0');
+  return [
+    parseInt(moment(eventDate, 'YYYY MM DD HH mm').format('x'), 10),
+    row.count,
+  ];
+}
 
 function addGraph(graph, data)
 {
-  const graphData = data.graph
-    .map((item) => {
-      if (item.eventDate.length < 16) {
-        item.eventDate = `${item.eventDate}0`;
-      }
-      return [parseInt(moment(item.eventDate, 'YYYY MM DD HH mm')
-        .format('x'), 10), item.count];
+  console.log(data.graph);
+  let graphData = data.graph.reduce((res, el)=>{
+    if (!res[el.env])
+    {
+      res[el.env] = [];
+    }
+    res[el.env].push(rowToPoint(el));
+    return res;
+  }, {});
+  console.log(graphData);
+  graphData = Object.entries(graphData).reduce((res, [env, item])=>{
+    res[env] = fillWithZeros(item);
+    return res;
+  }, {});
+  console.log(graphData);
+  const series = Object.entries(graphData).reduce((res, [env, zeroFilled])=>{
+    return res.concat({
+      type: 'area',
+      name: env,
+      data: zeroFilled,
     });
-  const zeroFilled = fillWithZeros(graphData);
+  }, []);
+  console.log(series);
   Highcharts.chart({
     chart: {
       type: 'area',
@@ -113,12 +135,7 @@ function addGraph(graph, data)
         threshold: null,
       },
     },
-
-    series: [{
-      type: 'area',
-      name: 'Errors',
-      data: zeroFilled,
-    }],
+    series,
   });
 }
 

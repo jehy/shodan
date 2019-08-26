@@ -26,7 +26,8 @@
   "plugins": [
     "standard",
     "promise",
-    "import"
+    "import",
+    "node"
   ],
   "rules": {
     "import/no-extraneous-dependencies": [
@@ -41,6 +42,13 @@
         ]
       }
     ],
+    "node/exports-style": ["warn", "module.exports"],
+    "node/prefer-promises/fs": "warn",
+    "node/prefer-promises/dns": "error",
+    "promise/catch-or-return": ["error", {"allowFinally": true, "terminationMethod":  [
+      "catch", "asCallback"
+    ]}],
+    "promise/no-return-in-finally": ["error"],
     "strict": "off",
     "object-curly-newline": "off",
     "prefer-destructuring": "warn",
@@ -48,7 +56,7 @@
     "function-paren-newline": "off",
     "no-mixed-operators": "off",
     "arrow-body-style": "off",
-    "brace-style": "off",
+    "brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
     "padded-blocks": "off",
     "no-plusplus": "off",
     "arrow-spacing": "off",

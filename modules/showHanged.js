@@ -12,7 +12,7 @@ async function showHanged(knex, socket, event) {
     .orderBy('eventDate');
 
   const logIds = hangData
-    .map(data=>data.logId)
+    .map((data)=>data.logId)
     .filter((value, index, self)=> self.indexOf(value) === index);
 
   const logData = await knex('logs')
@@ -22,8 +22,7 @@ async function showHanged(knex, socket, event) {
 
   const hangDataMap = hangData
     .reduce((res, item)=>{
-      if (!res[item.logId])
-      {
+      if (!res[item.logId]) {
         res[item.logId] = [];
       }
       res[item.logId].push(item);

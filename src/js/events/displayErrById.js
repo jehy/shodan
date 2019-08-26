@@ -18,7 +18,6 @@ Highcharts.setOptions({
 });
 
 function fillWithZeros(graphData) {
-
   const timingInterval = 60 * 1000 * 10;// 10 minutes step on graph
   // fill with zeros when there were no errors
   const zeroFilled = graphData.reduce((res, cur, index, arr) => {
@@ -44,8 +43,7 @@ function fillWithZeros(graphData) {
   }
   return zeroFilled;
 }
-function rowToPoint(row)
-{
+function rowToPoint(row) {
   const eventDate = row.eventDate.padEnd(16, '0');
   return [
     parseInt(moment(eventDate, 'YYYY MM DD HH mm').format('x'), 10),
@@ -53,14 +51,13 @@ function rowToPoint(row)
   ];
 }
 
-function addGraph(graph, data)
-{
+function addGraph(graph, data) {
   let graphData = data.graph.reduce((res, el)=>{
-    if (!res[el.env])
-    {
+    if (!res[el.env]) {
       res[el.env] = [];
     }
-    res[el.env].push(rowToPoint(el));
+    const point = rowToPoint(el);
+    res[el.env].push(point);
     return res;
   }, {});
   graphData = Object.entries(graphData).reduce((res, [env, item])=>{
@@ -172,10 +169,10 @@ function displayErrById(data, socket, config) {
   // eventDate, name,type,msgId,env,host,role,message
   const notNeededFields = ['message', 'name', 'msgName', 'index', 'type'];
   const needFields = Object.keys(data.errors[0])
-    .filter(key => !notNeededFields.includes(key));
+    .filter((key) => !notNeededFields.includes(key));
   const header = data.msgName;
   const thead = $('<thead>');
-  const headerTds = needFields.map(key => `<th>${key}</th>`);
+  const headerTds = needFields.map((key) => `<th>${key}</th>`);
   thead.append(headerTds);
   const table = $('<table class="table"/>');
   table.append(thead);
@@ -188,10 +185,9 @@ function displayErrById(data, socket, config) {
       trStyle = ' style="background-color: #f0f0f0;"';
     }
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
-    const meta = needFields.map(key => `<td>${err[key]}</td>`).join('');
+    const meta = needFields.map((key) => `<td>${err[key]}</td>`).join('');
     let errMessage = err.message;
-    if (errMessage.length === 2007 && errMessage.includes('CUT'))
-    {
+    if (errMessage.length === 2007 && errMessage.includes('CUT')) {
       errMessage += ` (${Math.floor(err.messageLength / 1024)} KB)`;
     }
     const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(errMessage);

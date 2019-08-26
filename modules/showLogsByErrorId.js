@@ -45,7 +45,7 @@ function showLogsByErrorId(knex, socket, event) {
   const commentQuery = knex('comments')
     .where('error_id', errorId)
     .limit(1).first();
-  Promise.all([queryGraph, queryData, commentQuery])
+  return Promise.all([queryGraph, queryData, commentQuery])
     .then(([graphData, data, commentData]) => {
       socket.emit('event', {
         name: 'displayErrByMessage',
@@ -58,6 +58,7 @@ function showLogsByErrorId(knex, socket, event) {
           comment: commentData,
         },
       });
+      return true;
     });
 }
 

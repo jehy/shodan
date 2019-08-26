@@ -17,13 +17,11 @@ let lastRemovedLogs = null;
 
 let hangedErrorIds = [];
 
-function md5(data)
-{
+function md5(data) {
   return crypto.createHash('md5').update(data).digest('hex');
 }
 
-function generateRequest(time, env, host, role, pid, after = false)
-{
+function generateRequest(time, env, host, role, pid, after = false) {
   const request = {
     version: true,
     size: 5,
@@ -55,8 +53,7 @@ function generateRequest(time, env, host, role, pid, after = false)
     script_fields: {},
   };
 
-  if (after)
-  {
+  if (after) {
     request.sort = [{'@timestamp': {order: 'asc', unmapped_type: 'boolean'}}];
     request.query.bool.must.push({
       range: {
@@ -118,31 +115,26 @@ async function getNearHangedLogs(index, date, env, host, role, pid) // todo use 
     headers,
     body: dataStringFinal1,
   };
-  const options2 = Object.assign({}, options1, {body: dataStringFinal2});
+  const options2 = { ...options1, body: dataStringFinal2};
   const options = [options1, options2];
-  try
-  {
-    const results = await Promise.map(options, option=>rp(option), {concurrency: 1});
+  try {
+    const results = await Promise.map(options, (option)=>rp(option), {concurrency: 1});
     log.debug('request data ok');
     return results;
-  }
-  catch (err) {
+  } catch (err) {
     log.warn(`failed to send requests ${JSON.stringify(options)}`);
     throw err;
   }
 }
 
 
-async function doAddHangedLogs()
-{
-  if (!hangedErrorIds.length)
-  {
+async function doAddHangedLogs() {
+  if (!hangedErrorIds.length) {
     hangedErrorIds = await knex('errors')
       .select('id')
       .where('msgName', 'HANGED')
       .pluck('id');
-    if (!hangedErrorIds || !hangedErrorIds.length)
-    {
+    if (!hangedErrorIds || !hangedErrorIds.length) {
       log.error('HANGED msgname can not be found in logs! Can`t update hang data!');
       return;
     }
@@ -161,8 +153,7 @@ async function doAddHangedLogs()
     .whereIn('logs.error_id', hangedErrorIds)
     .orderBy('logs.id')
     .first();
-  if (!newLogErrorData)
-  {
+  if (!newLogErrorData) {
     log.info('No new hangs, horray!');
     return;
   }
@@ -170,13 +161,13 @@ async function doAddHangedLogs()
     newLogErrorData.role, newLogErrorData.pid);
   let data;
   try {
-    data = responses.map(d=>JSON.parse(d));
+    data = responses.map((d)=>JSON.parse(d));
   } catch (e) {
     log.warn('malformed json!', e, responses);
     return;
   }
   try {
-    data = data.map(d=>d.responses[0].hits.hits);
+    data = data.map((d)=>d.responses[0].hits.hits);
   } catch (e) { // data has no... data
     log.warn('No hits.hits:', data);
     return;
@@ -185,11 +176,10 @@ async function doAddHangedLogs()
     .reduce((res, el) => {
       return res.concat(el);
     }, [])
-    .filter(item => item)
+    .filter((item) => item)
     .map((entry)=>{
       // eslint-disable-next-line no-underscore-dangle
-      if (!entry._source.message && entry._source.data)
-      {
+      if (!entry._source.message && entry._source.data) {
         // eslint-disable-next-line no-underscore-dangle
         entry._source.message = JSON.stringify(entry._source.data);
         // eslint-disable-next-line no-underscore-dangle
@@ -209,15 +199,14 @@ async function doAddHangedLogs()
         logId: newLogErrorData.id,
       });
     });
-  if (data.length === 0)
-  {
+  if (data.length === 0) {
     log.info('No new items to add');
     return;
   }
   log.info(`Adding ${data.length} items`);
   const query = knex('hanged_logs').insert(data).toString();
   const insertRes = await knex.raw(query.replace('insert', 'INSERT IGNORE'));
-  const failed = insertRes.filter(item => !item).length;
+  const failed = insertRes.filter((item) => !item).length;
   if (failed > 1) { // 1 is usually a duplicate
     log.info(`Failed to add ${failed} items`);
   }
@@ -235,8 +224,7 @@ async function doAddHangedLogs()
 }
 
 
-async function cleanUp()
-{
+async function cleanUp() {
 
   const today = parseInt(moment().format('DD'), 10);
   if (lastRemovedLogs && lastRemovedLogs === today) {
@@ -254,9 +242,7 @@ async function addHangedLogs() {
   try {
     await cleanUp();
     await doAddHangedLogs();
-  }
-  catch (err)
-  {
+  } catch (err) {
     log.error(err);
   }
   setTimeout(() => addHangedLogs(), config.updater.kibana.updateInterval * 1000);

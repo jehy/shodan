@@ -4,9 +4,8 @@ const Promise = require('bluebird');
 
 const log = bunyan.createLogger({name: 'shodan:showSpeed'});
 
-function fixData(el)
-{
-  const fixed = Object.assign({}, el);
+function fixData(el) {
+  const fixed = { ...el};
   const message = el.message.replace(el.msgName, '').trim().trim();
   fixed.message = JSON.parse(message);
   return fixed;

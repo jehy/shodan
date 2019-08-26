@@ -14,16 +14,14 @@ function showModal(header, data) {
   modal.modal();
 }
 
-function addAutoBadge(error)
-{
+function addAutoBadge(error) {
   if (error.indexOf('AUTO ') === 0) {
     return `${error.replace('AUTO ', '')} <span class="label label-default">auto</span>`;
   }
   return error;
 }
 
-function addErrorBadges(row)
-{
+function addErrorBadges(row) {
 
   const displayName = row.msgName;
   if (row.errors && row.errors.length) {
@@ -58,8 +56,7 @@ function showDiff(sec) {
   return `${parseInt(data, 10)} ${unit}`.replace(' ', '&nbsp;');
 }
 
-function makeKibanaLink(index, name, msgName, kibanaUrl)
-{
+function makeKibanaLink(index, name, msgName, kibanaUrl) {
   name = name.split('"').join();
   msgName = msgName.split('"').join();
   kibanaUrl = kibanaUrl.replace('logs-shodan', 'logs');

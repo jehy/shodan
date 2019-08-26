@@ -67,8 +67,7 @@ function fixMessageName(messageName, message, force) {
       const pos = autoMessageName.indexOf(' ', 50);
       if (pos !== -1 && pos < 60) {
         autoMessageName = `${autoMessageName.substr(0, pos).trim()}...`;
-      }
-      else {
+      } else {
         autoMessageName = `${autoMessageName.substr(0, 50).trim()}...`;
       }
     }
@@ -85,14 +84,10 @@ function fixLogEntry(logEntry) {
     || 'none';
   const messageLength = message.length;
   let messageName = logEntry._source.msgName;
-  if (!messageName && logEntry._source.data)
-  {
-    if (logEntry._source.data.event)
-    {
+  if (!messageName && logEntry._source.data) {
+    if (logEntry._source.data.event) {
       messageName = logEntry._source.data.event;
-    }
-    else
-    {
+    } else {
       const tmp = JSON.stringify(logEntry._source.data);
       messageName = tmp.substr(1, tmp.length - 2);
     }

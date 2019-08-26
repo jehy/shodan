@@ -4,7 +4,7 @@ const bunyan = require('bunyan');
 
 const log = bunyan.createLogger({name: 'shodan:showTopErrors'});
 
-const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map(m => m.toLowerCase());
+const veryBadMessages = ['unhandledRejection', 'uncaughtException'].map((m) => m.toLowerCase());
 
 function getLastIntervalTopErrors(knex, event, interval) {
 
@@ -67,8 +67,7 @@ function getFirstLastDateMet(knex, event, errorIds) {
     firstLastMetDataQuery = firstLastMetDataQuery
       .where('first_last_met.env', event.data.env)
       .select('first_last_met.firstMet', 'first_last_met.lastMet');
-  }
-  else {
+  } else {
     firstLastMetDataQuery = firstLastMetDataQuery
       .groupBy('errors.id')
       .min('first_last_met.firstMet as firstMet')
@@ -133,7 +132,7 @@ function checkErrorEntry(err) {
     errors.push('Too long');
   }
 
-  if (veryBadMessages.some(bad => err.msgName.toLowerCase().includes(bad))) {
+  if (veryBadMessages.some((bad) => err.msgName.toLowerCase().includes(bad))) {
     errors.push('Unhadled');
   }
   return errors;
@@ -142,7 +141,7 @@ function checkErrorEntry(err) {
 function getMetData(err, firstLastMetData) {
 
   let metData = firstLastMetData
-    .find(item => item.id === err.id);
+    .find((item) => item.id === err.id);
   if (!metData) {
     log.warn(`Not found met data for id "${err.id}" msgName "${err.msgName}" and name "${err.name}" `);
     //              in object ${JSON.stringify(firstLastMetData, null, 3)}`);
@@ -160,14 +159,14 @@ function showTopErrors(knex, socket, event) {
     interval = 'HOUR';
   }
 
-  getLastIntervalTopErrors(knex, event, interval)
+  return getLastIntervalTopErrors(knex, event, interval)
     .then((topErrors) => {
-      const errorIds = topErrors.map(err => err.id);
+      const errorIds = topErrors.map((err) => err.id);
       const errorsPerThisHourQuery = getErrorTotal(knex);
       const firstLastMetQuery = getFirstLastDateMet(knex, event, errorIds);
       const logCommentQuery = getLogComments(knex, event, errorIds);
       const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
-      let otherEnvQuery = false;
+      const otherEnvQuery = false;
       if (event.data.env) {
         // otherEnvQuery = getOtherEnvErrorNum(knex, event, errorIds, interval);
       }
@@ -180,11 +179,11 @@ function showTopErrors(knex, socket, event) {
             fetchErrors.push('Warning: No logs found, please check updater');
           }
           return topErrors.map((err) => {
-            const preHour = preHourData.find(item => item.msgName === err.msgName && item.name === err.name);
-            const comment = logComments.find(item => item.msgName === err.msgName && item.name === err.name);
+            const preHour = preHourData.find((item) => item.msgName === err.msgName && item.name === err.name);
+            const comment = logComments.find((item) => item.msgName === err.msgName && item.name === err.name);
             const metData = getMetData(err, firstLastMetData);
             if (otherEnvErrors) {
-              const otherEnv = otherEnvErrors.find(item => item.msgName === err.msgName && item.name === err.name);
+              const otherEnv = otherEnvErrors.find((item) => item.msgName === err.msgName && item.name === err.name);
               if (otherEnv) {
                 Object.assign(err, {otherEnv: otherEnv.count});
               }

@@ -37,7 +37,7 @@ async function getData(queryFrom, queryTo) {
   }
 
   const dataString1 = {index: ['twapi-avia-*'], ignore_unavailable: true, preference: config.updater.kibana.preference};
-  const includeIndexes = config.updater.kibana.indexes.map(includeIndex => ({match_phrase: {_index: includeIndex}}));
+  const includeIndexes = config.updater.kibana.indexes.map((includeIndex) => ({match_phrase: {_index: includeIndex}}));
   const dataString2 = {
     version: true,
     size: config.updater.kibana.fetchNum,
@@ -92,13 +92,11 @@ async function getData(queryFrom, queryTo) {
     body: dataString,
   };
   // debug(options);
-  try
-  {
+  try {
     const result = await rp(options);
     log.debug('request data ok');
     return result;
-  }
-  catch (err) {
+  } catch (err) {
     log.warn(`failed to send request ${JSON.stringify(options)}`);
     throw err;
   }
@@ -123,7 +121,7 @@ async function fetchData(queryFrom, queryTo) {
     .reduce((res, el) => {
       return res.concat(el);
     }, [])
-    .filter(item => item)
+    .filter((item) => item)
     .map(fixLogEntry)
     .map((el)=>{
       delete el.index;
@@ -142,8 +140,7 @@ async function getLogUpdateInterval() {
   if (!lastDate) {
     queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
     log.info('First time update, fetching data from ', queryFrom.format('YYYY-MM-DD HH:mm:ss'));
-  }
-  else {
+  } else {
     queryFrom = moment(lastDate);
   }
   const now = moment();
@@ -160,8 +157,7 @@ async function getLogUpdateInterval() {
   const maxPerHour = 300;
   if (logsForLastHour > maxPerHour * config.updater.kibana.searchFor) {
     const addFiveMin = queryFrom.clone().add(5, 'm');
-    if (addFiveMin < now)
-    {
+    if (addFiveMin < now) {
       log.warn('Too many logs for this hour, I will skip 5 minutes...');
       queryFrom = addFiveMin;
     }
@@ -169,11 +165,9 @@ async function getLogUpdateInterval() {
   return {queryFrom, queryTo};
 }
 
-async function doAddSpeedLogs(force = 0)
-{
+async function doAddSpeedLogs(force = 0) {
   const {queryFrom, queryTo} = await Promise.resolve(getLogUpdateInterval()).timeout(10 * 1000);
-  if (force)
-  {
+  if (force) {
     queryTo.add(20 * force, 'minutes');
   }
   log.info(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
@@ -190,7 +184,7 @@ async function doAddSpeedLogs(force = 0)
   log.info(`Adding ${data.count} items`);
   const query = knex('speed_logs').insert(data.data).toString();
   const insertRes = await Promise.resolve(knex.raw(query.replace('insert', 'INSERT IGNORE'))).timeout(20 * 1000);
-  const failed = insertRes.filter(item => !item).length;
+  const failed = insertRes.filter((item) => !item).length;
   if (failed > 1) { // 1 is usually a duplicate
     log.info(`Failed to add ${failed} items`);
   }
@@ -203,8 +197,7 @@ async function doAddSpeedLogs(force = 0)
   return true;
 }
 
-async function cleanUp()
-{
+async function cleanUp() {
 
   const today = parseInt(moment().format('DD'), 10);
   if (lastRemovedLogs && lastRemovedLogs === today) {
@@ -222,9 +215,7 @@ async function addSpeedLogs() {
   try {
     await cleanUp();
     await doAddSpeedLogs();
-  }
-  catch (err)
-  {
+  } catch (err) {
     log.error(err);
   }
   setTimeout(() => addSpeedLogs(), config.updater.kibana.updateInterval * 1000);

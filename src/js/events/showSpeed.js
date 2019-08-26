@@ -20,35 +20,29 @@ sunburst(Highcharts);
 
 const fetchErrorsAlert = $('#fetchErrors');
 
-function addTimeLineGraph(graph, data)
-{
+function addTimeLineGraph(graph, data) {
   let maxTiming = 0;
   let minTiming = null;
   const simple = data.timings.reduce((res, timing) => {
-    if (!timing.name)
-    {
+    if (!timing.name) {
       return res;
     }
-    if (timing.name.includes(' END '))
-    {
+    if (timing.name.includes(' END ')) {
       return res;
     }
     const name = timing.name.replace(' END', '').replace(' START', '').trim();
     const start = timing.time;
-    if (minTiming === null || minTiming > start)
-    {
+    if (minTiming === null || minTiming > start) {
       minTiming = start;
     }
     const endTiming = data.timings
-      .find(timingSearch=>timingSearch.name
+      .find((timingSearch)=>timingSearch.name
         && timingSearch.name.includes(' END')
         && timingSearch.name.replace(' END', ' START') === timing.name);
     let end;
-    if (endTiming)
-    {
+    if (endTiming) {
       end = endTiming.time;
-      if (maxTiming < end)
-      {
+      if (maxTiming < end) {
         maxTiming = end;
       }
     }
@@ -57,8 +51,7 @@ function addTimeLineGraph(graph, data)
     return res;
   }, []);
   simple.forEach((el)=>{
-    if (!el.end)
-    {
+    if (!el.end) {
       el.end = maxTiming;
     }
     el.start -= minTiming;
@@ -66,8 +59,8 @@ function addTimeLineGraph(graph, data)
     el.end -= minTiming;
     el.end /= 1000;
   });
-  const dataColumns = simple.map(data2 => data2.name);
-  const valueColumns = simple.map(data2 => ([data2.start, data2.end]));
+  const dataColumns = simple.map((data2) => data2.name);
+  const valueColumns = simple.map((data2) => ([data2.start, data2.end]));
   const options = {
     chart: {
       type: 'columnrange',
@@ -107,8 +100,7 @@ function addTimeLineGraph(graph, data)
   Highcharts.chart(options);
 }
 
-function addConditionsGraph(graph, data)
-{
+function addConditionsGraph(graph, data) {
   // Highcharts.getOptions().colors.splice(0, 0, 'transparent');
 
 
@@ -173,21 +165,19 @@ function addConditionsGraph(graph, data)
   });
 }
 
-function showTimeLineData(data, container)
-{
+function showTimeLineData(data, container) {
   const notNeededFields = ['message', 'name', 'index', 'type', 'guid', 'msgId', 'id'];
   const needFields = Object.keys(data[0])
-    .filter(key => !notNeededFields.includes(key));
+    .filter((key) => !notNeededFields.includes(key));
   const thead = $('<thead>');
-  const headerTds = needFields.map(key => `<th>${key}</th>`);
+  const headerTds = needFields.map((key) => `<th>${key}</th>`);
   thead.append(headerTds);
   let needStripe = true;
   data.forEach((log, index) => {
     const graph = $('<div/>');
     addTimeLineGraph(graph, log.message);
     const table = $('<table class="table"/>');
-    if (index === 0)
-    {
+    if (index === 0) {
       table.append(thead);
     }
     const tbody = $('<tbody>');
@@ -197,7 +187,7 @@ function showTimeLineData(data, container)
       trStyle = ' style="background-color: #f0f0f0;"';
     }
     log.eventDate = moment(log.eventDate).format('HH:mm:ss');
-    const meta = needFields.map(key => `<td>${log[key]}</td>`).join('');
+    const meta = needFields.map((key) => `<td>${log[key]}</td>`).join('');
     const logMessage = $('<div style="display: none"/>')
       .html(`<pre>${JSON.stringify(log.message, null, 3)}</pre>`);
     tbody.append(`<tr${trStyle}>${meta}</tr>`);
@@ -211,8 +201,7 @@ function showTimeLineData(data, container)
 }
 
 
-function showConditionsTimings(data, container)
-{
+function showConditionsTimings(data, container) {
   let graphData = [{
     id: '0.0',
     parent: '',
@@ -223,10 +212,10 @@ function showConditionsTimings(data, container)
     return {...el, hash};
   });
   const dataFilterred = dataWithHashes.filter((el, index)=>{
-    const found = dataWithHashes.findIndex(el2=>el2.hash === el.hash);
+    const found = dataWithHashes.findIndex((el2)=>el2.hash === el.hash);
     return found !== index;
   });
-  const hosts = dataFilterred.map(row=>row.host).filter((el, index, arr)=>arr.indexOf(el) === index);
+  const hosts = dataFilterred.map((row)=>row.host).filter((el, index, arr)=>arr.indexOf(el) === index);
   hosts.forEach((host)=>{
     graphData.push({
       id: host,
@@ -236,9 +225,8 @@ function showConditionsTimings(data, container)
   });
   dataFilterred.forEach((row)=>{
     const id = `${row.host}${row.pid}`;
-    const pidExists = graphData.find(el=>el.id === id);
-    if (!pidExists)
-    {
+    const pidExists = graphData.find((el)=>el.id === id);
+    if (!pidExists) {
       graphData.push({
         id,
         parent: row.host,

@@ -74,20 +74,15 @@ io.on('connection', (socket) => {
     }
     if (event.name === 'showTopErrors') {
       showTopErrors(knex, socket, event);
-    }
-    else if (event.name === 'updateMessageComment') {
+    } else if (event.name === 'updateMessageComment') {
       updateMessageComment(knex, socket, event);
-    }
-    else if (event.name === 'showHanged') {
+    } else if (event.name === 'showHanged') {
       showHanged(knex, socket, event);
-    }
-    else if (event.name === 'showSpeed') {
+    } else if (event.name === 'showSpeed') {
       showSpeed(knex, socket, event);
-    }
-    else if (event.name === 'showLogsByErrorId') {
+    } else if (event.name === 'showLogsByErrorId') {
       showLogsByErrorId(knex, socket, event);
-    }
-    else {
+    } else {
       log.error(`dunno event name ${event.name}`);
     }
   });

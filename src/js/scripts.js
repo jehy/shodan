@@ -73,32 +73,26 @@ function reload() {
   let iteration = 0;
   const progressSpan = progressBar.find('span');
   const progressDiv = progressBar.find('div');
-  function iterate()
-  {
+  function iterate() {
     console.log(`checking ${myId} for finish`);
     if (needUpdateId !== myId) {
       console.log(`${myId} is not main, exiting`);
-      return;
+      return false;
     }
     if (canUpdate) {
       console.log(`${myId} seems to finish, exiting`);
-      return;
+      return false;
     }
     progressSpan.text(`${iteration} seconds`);
-    if (iteration > 20)
-    {
+    if (iteration > 20) {
       progressDiv.removeClass('progress-bar-warning');
       progressDiv.removeClass('progress-bar-info');
       progressDiv.addClass('progress-bar-danger');
-    }
-    else if (iteration > 10)
-    {
+    } else if (iteration > 10) {
       progressDiv.removeClass('progress-bar-info');
       progressDiv.removeClass('progress-bar-danger');
       progressDiv.addClass('progress-bar-warning');
-    }
-    else
-    {
+    } else {
       progressDiv.removeClass('progress-bar-warning');
       progressDiv.removeClass('progress-bar-danger');
       progressDiv.addClass('progress-bar-info');
@@ -106,16 +100,14 @@ function reload() {
     iteration++;
 
     // eslint-disable-next-line no-await-in-loop
-    Promise.delay(1000).then(()=>iterate());
+    return Promise.delay(1000).then(()=>iterate());
   }
-  iterate();
+  return iterate();
 }
 
 function runReloader() {
-  function waitCanUpdate()
-  {
-    if (canUpdate)
-    {
+  function waitCanUpdate() {
+    if (canUpdate) {
       return Promise.resolve(true);
     }
     return Promise.delay(3000).then(()=>waitCanUpdate());
@@ -130,13 +122,14 @@ function runReloader() {
       if (now > timeForUpdate) {
         const interval = parseInt(reloadInterval.val(), 10);
         timeForUpdate = now + interval;
-        reload();
+        return reload();
       }
       // eslint-disable-next-line no-await-in-loop
       console.log('running delay');
       return Promise.delay(3000);
     })
-    .then(()=>runReloader());
+    .then(()=>runReloader())
+    .catch(()=>runReloader());
 }
 
 runReloader();
@@ -183,17 +176,14 @@ socket.on('event', (event) => {
 
   if (event.fetchErrors && event.fetchErrors.length) {
     fetchErrorsAlert.empty().append(event.fetchErrors.join('<br>')).show();
-  }
-  else {
+  } else {
     fetchErrorsAlert.hide();
   }
 
   if (events[event.name]) {
-    if (event.name === 'updateTopErrors')
-    {
+    if (event.name === 'updateTopErrors') {
       console.log(`${event.id} finished`);
-      if (event.id !== needUpdateId)
-      {
+      if (event.id !== needUpdateId) {
         console.log(`This update is already not needed(${event.id} while waiting for ${needUpdateId}), skipping`);
         return;
       }

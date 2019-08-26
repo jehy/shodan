@@ -43,8 +43,7 @@ function formatErrorDeltaTD(row) {
   let tdClass = '';
   if (koef >= 3) {
     tdClass = 'danger';
-  }
-  else if (koef < 0.5) {
+  } else if (koef < 0.5) {
     tdClass = 'success';
   }
   return `<td class="${tdClass}">${koef}</td>`;
@@ -56,8 +55,7 @@ function formatFirstMetTD(row) {
   const appearDiff = moment().diff(moment(row.firstMet), 'h');
   if (appearDiff < 6) {
     tdClass = 'danger';
-  }
-  else if (appearDiff < 48) {
+  } else if (appearDiff < 48) {
     tdClass = 'warning';
   }
   return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;

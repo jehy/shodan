@@ -14,30 +14,28 @@ function updateMessageComment(knex, socket, event) {
   let author = 'Anonymous';
   try {
     author = socket.request.user.displayName;
-  }
-  catch (err) {
+  } catch (err) {
     log.warn('Could not identify comment user!');
   }
-  queryData.then((data) => {
+  return queryData.then((data) => {
     if (data && data.id) {
-      knex('comments')
+      return knex('comments')
         .where('id', data.id)
         .update({comment, author})
         .then(() => {
           log.info('comment updated');
         });
     }
-    else {
-      knex('comments')
-        .insert({
-          comment,
-          error_id: errorId,
-          author,
-        })
-        .then(()=>{
-          log.info('comment added');
-        });
-    }
+    return knex('comments')
+      .insert({
+        comment,
+        error_id: errorId,
+        author,
+      })
+      .then(()=>{
+        log.info('comment added');
+      });
+
   });
 }
 

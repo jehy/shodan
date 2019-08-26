@@ -15,8 +15,7 @@ function showHanged(data) {
   const notNeededFields = ['logId', 'message', 'msgId', 'type'];
   const maxScore = data.reduce((res, d)=>{
     const score = d.messages.reduce((res2, msg)=>{
-      if (msg.name === 'HANG_CHECK')
-      {
+      if (msg.name === 'HANG_CHECK') {
         return res2;
       }
       return Math.max(res2, msg.score);
@@ -26,9 +25,9 @@ function showHanged(data) {
   console.log(`max score: ${maxScore}`);
   const scoreForWarn = maxScore * 0.8;
   const needFields = Object.keys(data[0].messages[0])
-    .filter(key => !notNeededFields.includes(key));
+    .filter((key) => !notNeededFields.includes(key));
   const thead = $('<thead>');
-  const headerTds = needFields.map(key => `<th>${key}</th>`);
+  const headerTds = needFields.map((key) => `<th>${key}</th>`);
   thead.append(headerTds);
   let needStripe = true;
   data.forEach((hang)=>{
@@ -52,20 +51,17 @@ function showHanged(data) {
       if (needStripe) {
         trStyle = ' style="background-color: #f0f0f0;"';
       }
-      if (err.score > scoreForWarn)
-      {
+      if (err.score > scoreForWarn) {
         trStyle = ' class = "warning"';
       }
-      if (err.name === 'HANG_CHECK')
-      {
+      if (err.name === 'HANG_CHECK') {
         trStyle = ' class = "danger"';
       }
       err.msgName = Utils.formatMessageName(err);
       err.eventDate = moment(err.eventDate).format('HH:mm:ss');
-      const meta = needFields.map(key => `<td>${err[key]}</td>`).join('');
+      const meta = needFields.map((key) => `<td>${err[key]}</td>`).join('');
       let errMessage = err.message;
-      if (errMessage.length === 2007 && errMessage.includes('CUT'))
-      {
+      if (errMessage.length === 2007 && errMessage.includes('CUT')) {
         errMessage += ` (${Math.floor(err.messageLength / 1024)} KB)`;
       }
       const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(errMessage);

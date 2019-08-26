@@ -35,14 +35,14 @@ async function getData(queryFrom, queryTo) {
   }
 
   const dataString1 = {index: ['*-*'], ignore_unavailable: true, preference: config.updater.kibana.preference};
-  const excludeIndexes = config.updater.kibana.indexFilterOut.map(indexExclude => ({
+  const excludeIndexes = config.updater.kibana.indexFilterOut.map((indexExclude) => ({
     match_phrase: {
       _index: {
         query: indexExclude,
       },
     },
   }));
-  const includeIndexes = config.updater.kibana.indexes.map(includeIndex => ({match_phrase: {_index: includeIndex}}));
+  const includeIndexes = config.updater.kibana.indexes.map((includeIndex) => ({match_phrase: {_index: includeIndex}}));
   const dataString2 = {
     version: true,
     size: config.updater.kibana.fetchNum,
@@ -89,13 +89,11 @@ async function getData(queryFrom, queryTo) {
     body: dataString,
   };
   // debug(options);
-  try
-  {
+  try {
     const result = await rp(options);
     log.debug('request data ok');
     return result;
-  }
-  catch (err) {
+  } catch (err) {
     log.warn(`failed to send request ${JSON.stringify(options)}`);
     throw err;
   }
@@ -120,7 +118,7 @@ async function fetchData(queryFrom, queryTo) {
     .reduce((res, el) => {
       return res.concat(el);
     }, [])
-    .filter(item => item)
+    .filter((item) => item)
     .map(fixLogEntry);
   return {count: data.length, data};
 }
@@ -134,8 +132,7 @@ async function getLogUpdateInterval() {
   if (!lastDate) {
     queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
     log.info('First time update, fetching data from ', queryFrom.format('YYYY-MM-DD HH:mm:ss'));
-  }
-  else {
+  } else {
     queryFrom = moment(lastDate);
   }
   const now = moment();
@@ -151,8 +148,7 @@ async function getLogUpdateInterval() {
   log.info(`Logs in base for hour: ${logsForLastHour}`);
   if (logsForLastHour > config.updater.kibana.maxLogsPerHour * config.updater.kibana.searchFor) {
     const addFiveMin = queryFrom.clone().add(5, 'm');
-    if (addFiveMin < now)
-    {
+    if (addFiveMin < now) {
       log.warn('Too many logs for this hour, I will skip 5 minutes...');
       queryFrom = addFiveMin;
     }
@@ -214,8 +210,7 @@ async function addItem(item) {
   return true;
 }
 
-async function updateMetData(item)
-{
+async function updateMetData(item) {
   const affectedRows = await knex('first_last_met')
     .where('error_id', item.error_id)
     .where('env', item.env)
@@ -251,22 +246,19 @@ async function doUpdateLogs() {
   log.info(`Adding ${data.count} items`);
   let newErrors = 0;
   await Promise.map(data.data, async (item)=>{
-    try
-    {
+    try {
       const isNew = await Promise.resolve(addItem(item));
-      if (isNew)
-      {
+      if (isNew) {
         newErrors++;
       }
-    } catch (err)
-    {
+    } catch (err) {
       log.error(`ERROR: ${err.message} ${err.stack}\n ot item ${JSON.stringify(item, null, 3)}`);
     }
   }, {concurrency: 1}).timeout(20 * 1000); // no more concurrency because there will be duplicates of error messages
   log.info(`Got all error IDs, new errors: ${newErrors}`);
   const query = knex('logs').insert(data.data).toString();
   const insertRes = await Promise.resolve(knex.raw(query.replace('insert', 'INSERT IGNORE'))).timeout(20 * 1000);
-  const failed = insertRes.filter(item => !item).length;
+  const failed = insertRes.filter((item) => !item).length;
   if (failed > 1) { // 1 is usually a duplicate
     log.info(`Failed to add ${failed} items`);
   }
@@ -285,8 +277,7 @@ async function doUpdateLogs() {
 }
 
 
-async function cleanUp()
-{
+async function cleanUp() {
 
   const today = parseInt(moment().format('DD'), 10);
   if (lastRemovedLogs && lastRemovedLogs === today) {
@@ -303,7 +294,7 @@ async function cleanUp()
     .leftJoin('logs', 'errors.id', 'logs.error_id')
     .whereNull('logs.error_id');
   log.info(`Removing old errors (${oldErrors.length})`);
-  const countErrors = await knex('errors').whereIn('id', oldErrors.map(el=>el.id)).del();
+  const countErrors = await knex('errors').whereIn('id', oldErrors.map((el)=>el.id)).del();
   log.info(`Removed old errors (${countErrors})`);
 
 
@@ -311,7 +302,7 @@ async function cleanUp()
     .leftJoin('errors', 'first_last_met.error_id', 'errors.id')
     .whereNull('errors.id');
   log.info(`Removing old met data, for not actual errors (${oldMetData.length})`);
-  const countOldMetData = await knex('first_last_met').whereIn('error_id', oldMetData.map(el=>el.error_id)).del();
+  const countOldMetData = await knex('first_last_met').whereIn('error_id', oldMetData.map((el)=>el.error_id)).del();
   log.info(`Removed old met data (${countOldMetData})`);
 
 
@@ -324,18 +315,16 @@ async function cleanUp()
     .leftJoin('errors', 'comments.error_id', 'errors.id')
     .whereNull('errors.id');
   log.info(`Removing old comments data (${oldCommentData.length})`);
-  const countOldCommentData = await knex('comments').whereIn('error_id', oldCommentData.map(el=>el.error_id)).del();
+  const countOldCommentData = await knex('comments').whereIn('error_id', oldCommentData.map((el)=>el.error_id)).del();
   log.info(`Removed old comments data (${countOldCommentData})`);
-  Object.keys(errorIdCache).forEach(key=>delete errorIdCache[key]);
+  Object.keys(errorIdCache).forEach((key)=>delete errorIdCache[key]);
 }
 
 async function updateLogs() {
   try {
     await cleanUp();
     await Promise.resolve(doUpdateLogs()).timeout(60 * 1000);
-  }
-  catch (err)
-  {
+  } catch (err) {
     log.error(err);
   }
   setTimeout(() => updateLogs(), config.updater.kibana.updateInterval * 1000);

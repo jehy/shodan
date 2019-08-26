@@ -22,16 +22,11 @@ function printQueryWithTime(uid, showBindings) {
   // I print the sql generated for a given query, as well as
   // the bindings for the queries.
   const logTimings = [query.sql, bindings, `\ntime: ${Math.round(elapsedTime)}`];
-  if (elapsedTime > 15000)
-  {
+  if (elapsedTime > 15000) {
     log.error(...logTimings);
-  }
-  else if (elapsedTime > 5000)
-  {
+  } else if (elapsedTime > 5000) {
     log.warn(...logTimings);
-  }
-  else
-  {
+  } else {
     log.debug(...logTimings);
   }
   // After I print out the query, I have no more use to it,

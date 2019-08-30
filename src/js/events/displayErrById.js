@@ -161,6 +161,66 @@ function getCommentGroup(data, socket) {
   return commentGroup;
 }
 
+
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, (m)=>map[m]).replace(/\n/g, '<br>').replace(/\\n/g, '<br>').replace(/ /g, '&nbsp;');
+}
+
+function formatJSON(message) {
+  let i = 0;
+  const replacements = [];
+  while (i < message.length) {
+    if (message[i] !== '{') {
+      i++;
+      continue;
+    }
+    let jsonFound = false;
+    let n = i;
+    while (!jsonFound && n < message.length) {
+      n++;
+      const closing = message.indexOf('}', n);
+      try {
+        const found = message.substr(i, (n - i + 1));
+        const replace = JSON.stringify(JSON.parse(found), null, 3);
+        replacements.push({from: found, to: replace});
+        jsonFound = true;
+        i = closing + 1;
+      } catch (err) {
+        // no need
+      }
+    }
+    if (!jsonFound) {
+      i++;
+    }
+  }
+  replacements.forEach((replacement)=>{
+    message = message.replace(replacement.from, `\n${replacement.to}`);
+  });
+  return message;
+}
+
+function cutFormat(message, err) {
+  if (message.length === 2007 && message.includes('CUT')) {
+    return `${message} (${Math.floor(err.messageLength / 1024)} KB)`;
+  }
+  return message;
+}
+
+function formatErrorMessage(message, err) {
+  const formated = formatJSON(message);
+  const escaped = escapeHtml(formated);
+  const cutFormatted = cutFormat(escaped, err);
+  return cutFormatted;
+}
+
+
 function displayErrById(data, socket, config) {
 
   const graph = $('<div/>');
@@ -186,11 +246,8 @@ function displayErrById(data, socket, config) {
     }
     err.eventDate = moment(err.eventDate).format('HH:mm:ss');
     const meta = needFields.map((key) => `<td>${err[key]}</td>`).join('');
-    let errMessage = err.message;
-    if (errMessage.length === 2007 && errMessage.includes('CUT')) {
-      errMessage += ` (${Math.floor(err.messageLength / 1024)} KB)`;
-    }
-    const message = $(`<td colspan=${needFields.length} class="err-msg">`).text(errMessage);
+    const errMessage = formatErrorMessage(err.message, err);
+    const message = $(`<td colspan=${needFields.length} class="err-msg">`).html(errMessage);
     // tr.append(Object.values(err).map((val => `<td>${val}</td>`)).join(''));
     tbody.append(`<tr${trStyle}>${meta}</tr>`);
     tbody.append($(`<tr${trStyle}>`).append(message));

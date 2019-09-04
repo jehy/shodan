@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-const rp = require('request-promise');
+const axios = require('axios');
 // const debug = require('debug')('shodan:updater');
 const bunyan = require('bunyan');
 const config = require('config');
@@ -86,13 +86,13 @@ async function getData(queryFrom, queryTo) {
     method: 'POST',
     encoding: null,
     headers,
-    body: dataString,
+    data: dataString,
   };
   // debug(options);
   try {
-    const result = await rp(options);
+    const result = await axios(options);
     log.debug('request data ok');
-    return result;
+    return result.data;
   } catch (err) {
     log.warn(`failed to send request ${JSON.stringify(options)}`);
     throw err;
@@ -103,13 +103,7 @@ async function fetchData(queryFrom, queryTo) {
   const response = await getData(queryFrom, queryTo);
   let data;
   try {
-    data = JSON.parse(response);
-  } catch (e) {
-    log.warn('malformed json!', e, response);
-    return null;
-  }
-  try {
-    data = data.responses[0].hits.hits;
+    data = response.responses[0].hits.hits;
   } catch (e) { // data has no... data
     log.warn('No hits.hits:', data);
     return null;

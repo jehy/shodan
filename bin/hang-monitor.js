@@ -1,6 +1,6 @@
 'use strict';
 
-const rp = require('request-promise');
+const axios = require('axios');
 // const debug = require('debug')('shodan:updater');
 const bunyan = require('bunyan');
 const config = require('config');
@@ -113,12 +113,12 @@ async function getNearHangedLogs(index, date, env, host, role, pid) // todo use 
     method: 'POST',
     encoding: null,
     headers,
-    body: dataStringFinal1,
+    data: dataStringFinal1,
   };
   const options2 = { ...options1, body: dataStringFinal2};
   const options = [options1, options2];
   try {
-    const results = await Promise.map(options, (option)=>rp(option), {concurrency: 1});
+    const results = await Promise.map(options, (option)=>axios(option).then((res)=>res.data), {concurrency: 1});
     log.debug('request data ok');
     return results;
   } catch (err) {
@@ -161,13 +161,7 @@ async function doAddHangedLogs() {
     newLogErrorData.role, newLogErrorData.pid);
   let data;
   try {
-    data = responses.map((d)=>JSON.parse(d));
-  } catch (e) {
-    log.warn('malformed json!', e, responses);
-    return;
-  }
-  try {
-    data = data.map((d)=>d.responses[0].hits.hits);
+    data = responses.map((d)=>d.responses[0].hits.hits);
   } catch (e) { // data has no... data
     log.warn('No hits.hits:', data);
     return;

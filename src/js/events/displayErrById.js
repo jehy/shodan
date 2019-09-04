@@ -208,16 +208,19 @@ function formatJSON(message) {
 
 function cutFormat(message, err) {
   if (err.messageLength > message.length && message.endsWith('... CUT')) {
-    return `${message} (${Math.floor(err.messageLength / 1024)} KB)`;
+    return {
+      cutInfo: `<span class="label label-warning">CUT (${Math.floor(err.messageLength / 1024)} KB)</span>`,
+      cutMessage: message.replace('... CUT', ''),
+    };
   }
-  return message;
+  return {cutInfo: '', cutMessage: message};
 }
 
 function formatErrorMessage(message, err) {
-  const cutFormatted = cutFormat(message, err);
-  const formated = formatJSON(cutFormatted);
+  const {cutInfo, cutMessage} = cutFormat(message, err);
+  const formated = formatJSON(cutMessage);
   const escaped = escapeHtml(formated);
-  return escaped;
+  return `${escaped}${cutInfo}`;
 }
 
 

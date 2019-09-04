@@ -230,7 +230,7 @@ function displayErrById(data, socket, config) {
   addGraph(graph, data);
   // //
   // eventDate, name,type,msgId,env,host,role,message
-  const notNeededFields = ['message', 'name', 'msgName', 'index', 'type'];
+  const notNeededFields = ['message', 'name', 'msgName', 'index', 'type', 'messageLength'];
   const needFields = Object.keys(data.errors[0])
     .filter((key) => !notNeededFields.includes(key));
   const header = data.msgName;

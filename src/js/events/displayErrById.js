@@ -207,17 +207,17 @@ function formatJSON(message) {
 }
 
 function cutFormat(message, err) {
-  if (message.length === 2007 && message.includes('CUT')) {
+  if (err.messageLength > message.length && message.endsWith('... CUT')) {
     return `${message} (${Math.floor(err.messageLength / 1024)} KB)`;
   }
   return message;
 }
 
 function formatErrorMessage(message, err) {
-  const formated = formatJSON(message);
+  const cutFormatted = cutFormat(message, err);
+  const formated = formatJSON(cutFormatted);
   const escaped = escapeHtml(formated);
-  const cutFormatted = cutFormat(escaped, err);
-  return cutFormatted;
+  return escaped;
 }
 
 

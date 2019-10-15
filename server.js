@@ -12,6 +12,7 @@ const showLogsByErrorId = require('./modules/showLogsByErrorId');
 const showTopErrors = require('./modules/showTopErrors');
 const showHanged = require('./modules/showHanged');
 const showSpeed = require('./modules/showSpeed');
+const showConditions = require('./modules/showConditions');
 const updateMessageComment = require('./modules/updateMessageComment');
 
 const log = bunyan.createLogger({name: 'shodan:server'});
@@ -80,6 +81,8 @@ io.on('connection', (socket) => {
       showHanged(knex, socket, event);
     } else if (event.name === 'showSpeed') {
       showSpeed(knex, socket, event);
+    }  else if (event.name === 'showConditions') {
+      showConditions(knex, socket, event);
     } else if (event.name === 'showLogsByErrorId') {
       showLogsByErrorId(knex, socket, event);
     } else {

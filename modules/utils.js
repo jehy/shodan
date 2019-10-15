@@ -5,6 +5,13 @@
 const moment = require('moment');
 const config = require('config');
 
+function fixData(el) {
+  const fixed = { ...el};
+  const message = el.message.replace(el.msgName, '').trim().trim();
+  fixed.message = JSON.parse(message);
+  return fixed;
+}
+
 function getStackStart(msg) {
   const stackBegin1 = msg.includes('(/') && msg.indexOf('(/');
   const stackBegin2 = msg.includes('at /') && msg.indexOf('at /');
@@ -127,4 +134,5 @@ function fixLogEntry(logEntry) {
 module.exports = {
   fixLogEntry,
   fixMessageName,
+  fixData,
 };

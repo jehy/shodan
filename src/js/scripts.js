@@ -16,6 +16,7 @@ const topErrorsPid = $('#topErrors-pid');
 const fetchErrorsAlert = $('#fetchErrors');
 const showHang = $('#topErrors-showHang');
 const showSpeed = $('#showSpeed');
+const showConditions = $('#showConditions');
 
 let needUpdateId = null;
 let timeForUpdate = 0;
@@ -52,6 +53,15 @@ showHang.on('click', () => {
 showSpeed.on('click', () => {
   const data = {
     name: 'showSpeed',
+    data: {
+    },
+  };
+  socket.emit('event', data);
+});
+
+showConditions.on('click', () => {
+  const data = {
+    name: 'showConditions',
     data: {
     },
   };

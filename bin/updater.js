@@ -13,6 +13,8 @@ const log = bunyan.createLogger({name: 'shodan:updater'});
 
 let lastRemovedLogs = null;
 
+const commonDateFormat = 'YYYY-MM-DD HH:mm:ss';
+
 async function getData(queryFrom, queryTo) {
   const kibanaUrl = config.updater.kibana.url;
   const headers = {
@@ -125,7 +127,7 @@ async function getLogUpdateInterval() {
   let queryFrom;
   if (!lastDate) {
     queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
-    log.info('First time update, fetching data from ', queryFrom.format('YYYY-MM-DD HH:mm:ss'));
+    log.info('First time update, fetching data from ', queryFrom.format(commonDateFormat));
   } else {
     queryFrom = moment(lastDate);
   }
@@ -135,7 +137,7 @@ async function getLogUpdateInterval() {
   }
   const queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
 
-  const dateString = queryFrom.format('YYYY-MM-DD HH:mm:ss');
+  const dateString = queryFrom.format(commonDateFormat);
   const reply = await knex('logs').count()
     .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.updater.kibana.searchFor} HOUR) and  "${dateString}"`);
   const logsForLastHour = Object.values(reply[0])[0];
@@ -226,7 +228,7 @@ async function updateMetData(item) {
 
 async function doUpdateLogs() {
   const {queryFrom, queryTo} = await Promise.resolve(getLogUpdateInterval()).timeout(10 * 1000);
-  log.info(`Fetching data from ${queryFrom.format('YYYY-MM-DD HH:mm:ss')} to ${queryTo.format('YYYY-MM-DD HH:mm:ss')}`);
+  log.info(`Fetching data from ${queryFrom.format(commonDateFormat)} to ${queryTo.format(commonDateFormat)}`);
   const queryFromInt = parseInt(queryFrom.format('x'), 10);
   const queryToInt = parseInt(queryTo.format('x'), 10);
   const data = await Promise.resolve(fetchData(queryFromInt, queryToInt)).timeout(40 * 1000);
@@ -284,6 +286,7 @@ async function cleanUp() {
     .del();
   log.info(`Removed ${count} old logs`);
 
+  // eslint-disable-next-line sonarjs/no-duplicate-string
   const oldErrors = await knex.select('errors.id', 'logs.error_id').from('errors')
     .leftJoin('logs', 'errors.id', 'logs.error_id')
     .whereNull('logs.error_id');

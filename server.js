@@ -66,12 +66,10 @@ io.on('connection', (socket) => {
       log.info(`No index for request ${JSON.stringify(event.data)}, setting to default`);
       event.data.index = 'twapi-avia-*';
     }
-    if (config.ui.auth && config.ui.auth.enabled) {
-      if (!socket.request.user || !socket.request.user.logged_in) {
-        log.warn('user not authorized!');
-        socket.emit('event', {name: 'updateTopErrors', data: [], fetchErrors: ['Not authorized']});
-        return;
-      }
+    if (config.ui.auth && config.ui.auth.enabled && (!socket.request.user || !socket.request.user.logged_in)) {
+      log.warn('user not authorized!');
+      socket.emit('event', {name: 'updateTopErrors', data: [], fetchErrors: ['Not authorized']});
+      return;
     }
     if (event.name === 'showTopErrors') {
       showTopErrors(knex, socket, event);

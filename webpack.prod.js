@@ -1,9 +1,9 @@
-const path = require('path'),
-  HtmlWebpackPlugin = require('html-webpack-plugin'),
-  {CleanWebpackPlugin} = require('clean-webpack-plugin'),
-  webpack = require('webpack'),
-  ExtractTextPlugin = require('extract-text-webpack-plugin'),
-  {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const webpack = require('webpack');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
 
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 

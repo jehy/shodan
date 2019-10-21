@@ -1,13 +1,17 @@
 {
   "parserOptions": {
-    "sourceType": "script"
+    "ecmaVersion": 2018,
+    "sourceType": "script",
+    "ecmaFeatures": {
+      "jsx": false
+    }
   },
   "env": {
     "browser": false,
     "node": true,
     "mocha": true
   },
-  "extends": "airbnb-base",
+  "extends": ["plugin:sonarjs/recommended", "airbnb-base"],
   "overrides": [
     {
       "files": [
@@ -27,7 +31,8 @@
     "standard",
     "promise",
     "import",
-    "node"
+    "node",
+    "sonarjs"
   ],
   "rules": {
     "import/no-extraneous-dependencies": [
@@ -42,7 +47,7 @@
         ]
       }
     ],
-    "node/exports-style": ["warn", "module.exports"],
+    "node/exports-style": ["error", "module.exports"],
     "node/prefer-promises/fs": "warn",
     "node/prefer-promises/dns": "error",
     "promise/catch-or-return": ["error", {"allowFinally": true, "terminationMethod":  [
@@ -52,7 +57,6 @@
     "strict": "off",
     "object-curly-newline": "off",
     "prefer-destructuring": "warn",
-    "one-var": "off",
     "function-paren-newline": "off",
     "no-mixed-operators": "off",
     "arrow-body-style": "off",
@@ -61,7 +65,6 @@
     "no-plusplus": "off",
     "arrow-spacing": "off",
     "object-curly-spacing": "off",
-    "prefer-const": "warn",
     "no-unused-vars": "warn",
     "object-shorthand": "warn",
     "no-param-reassign": "warn",
@@ -69,6 +72,7 @@
     "newline-per-chained-call": "off",
     "no-continue": "off",
     "no-multi-spaces": "off",
+    "sonarjs/cognitive-complexity": ["error", 40],
     "max-len": [
       "error",
       140

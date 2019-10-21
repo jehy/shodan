@@ -1,23 +1,23 @@
 function up(knex, Promise) {
-  return knex.schema.createTable('speed_logs', (t) => {
+  return knex.schema.createTable('logs', (t) => {
     t.increments('id').unsigned().primary();
-    t.string('name').notNull().index();
-    t.string('msgName').notNull().index();
     t.specificType('eventDate', 'DATETIME(6)').notNull().index();
     t.string('type').notNull().index();
-    t.integer('pid').index();
-    t.string('env').notNull().index();
+    t.string('msgId').notNull();
+    t.string('guid').notNull();
+    t.enum('env', ['production-a', 'production-b', 'staging']).notNull().index();
     t.string('host').notNull();
     t.string('role').notNull().index();
     t.text('message').nullable();
-    t.string('msgId').notNull();
-    t.string('guid').notNull().unique();
+    t.integer('pid').index();
+    t.integer('messageLength').index();
+    t.integer('error_id').unsigned().notNullable().index();
     t.enum('level', ['I', 'E', 'W', 'Z', 'D', '']).notNull().index();
   });
 }
 
 function down(knex, Promise) {
-  return knex.schema.dropTableIfExists('speed_logs');
+  return knex.schema.dropTableIfExists('logs');
 }
 
 module.exports = {up, down};

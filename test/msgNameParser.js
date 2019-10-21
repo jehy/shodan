@@ -16,6 +16,7 @@ describe('Message name generator', () => {
         msgName: 'uncaughtException_0',
         fields: {},
       },
+      // eslint-disable-next-line sonarjs/no-duplicate-string
       _index: 'some-index',
     };
     const fixed = parsingUtils.fixLogEntry(logEntry);

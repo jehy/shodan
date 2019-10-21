@@ -11,11 +11,6 @@
       "args": "run updater"
     },
     {
-      "name": "shodan-hang-monitor",
-      "script": "npm",
-      "args": "run hang-monitor"
-    },
-    {
       "name": "shodan-speed-monitor",
       "script": "npm",
       "args": "run speed-monitor"

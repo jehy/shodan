@@ -1,5 +1,5 @@
-const webpackDev = require('./webpack.dev'),
-  webpackProd = require('./webpack.prod');
+const webpackDev = require('./webpack.dev');
+const webpackProd = require('./webpack.prod');
 
 const webpack = {dev: webpackDev, prod: webpackProd};
 

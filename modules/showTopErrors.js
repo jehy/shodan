@@ -1,4 +1,4 @@
-// const debug = require('debug')('shodan:server');
+/* eslint-disable sonarjs/no-duplicate-string */
 const config = require('config');
 const bunyan = require('bunyan');
 

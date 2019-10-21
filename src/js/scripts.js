@@ -18,6 +18,12 @@ const showHang = $('#topErrors-showHang');
 const showSpeed = $('#showSpeed');
 const showConditions = $('#showConditions');
 
+const progressBarClasses = {
+  warn: 'progress-bar-warning',
+  info: 'progress-bar-info',
+  danger: 'progress-bar-danger',
+};
+
 let needUpdateId = null;
 let timeForUpdate = 0;
 let canUpdate = true;
@@ -95,17 +101,17 @@ function reload() {
     }
     progressSpan.text(`${iteration} seconds`);
     if (iteration > 20) {
-      progressDiv.removeClass('progress-bar-warning');
-      progressDiv.removeClass('progress-bar-info');
-      progressDiv.addClass('progress-bar-danger');
+      progressDiv.removeClass(progressBarClasses.warn);
+      progressDiv.removeClass(progressBarClasses.info);
+      progressDiv.addClass(progressBarClasses.danger);
     } else if (iteration > 10) {
-      progressDiv.removeClass('progress-bar-info');
-      progressDiv.removeClass('progress-bar-danger');
-      progressDiv.addClass('progress-bar-warning');
+      progressDiv.removeClass(progressBarClasses.info);
+      progressDiv.removeClass(progressBarClasses.danger);
+      progressDiv.addClass(progressBarClasses.warn);
     } else {
-      progressDiv.removeClass('progress-bar-warning');
-      progressDiv.removeClass('progress-bar-danger');
-      progressDiv.addClass('progress-bar-info');
+      progressDiv.removeClass(progressBarClasses.warn);
+      progressDiv.removeClass(progressBarClasses.danger);
+      progressDiv.addClass(progressBarClasses.info);
     }
     iteration++;
 
@@ -123,7 +129,7 @@ function runReloader() {
     return Promise.delay(3000).then(()=>waitCanUpdate());
   }
 
-  waitCanUpdate().timeout(80 * 1000)
+  return waitCanUpdate().timeout(80 * 1000)
     .catch(()=>{
       console.log('Timeout while waiting for updating, requesting again');
     })

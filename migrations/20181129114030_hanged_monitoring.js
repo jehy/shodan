@@ -1,4 +1,4 @@
-exports.up = (knex, Promise) => {
+function up(knex, Promise) {
   return knex.schema.createTable('hanged_logs', (t) => {
     t.increments('id').unsigned().primary();
     t.string('name').notNull().index();
@@ -14,8 +14,10 @@ exports.up = (knex, Promise) => {
     t.integer('logId').unsigned().notNullable();
     t.integer('score').index();
   });
-};
+}
 
-exports.down = (knex, Promise) => {
+function down(knex, Promise) {
   return knex.schema.dropTableIfExists('hanged_logs').catch();
-};
+}
+
+module.exports = {up, down};

@@ -281,10 +281,17 @@ async function cleanUp() {
   }
   log.info('Removing old logs');
   lastRemovedLogs = today;
-  const count = await knex('logs')
-    .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
-    .del();
-  log.info(`Removed ${count} old logs`);
+  let count = 0;
+  let removeCounter = 0;
+  while (count > 1000 || removeCounter === 0) {
+    removeCounter++;
+    // eslint-disable-next-line no-await-in-loop
+    count = await knex('logs')
+      .whereRaw(`eventDate < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
+      .limit(5000)
+      .del();
+    log.info(`Removed ${count} old logs, iteration ${removeCounter}`);
+  }
 
   // eslint-disable-next-line sonarjs/no-duplicate-string
   const oldErrors = await knex.select('errors.id', 'logs.error_id').from('errors')

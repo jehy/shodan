@@ -6,9 +6,9 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 
 module.exports = {
-  entry: './src/js/index.js',
+  entry: './front/js/index.js',
   devtool: 'source-map',
-  cache: true,
+  cache: false,
   mode: 'development',
   plugins: [
     new webpack.ProvidePlugin({$: 'jquery', jQuery: 'jquery' }),
@@ -16,8 +16,8 @@ module.exports = {
     new ExtractTextPlugin('styles.css'),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      favicon: './src/images/favicon.ico',
-      template: './src/index.ejs',
+      favicon: './front/images/favicon.ico',
+      template: './front/index.ejs',
       inject: true,
       hash: true,
     }),
@@ -40,7 +40,9 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env'],
+            presets: [['@babel/preset-env', {targets: {
+              chrome: '77',
+            }}]],
           },
         },
       },

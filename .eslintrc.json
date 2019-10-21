@@ -15,7 +15,7 @@
   "overrides": [
     {
       "files": [
-        "src/js/**/*.js"
+        "front/js/**/*.js"
       ],
       "env": {
         "browser": true,
@@ -43,7 +43,7 @@
           "webpack.config",
           "webpack.dev.js",
           "webpack.prod.js",
-          "src/js/**/*.js"
+          "front/js/**/*.js"
         ]
       }
     ],

@@ -135,7 +135,7 @@ function showTimeLineData(data, container) {
 
 function showSpeed(data) {
 
-  if (!data) {
+  if (!data || !data.length) {
     fetchErrorsAlert.empty().append('No logs for slow searches, please come back later').show();
     return;
   }

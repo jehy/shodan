@@ -1,84 +1,30 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
+const TerserPlugin = require('terser-webpack-plugin');
+const devSetup = require('./webpack.dev');
 
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-
-module.exports = {
-  entry: './src/js/index.js',
+const prodOnly = {
   devtool: 'source-map',
-  cache: true,
   mode: 'production',
   optimization: {
     minimizer: [
-      new UglifyJsPlugin({
-        cache: true,
+      new TerserPlugin({
         parallel: true,
-        sourceMap: true,
+        terserOptions: {
+          ecma: 6,
+        },
       }),
     ],
   },
   plugins: [
-    new webpack.ProvidePlugin({$: 'jquery', jQuery: 'jquery' }),
-    new webpack.ContextReplacementPlugin(/moment[\\/]locale$/, /^\.\/(ru|en)$/), // https://github.com/webpack/webpack/issues/87
     new BundleAnalyzerPlugin({analyzerMode: 'static', openAnalyzer: false}),
-    new ExtractTextPlugin('styles.css'),
-    new webpack.LoaderOptionsPlugin({
-      minimize: true,
-      debug: false,
-    }),
-    new CleanWebpackPlugin(),
-    new HtmlWebpackPlugin({
-      favicon: './src/images/favicon.ico',
-      template: './src/index.ejs',
-      inject: true,
-      hash: true,
-    }),
   ],
-  output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-  },
-  node: {
-    tls: 'empty',
-    fs: 'empty',
-    net: 'empty',
-    console: true,
-  },
-  module: {
-    rules: [
-      {
-        test: /\.js$/,
-        // exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env'],
-          },
-        },
-      },
-      {
-        test: /\.css$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: 'css-loader',
-        }),
-      },
-      {
-        test: /\.(png|svg|jpg|gif)$/,
-        use: [
-          'file-loader',
-        ],
-      },
-      {
-        test: /\.(woff|woff2|eot|ttf|otf)$/,
-        use: [
-          'file-loader',
-        ],
-      },
-    ],
-  },
 };
+
+const prodSetup = {...devSetup,
+  devtool: prodOnly.devtool,
+  mode: prodOnly.mode,
+  optimization: prodOnly.optimization,
+  plugins: prodOnly.plugins.concat(devSetup.plugins),
+};
+
+module.exports = prodSetup;

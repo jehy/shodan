@@ -150,8 +150,7 @@ function getMetData(err, firstLastMetData) {
   return metData;
 }
 
-function showTopErrors(knex, socket, event) {
-
+function getTopErrors(knex, event) {
   const fetchErrors = [];
 
   let interval = 'DAY';
@@ -194,17 +193,22 @@ function showTopErrors(knex, socket, event) {
               preHour: preHour && preHour.count || 0,
               comment: comment && comment.comment || '',
               errors: checkErrorEntry(err),
+              env: event.data.env,
             });
           });
         });
-    })
-    .then((topErrors) => {
-      if (!socket) {
-        return topErrors;
-      }
-      return socket.emit('event', {name: 'updateTopErrors', data: topErrors, fetchErrors, id: event.id});
-    });
+    }).then((result) => { return {topErrors: result, fetchErrors}; });
+}
+
+async function showTopErrors(knex, socket, event) {
+  const result = await getTopErrors(knex, event);
+  socket.emit('event', {
+    name: 'updateTopErrors',
+    data: result.topErrors,
+    fetchErrors: result.fetchErrors,
+    id: event.id,
+  });
 }
 
 
-module.exports = showTopErrors;
+module.exports = {showTopErrors, getTopErrors};

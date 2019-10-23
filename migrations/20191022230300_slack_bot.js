@@ -2,8 +2,8 @@ const table = 'slack-bot';
 function up(knex, Promise) {
   return knex.schema.createTable(table, (t) => {
     t.increments('id').unsigned().primary();
-    t.text('fullMessage').nullable();
-    t.boolean('isStaging').notNullable();
+    t.string('msgName').nullable();
+    t.string('typeErr').notNullable();
     t.dateTime('added').notNull().defaultTo(knex.raw('CURRENT_TIMESTAMP'));
   });
 }

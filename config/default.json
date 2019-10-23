@@ -19,8 +19,7 @@
       }
     }
   },
-  "updater":
-  {
+  "updater": {
     "maxErrorLength": 10000,
     "kibana": {
       "version": "5.5.2",
@@ -55,5 +54,14 @@
     "migrations": {
       "tableName": "knex_migrations"
     }
+  },
+  "slack": {
+    "token": "",
+    "channelId": "CPQA5NS6A",
+    "cronInterval": "*/10 * * * *",
+    "diffMinutesBetweenSendSlack": "5",
+    "perHourErrors": 0,
+    "countErrors" : 0,
+    "blackListMsgNames": [""]
   }
 }

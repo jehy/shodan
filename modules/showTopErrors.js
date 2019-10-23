@@ -199,7 +199,10 @@ function showTopErrors(knex, socket, event) {
         });
     })
     .then((topErrors) => {
-      socket.emit('event', {name: 'updateTopErrors', data: topErrors, fetchErrors, id: event.id});
+      if (!socket) {
+        return topErrors;
+      }
+      return socket.emit('event', {name: 'updateTopErrors', data: topErrors, fetchErrors, id: event.id});
     });
 }
 

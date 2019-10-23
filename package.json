@@ -7,6 +7,7 @@
     "updater": "DEBUG=shodan:updater node --use-strict ./bin/updater.js  | ./node_modules/.bin/bunyan -o short",
     "hang-monitor": "DEBUG=shodan:hang-monitor node --use-strict ./bin/hang-monitor.js  | ./node_modules/.bin/bunyan -o short",
     "speed-monitor": "DEBUG=shodan:speed-monitor node --use-strict ./bin/speed-monitor.js  | ./node_modules/.bin/bunyan -o short",
+    "slack-bot": "DEBUG=shodan:slack-bot node --use-strict ./bin/slack-bot.js | ./node_modules/.bin/bunyan -o short",
     "server": "DEBUG=shodan:server,shodan:knex-data,shodan:auth node --use-strict ./server.js  | ./node_modules/.bin/bunyan -o short",
     "start": "DEBUG=shodan:server,shodan:updater,shodan:auth node --use-strict ./index.js  | ./node_modules/.bin/bunyan -o short",
     "lint": "node ./node_modules/eslint/bin/eslint.js ./front/js server.js webpack.config.js webpack.dev.js webpack.dev.js migrations bin knexfile.js modules",
@@ -44,11 +45,14 @@
     "knex": "~0.19.5",
     "moment": "~2.24.0",
     "mysql": "~2.17.1",
+    "node-cron": "^2.0.3",
     "passport": "~0.4.0",
     "passport-google-oauth": "^1.0.0",
     "passport.socketio": "~3.7.0",
     "performance-now": "~2.1.0",
-    "socket.io": "^2.3.0"
+    "slack": "^11.0.2",
+    "socket.io": "^2.3.0",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",

@@ -22,7 +22,7 @@
   "updater": {
     "maxErrorLength": 10000,
     "kibana": {
-      "version": "5.5.2",
+      "version": "6.2.4",
       "url": "",
       "searchFor": 1,
       "firstSearchFor": 24,
@@ -56,12 +56,20 @@
     }
   },
   "slack": {
-    "token": "",
-    "channelId": "CPQA5NS6A",
-    "cronInterval": "*/10 * * * *",
-    "diffMinutesBetweenSendSlack": "5",
-    "perHourErrors": 0,
-    "countErrors" : 0,
-    "blackListMsgNames": [""]
+    "table": "slack_bot",
+    "credentials": {
+      "token": ""
+    },
+    "errNotifyBot": {
+      "releaseChannelId": "",
+      "outputChannelId": "",
+      "intervalMin": 5,
+      "diffMinutesBetweenSendSlack": 5,
+      "perHourErrors": 1,
+      "countErrors" : 10,
+      "blackListMsgNames": [""],
+      "maxSlackMessages": 6,
+      "formatDate": "MMM DD HH:mm"
+    }
   }
 }

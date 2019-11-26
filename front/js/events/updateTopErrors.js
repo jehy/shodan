@@ -53,9 +53,9 @@ function formatFirstMetTD(row) {
   const firstMet = moment().diff(moment(row.firstMet), 's');
   let tdClass = '';
   const appearDiff = moment().diff(moment(row.firstMet), 'h');
-  if (appearDiff < 6) {
+  if (appearDiff < 24) {
     tdClass = 'danger';
-  } else if (appearDiff < 48) {
+  } else if (appearDiff < 96) {
     tdClass = 'warning';
   }
   return `<td class="${tdClass}">${Utils.showDiff(firstMet)}</td>`;

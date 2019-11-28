@@ -14,6 +14,11 @@
       "name": "shodan-speed-monitor",
       "script": "npm",
       "args": "run speed-monitor"
+    },
+    {
+      "name": "shodan-slack-bot",
+      "script": "npm",
+      "args": "run slack-bot"
     }
   ]
 }

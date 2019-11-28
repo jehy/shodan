@@ -9,7 +9,7 @@ const knex = require('knex')(config.db);
 require('./modules/knex-timings')(knex, false);
 
 const showLogsByErrorId = require('./modules/showLogsByErrorId');
-const showTopErrors = require('./modules/showTopErrors');
+const {showTopErrors} = require('./modules/showTopErrors');
 const showHanged = require('./modules/showHanged');
 const showSpeed = require('./modules/showSpeed');
 const showConditions = require('./modules/showConditions');

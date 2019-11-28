@@ -19,11 +19,10 @@
       }
     }
   },
-  "updater":
-  {
+  "updater": {
     "maxErrorLength": 10000,
     "kibana": {
-      "version": "5.5.2",
+      "version": "6.2.4",
       "url": "",
       "searchFor": 1,
       "firstSearchFor": 24,
@@ -54,6 +53,21 @@
     },
     "migrations": {
       "tableName": "knex_migrations"
+    }
+  },
+  "slack": {
+    "credentials": {
+      "token": ""
+    },
+    "errNotifyBot": {
+      "releaseChannelId": "",
+      "outputChannelId": "",
+      "intervalMin": 5,
+      "diffMinutesBetweenSendSlack": 60,
+      "perHourErrors": 15,
+      "blackListMsgNames": [],
+      "maxSlackMessages": 4,
+      "formatDate": "MMM DD HH:mm"
     }
   }
 }

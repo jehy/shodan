@@ -59,8 +59,8 @@ const typesConfig = {
 
 const events = [
   // eslint-disable-next-line sonarjs/no-duplicate-string
-  {name: 'showTopErrors', data: { env: '', period: 'day', role: '', pid: '', index: 'twapi-avia'}},
-  {name: 'showTopErrors', data: { env: 'staging', period: 'day', role: '', pid: '', index: 'twapi-avia'}},
+  {name: 'showTopErrors', data: { env: '', period: 'hour', role: '', pid: '', index: 'twapi-avia'}},
+  {name: 'showTopErrors', data: { env: 'staging', period: 'hour', role: '', pid: '', index: 'twapi-avia'}},
 ];
 
 async function getDuty() {

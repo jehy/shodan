@@ -135,6 +135,7 @@ async function sendMessages(object, duty) {
       token: slackCfg.credentials.token,
       channel: slackCfg.errNotifyBot.outputChannelId,
       text: '',
+      as_user: true,
       blocks,
     });
   }

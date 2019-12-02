@@ -59,15 +59,17 @@
     "credentials": {
       "token": ""
     },
-    "errNotifyBot": {
-      "releaseChannelId": "",
+    "errorNotifyBot": {
+      "monitoringChannelId": "",
       "outputChannelId": "",
-      "intervalMin": 5,
+      "interval": 5,
       "diffMinutesBetweenSendSlack": 60,
-      "perHourErrors": 15,
+      "minStageErrors": 10,
+      "minProdErrors": 20,
+      "minStageErrorsGrown": 5,
+      "minProdErrorsGrown": 5,
       "blackListMsgNames": [],
-      "maxSlackMessages": 4,
-      "formatDate": "MMM DD HH:mm"
+      "maxSlackMessages": 4
     }
   }
 }

@@ -11,202 +11,191 @@ const {makeKibanaLink} = require('../modules/common');
 const {getTopErrors} = require('../modules/showTopErrors');
 
 const log = bunyan.createLogger({name: 'shodan:slack-notify'});
-const {kibana} = config.updater;
-const slackCfg = config.slack;
-const slack = new Slack({token: slackCfg.credentials.token});
+const kibanaConfig = config.updater.kibana;
+const slackConfig = config.slack;
+const botConfig = slackConfig.errorNotifyBot;
+const slackClient = new Slack({token: slackConfig.credentials.token});
 
-const TIMEOUT = slackCfg.errNotifyBot.intervalMin * 1000 * 60;
+const checkInterval = botConfig.interval * 1000 * 60;
 
-const Errors = {
-  FIRST_ERRORS_PROD: 'firstErrorsProd',
-  GROWING_ERRORS_PROD: 'growingErrorsProd',
-  FIRST_ERRORS_STAGE: 'firstErrorsStage',
-  GROWING_ERRORS_STAGE: 'growingErrorsStage',
-};
+const kibanaIndex = 'twapi-avia';
 
-const typesConfig = {
-  [Errors.FIRST_ERRORS_PROD]: {
-    description: '',
+class ErrorChecks {
+  static grownEnough(el, min) {
+    return el.preHour === 0 || (el.count / el.preHour >= min);
+  }
+
+  static countEnough(el, min) {
+    return el.count >= min;
+  }
+
+  static isStaging(el) {
+    return el.env === 'staging';
+  }
+
+  static appearedToday(el) {
+    return moment(el.firstMet).format('DDMMYYYY') === moment().format('DDMMYYYY');
+  }
+}
+
+// Ошибки по приоритету. Чем выше, тем приоритетнее. Одна ошибка попадает только в одну категорию, наиболее приоритетную.
+const errorsByPriority = [
+  {
+    description: 'Впервые на продакшне',
     condition: (el) => {
-      const first = moment(el.firstMet).format('DDMMYYYY') === moment().format('DDMMYYYY');
-      return el.env !== 'staging' && first;
+      const countEnough = ErrorChecks.countEnough(el, botConfig.minProdErrors);
+      const isStaging = ErrorChecks.isStaging(el);
+      const appearedToday = ErrorChecks.appearedToday(el);
+      return !isStaging && appearedToday && countEnough;
     },
   },
-  [Errors.GROWING_ERRORS_PROD]: {
-    description: '',
+  {
+    description: 'Впервые на стейдже',
     condition: (el) => {
-      const hour = el.preHour >= slackCfg.errNotifyBot.perHourErrors;
-      const grow = (el.preHour === 0 ? !!el.count : (el.count / el.preHour)) >= slackCfg.errNotifyBot.perHourErrors;
-      return el.env !== 'staging' && hour && grow;
+      const countEnough = ErrorChecks.countEnough(el, botConfig.minStageErrors);
+      const isStaging = ErrorChecks.isStaging(el);
+      const appearedToday = ErrorChecks.appearedToday(el);
+      return appearedToday && countEnough && isStaging;
     },
   },
-  [Errors.FIRST_ERRORS_STAGE]: {
-    description: 'на стейдже',
+  {
+    description: 'Рост на продакшне',
     condition: (el) => {
-      const first = moment(el.firstMet).format('DDMMYYYY') === moment().format('DDMMYYYY');
-      return el.env === 'staging' && first;
+      const countEnough = ErrorChecks.countEnough(el, botConfig.minProdErrors);
+      const grownEnough = ErrorChecks.grownEnough(el, botConfig.minProdErrorsGrown);
+      const isStaging = ErrorChecks.isStaging(el);
+      return !isStaging && countEnough && grownEnough;
     },
   },
-  [Errors.GROWING_ERRORS_STAGE]: {
-    description: 'на стейдже',
+  {
+    description: 'Рост на стейдже',
     condition: (el) => {
-      const hour = el.preHour >= slackCfg.errNotifyBot.perHourErrors;
-      const grow = (el.preHour === 0 ? !!el.count : (el.count / el.preHour)) >= slackCfg.errNotifyBot.perHourErrors;
-      return el.env === 'staging' && hour && grow;
+      const countEnough = ErrorChecks.countEnough(el, botConfig.minStageErrors);
+      const grownEnough = ErrorChecks.grownEnough(el, botConfig.minStageErrorsGrown);
+      const isStaging = ErrorChecks.isStaging(el);
+      return isStaging && countEnough && grownEnough;
     },
   },
-};
-
-const events = [
-  // eslint-disable-next-line sonarjs/no-duplicate-string
-  {name: 'showTopErrors', data: { env: '', period: 'hour', role: '', pid: '', index: 'twapi-avia'}},
-  {name: 'showTopErrors', data: { env: 'staging', period: 'hour', role: '', pid: '', index: 'twapi-avia'}},
 ];
 
 async function getDuty() {
-  const info = await slack.channels.info({
-    token: slackCfg.credentials.token,
-    channel: slackCfg.errNotifyBot.releaseChannelId,
+  const info = await slackClient.conversations.info({
+    token: slackConfig.credentials.token,
+    channel: botConfig.monitoringChannelId,
   });
   return info.channel.topic.value.match(/<@\w{9}>/gi);
 }
 
-function createHeader(duty) {
-  return [{
+function link(error) {
+  return makeKibanaLink(kibanaIndex, error.name, error.msgName, kibanaConfig.url);
+}
+
+function formatDate(date) {
+  return moment(date).format('MMM DD HH:mm');
+}
+
+function errorGrowthRate(error) {
+  return (error.preHour === 0 ? 'N/A' : (error.count / error.preHour).toFixed(2));
+}
+
+function generateMessage(errors, duty) {
+  const header = {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `*Статистика.* Уважаемые дежурные ${duty.join(',')}, у нас что-то горит...`,
+      text: `*Shodan.* ${duty.join(',')}, обратите внимание:`,
     },
-  }];
+  };
+  const errorsFormatted = errors.map((error, index)=>{
+    return {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*${index + 1}.* <${link(error)}|${error.name}.${error.msgName}>: ${error.description}\n`
+      + `сколько: ${error.count}, ранее: ${error.preHour}, первая: ${formatDate(error.firstMet)},`
+      + ` последняя: ${formatDate(error.lastMet)}, рост: ${errorGrowthRate(error)}`,
+      },
+    };
+  });
+  return [header].concat(errorsFormatted);
 }
 
-function link(m) {
-  return makeKibanaLink('twapi-avia', m.name, m.msgName, kibana.url);
-}
-function formatDate(date) {
-  return moment(date).format(slackCfg.errNotifyBot.formatDate);
-}
-function prevInterval(m) {
-  return (m.preHour === 0 ? m.count : (m.count / m.preHour).toFixed(2));
-}
-
-function generateBlocks(messages, duty) {
-  let i = 0;
-  return createHeader(duty).concat(Object.keys(messages).reduce((acc, typeError) => {
-    messages[typeError].forEach((m) => {
-      const description = typesConfig[typeError].description ? `описание: ${typesConfig[typeError].description}` : '';
-      acc.push({
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*${i++ + 1}.* <${link(m)}|${m.name}.${m.msgName}>, `
-            + `сколько: ${m.count}, `
-            + `первая: ${formatDate(m.firstMet)}, `
-            + `последняя: ${formatDate(m.lastMet)}, `
-            + `рост: ${Math.trunc(prevInterval(m))} `
-            + `${description} `,
-        },
-      });
-    });
-    return acc;
-  }, []));
-}
-
-async function sendMessages(object, duty) {
-  const keys = Object.keys(object);
-  if (keys.length === 0) {
-    log.info('Object with errors has not keys in sendMessages()');
-    return;
-  }
-  // ограничиваем количество сообщений, для отправки в слак
-  // делим на количество типов ошибок, попровну на каждый тип
-  const limit = Math.round(slackCfg.errNotifyBot.maxSlackMessages / keys.length);
-
-  const errors = keys.reduce((acc, el) => {
-    acc[el] = object[el].slice(0, limit);
-    return acc;
-  }, {});
-
-  const blocks = generateBlocks(errors, duty);
-
-  if (blocks.length !== 1) {
-    await slack.chat.postMessage({
-      token: slackCfg.credentials.token,
-      channel: slackCfg.errNotifyBot.outputChannelId,
-      text: '',
-      as_user: true,
-      blocks,
-    });
-  }
-}
-
-
-async function writeToDb(object) {
-  const keys = Object.keys(object);
-  if (keys.length === 0) {
-    log.info('Object with errors has not keys in writeToDb()');
-    return;
-  }
+async function sendToSlack(errors) {
   const duty = await getDuty();
-  log.info(`Duty is ${JSON.stringify(duty)}`);
-  const minutes = slackCfg.errNotifyBot.diffMinutesBetweenSendSlack;
+  log.info(`Duty data from slack: ${JSON.stringify(duty)}`);
+  const message = generateMessage(errors, duty);
 
-  const slackMessages = await Promise.reduce(keys, async (acc, curTypeError) => {
-    const currentArr = object[curTypeError];
-    const databaseMessages = await Promise.reduce(currentArr, async (accum, curMes) => {
-      const value = await knex
-        .where({typeErr: curTypeError, msgName: curMes.msgName})
-        .andWhereRaw(`added > DATE_SUB(NOW(), INTERVAL ${minutes} MINUTE)`)
-        .from('slack_bot')
-        .first('id', 'added');
+  await slackClient.chat.postMessage({
+    token: slackConfig.credentials.token,
+    channel: botConfig.outputChannelId,
+    text: '',
+    as_user: true,
+    blocks: message,
+  });
+}
 
-      if (!value) {
-        log.info(`We have new record: ${JSON.stringify(curMes)}`);
-        await knex.insert({msgName: curMes.msgName, typeErr: curTypeError}).into('slack_bot');
-        accum.push(curMes);
-      }
-      return accum;
-    }, []);
+/**
+ * filter messages for slack, leave only those that were not sent earlier
+ * @param errorsToReport
+ * @returns {Promise<*>}
+ */
+async function filterBySent(errorsToReport) {
+  const possibleDuplicates = await knex('slack_bot')
+    .select('msgName', 'typeErr')
+    .whereRaw(`added > DATE_SUB(NOW(), INTERVAL ${botConfig.diffMinutesBetweenSendSlack} MINUTE)`)
+    .from('slack_bot');
+  return errorsToReport.filter((err)=>!possibleDuplicates.some((dup)=>{
+    return dup.msgName === err.msgName && dup.typeErr === err.description;
+  }));
+}
 
-    acc[curTypeError] = [].concat(databaseMessages);
+async function processErrorMessages(errorsToReport) {
+  const newErrorMessages = await filterBySent(errorsToReport);
+  const errorMessagesLimited = newErrorMessages.slice(0, botConfig.maxSlackMessages);
+  if (!errorMessagesLimited.length) {
+    log.info('no new messages to send after filtering by already sent');
+    return;
+  }
+  await sendToSlack(errorMessagesLimited);
+  const forDatabase = errorMessagesLimited.map((err)=>({msgName: err.msgName, typeErr: err.description}));
+  await knex.insert(forDatabase).into('slack_bot');
+}
+
+async function run() {
+
+  await knex('slack_bot')
+    .whereRaw(`added < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
+    .del();
+  const dbRequests = [
+    {name: 'showTopErrors', data: { env: '', period: 'hour', role: '', pid: '', index: kibanaIndex}},
+    {name: 'showTopErrors', data: { env: 'staging', period: 'hour', role: '', pid: '', index: kibanaIndex}},
+  ];
+  const errors = (await Promise.reduce(dbRequests, async (res, el) => {
+    const errorPart = await getTopErrors(knex, el);
+    return res.concat(errorPart && errorPart.topErrors || []);
+  }, []))
+    .filter((e) => !botConfig.blackListMsgNames.includes(e.msgName));
+  log.info('We have', errors.length, 'errors after blacklist');
+
+  const errorsToReport = errors.reduce((acc, error) => {
+    const reportCondition = errorsByPriority.find(({condition}) => condition(error));
+    if (reportCondition) {
+      acc.push({...error, description: reportCondition.description});
+    }
     return acc;
-  }, {});
-  await sendMessages(slackMessages, duty);
+  }, []);
+
+  if (!errorsToReport.length) {
+    log.info('Nothing to report after condition filter');
+    return null;
+  }
+  return processErrorMessages(errorsToReport);
 }
 
-function run() {
-  const blackList = slackCfg.errNotifyBot.blackListMsgNames;
-
-  return Promise.map(events, (el) => getTopErrors(knex, el))
-    .then(async (res) => {
-      const errors = res
-        .reduce((acc, obj) => acc.concat(obj.topErrors), [])
-        .filter((e) => !blackList.includes(e.msgName));
-
-      log.info('We are have', errors.length, 'errors');
-      const priorityConditions = Object.keys(typesConfig);
-      log.info('Priority conditions', priorityConditions);
-
-      const assembledObject = errors.reduce((acc, el) => {
-        for (let i = 0; i < priorityConditions.length; i++) {
-          const curr = priorityConditions[i];
-          if (typesConfig[curr].condition(el)) {
-            acc[curr] = [].concat(acc[curr] ? acc[curr] : [], el);
-            break;
-          }
-        }
-        return acc;
-      }, {});
-
-      await writeToDb(assembledObject);
-    })
-    .catch((e) => log.error(e));
-}
-async function start() {
+function schedule() {
   log.info('Slack-bot started');
-  await run();
-  setTimeout(start, TIMEOUT);
+  run().catch((e) => log.error(e));
+  setTimeout(schedule, checkInterval);
 }
 
-start();
+schedule();

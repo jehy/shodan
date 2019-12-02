@@ -80,7 +80,6 @@ const errorsByPriority = [
 
 async function getDuty() {
   const info = await slackClient.conversations.info({
-    token: slackConfig.credentials.token,
     channel: botConfig.monitoringChannelId,
   });
   return info.channel.topic.value.match(/<@\w{9}>/gi);
@@ -126,7 +125,6 @@ async function sendToSlack(errors) {
   const message = generateMessage(errors, duty);
 
   await slackClient.chat.postMessage({
-    token: slackConfig.credentials.token,
     channel: botConfig.outputChannelId,
     text: '',
     as_user: true,

@@ -43,7 +43,7 @@ const errorsByPriority = [
   {
     description: 'Впервые на продакшне',
     condition: (el) => {
-      const countEnough = ErrorChecks.countEnough(el, botConfig.minProdErrors);
+      const countEnough = ErrorChecks.countEnough(el, botConfig.minProdErrorsNew);
       const isStaging = ErrorChecks.isStaging(el);
       const appearedToday = ErrorChecks.appearedToday(el);
       return !isStaging && appearedToday && countEnough;
@@ -52,7 +52,7 @@ const errorsByPriority = [
   {
     description: 'Впервые на стейдже',
     condition: (el) => {
-      const countEnough = ErrorChecks.countEnough(el, botConfig.minStageErrors);
+      const countEnough = ErrorChecks.countEnough(el, botConfig.minStageErrorsNew);
       const isStaging = ErrorChecks.isStaging(el);
       const appearedToday = ErrorChecks.appearedToday(el);
       return appearedToday && countEnough && isStaging;

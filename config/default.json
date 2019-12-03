@@ -65,11 +65,13 @@
       "interval": 5,
       "diffMinutesBetweenSendSlack": 60,
       "minStageErrors": 10,
-      "minProdErrors": 20,
+      "minProdErrors": 50,
+      "minStageErrorsNew": 10,
+      "minProdErrorsNew": 20,
       "minStageErrorsGrown": 5,
       "minProdErrorsGrown": 5,
       "blackListMsgNames": [],
-      "maxSlackMessages": 4
+      "maxSlackMessages": 8
     }
   }
 }

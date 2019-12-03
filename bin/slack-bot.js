@@ -136,6 +136,7 @@ async function sendToSlack(errors) {
     as_user: true,
     blocks: message,
   });
+  log.info(`Sent warning about ${message.length - 1} errors`);
 }
 
 /**

@@ -96,6 +96,12 @@ function formatDate(date) {
 function errorGrowthRate(error) {
   return (error.preHour === 0 ? 'N/A' : (error.count / error.preHour).toFixed(2));
 }
+function formatDescription(str) {
+  if (str.includes('Впервые')) {
+    return `*${str}*`;
+  }
+  return str;
+}
 
 function generateMessage(errors, duty) {
   const header = {
@@ -110,7 +116,7 @@ function generateMessage(errors, duty) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${index + 1}.* <${link(error)}|${error.name}.${error.msgName}>: ${error.description}\n`
+        text: `*${index + 1}.* <${link(error)}|${error.name}.${error.msgName}>: ${formatDescription(error.description)}\n`
       + `сколько: ${error.count}, ранее: ${error.preHour}, первая: ${formatDate(error.firstMet)},`
       + ` последняя: ${formatDate(error.lastMet)}, рост: ${errorGrowthRate(error)}`,
       },

@@ -136,7 +136,6 @@ async function sendToSlack(errors) {
     as_user: true,
     blocks: message,
   });
-  log.info(`Sent warning about ${message.length - 1} errors`);
 }
 
 /**
@@ -161,9 +160,11 @@ async function processErrorMessages(errorsToReport) {
     log.info('no new messages to send after filtering by already sent');
     return;
   }
+  log.info('We have', errorMessagesLimited.length, 'errors after filter by already sent');
   await sendToSlack(errorMessagesLimited);
   const forDatabase = errorMessagesLimited.map((err)=>({msgName: err.msgName, typeErr: err.description}));
   await knex.insert(forDatabase).into('slack_bot');
+  log.info(`Sent warning about ${errorMessagesLimited.length} errors`);
 }
 
 async function run() {
@@ -194,6 +195,7 @@ async function run() {
     log.info('Nothing to report after condition filter');
     return null;
   }
+  log.info('We have', errorsToReport.length, 'errors after condition filter');
   return processErrorMessages(errorsToReport);
 }
 

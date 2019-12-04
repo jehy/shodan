@@ -39,9 +39,10 @@ class ErrorChecks {
 }
 
 // Ошибки по приоритету. Чем выше, тем приоритетнее. Одна ошибка попадает только в одну категорию, наиболее приоритетную.
+// !! При добавлении ошибок - дописывайте их в хвост, чтобы не менять порядковый номер существующих.
 const errorsByPriority = [
   {
-    description: 'Впервые на продакшне',
+    description: 'Сегодня появилась впервые на продакшне',
     condition: (el) => {
       const countEnough = ErrorChecks.countEnough(el, botConfig.minProdErrorsNew);
       const isStaging = ErrorChecks.isStaging(el);
@@ -50,7 +51,7 @@ const errorsByPriority = [
     },
   },
   {
-    description: 'Впервые на стейдже',
+    description: 'Сегодня появилась впервые на стейдже',
     condition: (el) => {
       const countEnough = ErrorChecks.countEnough(el, botConfig.minStageErrorsNew);
       const isStaging = ErrorChecks.isStaging(el);
@@ -97,7 +98,7 @@ function errorGrowthRate(error) {
   return (error.preHour === 0 ? 'N/A' : (error.count / error.preHour).toFixed(2));
 }
 function formatDescription(str) {
-  if (str.includes('Впервые')) {
+  if (str.includes('впервые')) {
     return `*${str}*`;
   }
   return str;
@@ -116,7 +117,8 @@ function generateMessage(errors, duty) {
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${index + 1}.* <${link(error)}|${error.name}.${error.msgName}>: ${formatDescription(error.description)}\n`
+        text: `*${index + 1}.* <${link(error)}|${error.name}.${error.msgName}>: `
+      + `${formatDescription(errorsByPriority[error.typeErr].description)}\n`
       + `сколько: ${error.count}, ранее: ${error.preHour}, первая: ${formatDate(error.firstMet)},`
       + ` последняя: ${formatDate(error.lastMet)}, рост: ${errorGrowthRate(error)}`,
       },
@@ -149,7 +151,7 @@ async function filterBySent(errorsToReport) {
     .whereRaw(`added > DATE_SUB(NOW(), INTERVAL ${botConfig.diffMinutesBetweenSendSlack} MINUTE)`)
     .from('slack_bot');
   return errorsToReport.filter((err)=>!possibleDuplicates.some((dup)=>{
-    return dup.msgName === err.msgName && dup.typeErr === err.description;
+    return dup.msgName === err.msgName && dup.typeErr === err.typeErr;
   }));
 }
 
@@ -162,7 +164,7 @@ async function processErrorMessages(errorsToReport) {
   }
   log.info('We have', errorMessagesLimited.length, 'errors after filter by already sent');
   await sendToSlack(errorMessagesLimited);
-  const forDatabase = errorMessagesLimited.map((err)=>({msgName: err.msgName, typeErr: err.description}));
+  const forDatabase = errorMessagesLimited.map((err)=>({msgName: err.msgName, typeErr: err.typeErr}));
   await knex.insert(forDatabase).into('slack_bot');
   log.info(`Sent warning about ${errorMessagesLimited.length} errors`);
 }
@@ -184,9 +186,9 @@ async function run() {
   log.info('We have', errors.length, 'errors after blacklist');
 
   const errorsToReport = errors.reduce((acc, error) => {
-    const reportCondition = errorsByPriority.find(({condition}) => condition(error));
-    if (reportCondition) {
-      acc.push({...error, description: reportCondition.description});
+    const reportConditionIndex = errorsByPriority.findIndex(({condition}) => condition(error));
+    if (reportConditionIndex !== -1) {
+      acc.push({...error, typeErr: reportConditionIndex});
     }
     return acc;
   }, []);

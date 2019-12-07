@@ -79,11 +79,25 @@ const errorsByPriority = [
   },
 ];
 
+function isDevOnDuty()
+{
+  const now = moment();
+  const weekDay = now.isoWeekday();
+  const hour = now.hour();
+  const isHoliday = [6, 7].includes(weekDay);
+  const offWorkHours = hour < 9 || hour > 19;
+  return !isHoliday && !offWorkHours;
+}
+
 async function getDuty() {
   const info = await slackClient.conversations.info({
     channel: botConfig.monitoringChannelId,
   });
-  return info.channel.topic.value.match(/<@\w{9}>/gi);
+  const onDuty = info.channel.topic.value.match(/<@\w{9}>/gi);
+  if (onDuty.length > 1 && !isDevOnDuty()) {
+    return onDuty.slice(0, 1);
+  }
+  return onDuty;
 }
 
 function link(error) {

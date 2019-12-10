@@ -79,8 +79,7 @@ const errorsByPriority = [
   },
 ];
 
-function isDevOnDuty()
-{
+function isDevOnDuty() {
   const now = moment();
   const weekDay = now.isoWeekday();
   const hour = now.hour();
@@ -118,12 +117,26 @@ function formatDescription(str) {
   return str;
 }
 
+function getGrowthIcon(error) {
+  const rate = error.preHour === 0 ? error.count : (error.count / error.preHour);
+  if (rate > 300) {
+    return ' :pants_on_fire:';
+  }
+  if (rate > 100) {
+    return ' :alert:';
+  }
+  if (rate > 30) {
+    return ' :rocket:';
+  }
+  return '';
+}
+
 function generateMessage(errors, duty) {
   const header = {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `*Shodan.* ${duty.join(',')}, обратите внимание:`,
+      text: `${duty.join(',')}, обратите внимание:`,
     },
   };
   const errorsFormatted = errors.map((error, index)=>{
@@ -134,7 +147,7 @@ function generateMessage(errors, duty) {
         text: `*${index + 1}.* <${link(error)}|${error.name}.${error.msgName}>: `
       + `${formatDescription(errorsByPriority[error.typeErr].description)}\n`
       + `сколько: ${error.count}, ранее: ${error.preHour}, первая: ${formatDate(error.firstMet)},`
-      + ` последняя: ${formatDate(error.lastMet)}, рост: ${errorGrowthRate(error)}`,
+      + ` последняя: ${formatDate(error.lastMet)}, рост: ${errorGrowthRate(error)}${getGrowthIcon(error)}`,
       },
     };
   });

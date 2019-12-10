@@ -122,10 +122,10 @@ function getGrowthIcon(error) {
   if (rate > 300) {
     return ' :pants_on_fire:';
   }
-  if (rate > 100) {
+  if (rate > 50) {
     return ' :alert:';
   }
-  if (rate > 30) {
+  if (rate > 10) {
     return ' :rocket:';
   }
   return '';

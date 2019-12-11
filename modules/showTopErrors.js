@@ -154,7 +154,7 @@ function getMetData(err, firstLastMetData) {
   return metData;
 }
 
-function getTopErrors(knex, event) {
+async function getTopErrors(knex, event) {
   const fetchErrors = [];
 
   let interval = 'DAY';
@@ -162,46 +162,44 @@ function getTopErrors(knex, event) {
     interval = 'HOUR';
   }
 
-  return getLastIntervalTopErrors(knex, event, interval)
-    .then((topErrors) => {
-      const errorIds = topErrors.map((err) => err.id);
-      const errorsPerThisHourQuery = getErrorTotal(knex);
-      const firstLastMetQuery = getFirstLastDateMet(knex, event, errorIds);
-      const logCommentQuery = getLogComments(knex, event, errorIds);
-      const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
-      const otherEnvQuery = false;
-      if (event.data.env) {
-        // otherEnvQuery = getOtherEnvErrorNum(knex, event, errorIds, interval);
+  const topErrors = await getLastIntervalTopErrors(knex, event, interval);
+  const errorIds = topErrors.map((err) => err.id);
+  const errorsPerThisHourQuery = getErrorTotal(knex);
+  const firstLastMetQuery = getFirstLastDateMet(knex, event, errorIds);
+  const logCommentQuery = getLogComments(knex, event, errorIds);
+  const preHourQuery = getPrevIntervalErrorStats(knex, event, interval);
+  const otherEnvQuery = false;
+  if (event.data.env) {
+    // otherEnvQuery = getOtherEnvErrorNum(knex, event, errorIds, interval);
+  }
+  const [preHourData, firstLastMetData, errorsPerHour, otherEnvErrors, logComments] = await Promise.all([preHourQuery,
+    firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery, logCommentQuery]);
+  if (errorsPerHour * 0.7 > config.updater.kibana.maxLogsPerHour) {
+    fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour}), some may be skipped`);
+  }
+  if (topErrors.length === 0) {
+    fetchErrors.push('Warning: No logs found, please check updater');
+  }
+  const result = topErrors.map((err) => {
+    const preHour = preHourData.find((item) => item.msgName === err.msgName && item.name === err.name);
+    const comment = logComments.find((item) => item.msgName === err.msgName && item.name === err.name);
+    const metData = getMetData(err, firstLastMetData);
+    if (otherEnvErrors) {
+      const otherEnv = otherEnvErrors.find((item) => item.msgName === err.msgName && item.name === err.name);
+      if (otherEnv) {
+        Object.assign(err, {otherEnv: otherEnv.count});
       }
-      return Promise.all([preHourQuery, firstLastMetQuery, errorsPerThisHourQuery, otherEnvQuery, logCommentQuery])
-        .then(([preHourData, firstLastMetData, errorsPerHour, otherEnvErrors, logComments]) => {
-          if (errorsPerHour * 0.7 > config.updater.kibana.maxLogsPerHour) {
-            fetchErrors.push(`Warning: many logs per this hour (${errorsPerHour}), some may be skipped`);
-          }
-          if (topErrors.length === 0) {
-            fetchErrors.push('Warning: No logs found, please check updater');
-          }
-          return topErrors.map((err) => {
-            const preHour = preHourData.find((item) => item.msgName === err.msgName && item.name === err.name);
-            const comment = logComments.find((item) => item.msgName === err.msgName && item.name === err.name);
-            const metData = getMetData(err, firstLastMetData);
-            if (otherEnvErrors) {
-              const otherEnv = otherEnvErrors.find((item) => item.msgName === err.msgName && item.name === err.name);
-              if (otherEnv) {
-                Object.assign(err, {otherEnv: otherEnv.count});
-              }
-            }
-            return Object.assign(err, {
-              firstMet: metData.firstMet,
-              lastMet: metData.lastMet,
-              preHour: preHour && preHour.count || 0,
-              comment: comment && comment.comment || '',
-              errors: checkErrorEntry(err),
-              env: event.data.env === 'staging' ? 'staging' : 'production',
-            });
-          });
-        });
-    }).then((result) => { return {topErrors: result, fetchErrors}; });
+    }
+    return Object.assign(err, {
+      firstMet: metData.firstMet,
+      lastMet: metData.lastMet,
+      preHour: preHour && preHour.count || 0,
+      comment: comment && comment.comment || '',
+      errors: checkErrorEntry(err),
+      env: event.data.env === 'staging' ? 'staging' : 'production',
+    });
+  });
+  return {topErrors: result, fetchErrors};
 }
 
 async function showTopErrors(knex, socket, event) {

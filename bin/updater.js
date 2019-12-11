@@ -267,7 +267,7 @@ async function doUpdateLogs() {
     }
     return res;
   }, {});
-  await Promise.map(Object.values(dataForUpdate), updateMetData, {concurrency: 10}).timeout(20 * 1000);
+  await Promise.map(Object.values(dataForUpdate), updateMetData, {concurrency: 1}).timeout(20 * 1000);
   log.info('updated met data');
   return true;
 }

@@ -227,6 +227,10 @@ function formatErrorMessage(message, err) {
 
 function displayErrById(data, socket, config) {
 
+  if (!data.errors.length) {
+    Utils.showModal(data.msgName, '<div class="alert alert-warning">No error data found</div>');
+    return;
+  }
   const graph = $('<div/>');
   addGraph(graph, data);
   // //

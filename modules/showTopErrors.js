@@ -14,8 +14,9 @@ function getLastIntervalTopErrors(knex, event, interval) {
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereRaw(`logs.eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
+    const env = Array.isArray(event.data.env) ? event.data.env : [event.data.env];
     query = query
-      .where('logs.env', event.data.env);
+      .whereIn('logs.env', env);
   }
   if (event.data.role) {
     query = query
@@ -43,8 +44,9 @@ function getPrevIntervalErrorStats(knex, event, interval) {
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereRaw(`logs.eventDate BETWEEN DATE_SUB(NOW(),INTERVAL 2 ${interval}) AND DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {
+    const env = Array.isArray(event.data.env) ? event.data.env : [event.data.env];
     hourPreQuery = hourPreQuery
-      .where('logs.env', event.data.env);
+      .whereIn('logs.env', env);
   }
   if (event.data.role) {
     hourPreQuery = hourPreQuery
@@ -64,8 +66,9 @@ function getFirstLastDateMet(knex, event, errorIds) {
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereIn('errors.id', errorIds);
   if (event.data.env) {
+    const env = Array.isArray(event.data.env) ? event.data.env : [event.data.env];
     firstLastMetDataQuery = firstLastMetDataQuery
-      .where('first_last_met.env', event.data.env)
+      .whereIn('first_last_met.env', env)
       .select('first_last_met.firstMet', 'first_last_met.lastMet');
   } else {
     firstLastMetDataQuery = firstLastMetDataQuery
@@ -104,8 +107,9 @@ function getOtherEnvErrorNum(knex, event, errorIds, interval) {
     .groupBy('errors.id')
     .count('errors.id as count');
   if (event.data.env) {
+    const env = Array.isArray(event.data.env) ? event.data.env : [event.data.env];
     otherEnvQuery = otherEnvQuery
-      .whereNot('logs.env', event.data.env);
+      .whereNotIn('logs.env', env);
   }
   if (event.data.pid) {
     otherEnvQuery = otherEnvQuery
@@ -193,7 +197,7 @@ function getTopErrors(knex, event) {
               preHour: preHour && preHour.count || 0,
               comment: comment && comment.comment || '',
               errors: checkErrorEntry(err),
-              env: event.data.env,
+              env: event.data.env === 'staging' ? 'staging' : 'production',
             });
           });
         });

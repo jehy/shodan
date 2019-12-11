@@ -202,7 +202,7 @@ async function run() {
     .whereRaw(`added < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
     .del();
   const dbRequests = [
-    {name: 'showTopErrors', data: { env: '', period: 'hour', role: '', pid: '', index: kibanaIndex}},
+    {name: 'showTopErrors', data: { env: ['production-a', 'production-b'], period: 'hour', role: '', pid: '', index: kibanaIndex}},
     {name: 'showTopErrors', data: { env: 'staging', period: 'hour', role: '', pid: '', index: kibanaIndex}},
   ];
   const errors = (await Promise.reduce(dbRequests, async (res, el) => {

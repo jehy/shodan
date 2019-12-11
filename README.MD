@@ -65,3 +65,16 @@ Error details:
         *  `"charset": "utf8"`
     * `"migrations":`
         *  `"tableName": "knex_migrations"`
+* `errorNotifyBot` bot config
+     * `monitoringChannelId` - channel where bot takes guys who are on duty.
+     * `outputChannelId` - channel to write error messages to.
+     * `interval` - error check interval.
+     * `diffMinutesBetweenSendSlack` - min interval for posting same messages.
+     * `minStageErrors` - minimal stage errors number to react to.
+     * `minProdErrors`- minimal production errors number to react to.
+     * `minStageErrorsNew` - minimal NEW stage errors number to react to.
+     * `minProdErrorsNew`  -minimal NEW prod errors number to react to.
+     * `minStageErrorsGrown` - minimal stage errors growth to react to.
+     * `minProdErrorsGrown`  - minimal prod errors growth to react to.
+     * `maxSlackMessages` - max number of messages per slack post
+     * `blackListMsgNames`, ex `["fillDistances", "getGMToffset_0"]` - array of error message names to ignore

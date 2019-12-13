@@ -242,7 +242,7 @@ async function schedule(projectConfig = null) {
     return;
   }
   await run(projectConfig).catch((e) => projectConfig.log.error(e));
-  setTimeout(schedule,  projectConfig.interval);
+  setTimeout(()=>schedule(projectConfig),  projectConfig.interval);
 }
 
 schedule().catch((e) => log.error(e));

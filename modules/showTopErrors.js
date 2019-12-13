@@ -10,7 +10,7 @@ function getLastIntervalTopErrors(knex, event, interval) {
 
   let query = knex('logs')
     .join('errors', 'logs.error_id', 'errors.id')
-    .select('errors.msgName', 'errors.name', 'errors.id')
+    .select('errors.msgName', 'errors.name', 'errors.id', 'errors.index')
     .where('errors.index', event.data.index.replace('-*', ''))
     .whereRaw(`logs.eventDate >= DATE_SUB(NOW(),INTERVAL 1 ${interval})`);
   if (event.data.env) {

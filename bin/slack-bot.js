@@ -233,7 +233,7 @@ async function schedule(projectConfig = null) {
   if (projectConfig === null) { // first launch
     log.info('Slack-bot started');
     for (let projectId = 0; projectId < slackConfig.errorNotifyBot.length; projectId++) {
-      const projectLog = log.child({projectId});
+      const projectLog = log.child({index: slackConfig.errorNotifyBot[projectId].index});
       const project = {...slackConfig.errorNotifyBot[projectId], projectId, log: projectLog};
       // eslint-disable-next-line no-await-in-loop
       await run(project).catch((e) => projectLog.error(e));

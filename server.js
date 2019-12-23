@@ -32,7 +32,7 @@ setInterval(() => {
   log.info(`Current users connected: ${Object.keys(io.sockets.connected).length}`);
 }, 5000);
 
-function sendClinetConfig(socket) {
+function sendClientConfig(socket) {
   const eventData = {
     name: 'updateConfig',
     data: {
@@ -57,7 +57,7 @@ function sendClinetConfig(socket) {
 io.on('connection', (socket) => {
   log.info(`A user connected (${socket.request.user && socket.request.user.displayName || 'unknown'})`);
 
-  sendClinetConfig(socket);
+  sendClientConfig(socket);
 
   socket.on('event', (event) => {
     log.info(`event ${event.name} fired: ${JSON.stringify(event)}`);

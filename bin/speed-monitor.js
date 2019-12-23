@@ -8,7 +8,7 @@ const moment = require('moment');
 const Promise = require('bluebird');
 const knex = require('knex')(config.db);
 require('../modules/knex-timings')(knex, false);
-const {fixLogEntry} = require('../modules/utils');
+const {fixLogEntry} = require('../lib/fixLogs');
 
 const log = bunyan.createLogger({name: 'shodan:speed-monitor'});
 

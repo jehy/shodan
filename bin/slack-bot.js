@@ -7,7 +7,7 @@ const knex = require('knex')(config.db);
 
 require('../modules/knex-timings')(knex, false);
 
-const {makeKibanaLink} = require('../modules/common');
+const {makeKibanaLink} = require('../lib/common');
 const {getTopErrors} = require('../modules/showTopErrors');
 
 const log = bunyan.createLogger({name: 'shodan:slack-notify'});

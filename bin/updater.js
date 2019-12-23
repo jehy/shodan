@@ -6,7 +6,7 @@ const config = require('config');
 const moment = require('moment');
 const Promise = require('bluebird');
 const knex = require('knex')(config.db);
-const {fixLogEntry} = require('../modules/utils');
+const {fixLogEntry} = require('../lib/fixLogs');
 require('../modules/knex-timings')(knex, false);
 
 const log = bunyan.createLogger({name: 'shodan:updater'});

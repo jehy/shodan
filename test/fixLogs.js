@@ -1,5 +1,5 @@
 const {assert} = require('chai');
-const parsingUtils = require('../modules/utils');
+const parsingUtils = require('../lib/fixLogs');
 
 
 describe('Message name generator', () => {

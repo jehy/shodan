@@ -1,7 +1,7 @@
 const config = require('config');
 const bunyan = require('bunyan');
 const Promise = require('bluebird');
-const {fixData} = require('./utils');
+const {fixData} = require('../lib/fixLogs');
 
 const log = bunyan.createLogger({name: 'shodan:showSpeed'});
 

@@ -21,11 +21,11 @@ function addAutoBadge(error) {
   return error;
 }
 
-function addErrorBadges(row) {
+function addErrorBadges(err) {
 
-  const displayName = row.msgName;
-  if (row.errors && row.errors.length) {
-    return `${displayName} <span class="label label-danger">${row.errors.join(', ')}</span>`;
+  const displayName = err.msgName;
+  if (err.errors && err.errors.length) {
+    return `${displayName} <span class="label label-danger">${err.errors.join(', ')}</span>`;
   }
   return displayName;
 }

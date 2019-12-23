@@ -8,7 +8,7 @@ const moment = require('moment');
 const Promise = require('bluebird');
 const crypto = require('crypto');
 const knex = require('knex')(config.db);
-const {fixLogEntry, fixMessageName} = require('../modules/utils');
+const {fixLogEntry, fixMessageName} = require('../lib/fixLogs');
 require('../modules/knex-timings')(knex, false);
 
 const log = bunyan.createLogger({name: 'shodan:hang-monitor'});

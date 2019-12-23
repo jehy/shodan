@@ -10,7 +10,6 @@ config/config.json
 import/
 config/development.json
 config/production.json
-lib
 err_reports
 config/runtime.json
 test-results.xml

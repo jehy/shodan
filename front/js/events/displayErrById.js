@@ -9,7 +9,7 @@ import * as boost from 'highcharts/modules/boost';
 import * as moment from 'moment';
 import * as Utils from  '../utils';
 
-const {makeKibanaLink} = require('../../../modules/common');
+const {makeKibanaLink} = require('../../../lib/common');
 
 boost(Highcharts);
 Highcharts.setOptions({
@@ -267,7 +267,7 @@ function displayErrById(data, socket, config) {
   const container = $('<div/>');
   const msgName = Utils.formatMessageName(data.errors[0]);
   const {index, name} = data.errors[0];
-  const kibanaLink = makeKibanaLink(index, name, msgName, config.updater.kibana.url);
+  const kibanaLink = makeKibanaLink(index, name, data.errors[0].msgName, config.updater.kibana.url);
   container.append(`
             <table class="table">
             <thead><th>name</th><th>msgName</th><th>index</th></thead>

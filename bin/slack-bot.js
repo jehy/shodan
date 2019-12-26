@@ -3,6 +3,7 @@ const moment = require('moment');
 const config = require('config');
 const bunyan = require('bunyan');
 const Promise = require('bluebird');
+const axios = require('axios');
 const knex = require('knex')(config.db);
 
 require('../modules/knex-timings')(knex, false);
@@ -74,13 +75,33 @@ const errorsByPriority = [
   },
 ];
 
-function isDevOnDuty() {
+const holidayCache = {};
+async function checkIfHoliday() {
+  const now = moment();
+  const key = now.format('YYYY-MM-DD');
+  if (holidayCache[key] !== undefined) {
+    return holidayCache[key];
+  }
+  try {
+    const {data} = axios(`https://isdayoff.ru/api/getdata?year=${now.format('YYYY')}&month=${now.format('MM')}&day=${now.format('DD')}`);
+    return data === '1';
+  } catch (err) {
+    log.error('Could not check holyday data', err);
+  }
+  return false;
+
+}
+async function isDevOnDuty() {
   const now = moment();
   const weekDay = now.isoWeekday();
   const hour = now.hour();
-  const isHoliday = [6, 7].includes(weekDay);
-  const offWorkHours = hour < 9 || hour > 19;
-  return !isHoliday && !offWorkHours;
+  const isWorkDay = weekDay < 6;
+  const isWorkHour = hour > 9 && hour < 19;
+  if (!isWorkDay || !isWorkHour) {
+    return false;
+  }
+  const isHoliday = await checkIfHoliday();
+  return isWorkDay && isWorkHour && !isHoliday;
 }
 
 async function getDuty(conf) {
@@ -91,7 +112,8 @@ async function getDuty(conf) {
     channel: conf.monitoringChannelId,
   });
   const onDuty = info.channel.topic.value.match(/<@\w{9}>/gi);
-  if (onDuty.length > 1 && !isDevOnDuty()) {
+  const shouldNotify = await isDevOnDuty();
+  if (onDuty.length > 1 && !shouldNotify) {
     return onDuty.slice(0, 1);
   }
   return onDuty;

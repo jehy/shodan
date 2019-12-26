@@ -129,13 +129,13 @@ function getGrowthIcon(error) {
   return '';
 }
 
-function generateMessage(errors, duty) {
+function generateMessage(errors, duty, project) {
   const onDuty = duty ? `${duty.join(',')}, ` : '';
   const header = {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `${onDuty}обратите внимание:`,
+      text: `${onDuty}обратите внимание на ${project.index.replace('twapi-', '')}:`,
     },
   };
   const errorsFormatted = errors.map((error, index)=>{
@@ -156,7 +156,7 @@ function generateMessage(errors, duty) {
 async function sendToSlack(errors, project) {
   const duty = await getDuty(project);
   project.log.info(`Duty data from slack: ${JSON.stringify(duty)}`);
-  const message = generateMessage(errors, duty);
+  const message = generateMessage(errors, duty, project);
 
   await slackClient.chat.postMessage({
     channel: project.outputChannelId,

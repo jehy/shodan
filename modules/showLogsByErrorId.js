@@ -61,7 +61,7 @@ if (env) {
       comment: commentData,
     },
   };
-  console.log(`Sending data ${JSON.stringify(reply)} for request ${JSON.stringify(event.data)}`);
+  // console.log(`Sending data ${JSON.stringify(reply)} for request ${JSON.stringify(event.data)}`);
   socket.emit('event', reply);
   return true;
 }

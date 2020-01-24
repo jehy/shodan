@@ -17,6 +17,9 @@
       "files": [
         "front/js/**/*.js"
       ],
+      "rules": {
+        "no-console": "warn"
+      },
       "env": {
         "browser": true,
         "node": true,
@@ -68,7 +71,7 @@
     "no-unused-vars": "warn",
     "object-shorthand": "warn",
     "no-param-reassign": "warn",
-    "no-console": "warn",
+    "no-console": "error",
     "newline-per-chained-call": "off",
     "no-continue": "off",
     "no-multi-spaces": "off",

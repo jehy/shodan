@@ -52,6 +52,12 @@ function rowToPoint(row) {
   ];
 }
 
+const colors = {
+  staging: '#ff0000',
+  'production-a': '#00ff00',
+  'production-b': '#0000ff',
+};
+
 function addGraph(graph, data) {
   let graphData = data.graph.reduce((res, el)=>{
     if (!res[el.env]) {
@@ -68,6 +74,7 @@ function addGraph(graph, data) {
   const series = Object.entries(graphData).reduce((res, [env, zeroFilled])=>{
     return res.concat({
       type: 'area',
+      color: colors[env],
       name: env,
       data: zeroFilled,
     });

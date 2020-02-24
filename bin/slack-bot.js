@@ -83,10 +83,13 @@ async function checkIfHoliday() {
     return holidayCache[key];
   }
   try {
-    const {data} = axios(`https://isdayoff.ru/api/getdata?year=${now.format('YYYY')}&month=${now.format('MM')}&day=${now.format('DD')}`);
-    return data === '1';
+    const request = `https://isdayoff.ru/api/getdata?year=${now.format('YYYY')}&month=${now.format('MM')}&day=${now.format('DD')}`;
+    const {data} = await axios(request);
+    const isHoliday = data === '1';
+    holidayCache[key] = isHoliday;
+    return isHoliday;
   } catch (err) {
-    log.error('Could not check holyday data', err);
+    log.error('Could not check holiday data', err);
   }
   return false;
 

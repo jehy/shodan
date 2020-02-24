@@ -85,7 +85,8 @@ async function checkIfHoliday() {
   try {
     const request = `https://isdayoff.ru/api/getdata?year=${now.format('YYYY')}&month=${now.format('MM')}&day=${now.format('DD')}`;
     const {data} = await axios(request);
-    const isHoliday = data === '1';
+    const isHoliday = parseInt(data, 10) === 1;
+    log.info(`checking holiday, request ${request} data ${data} isHoliday ${isHoliday}`);
     holidayCache[key] = isHoliday;
     return isHoliday;
   } catch (err) {

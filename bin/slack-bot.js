@@ -10,11 +10,17 @@ require('../modules/knex-timings')(knex, false);
 
 const {makeKibanaLink} = require('../lib/common');
 const {getTopErrors} = require('../modules/showTopErrors');
+const {getIndexes} = require('../modules/getIndexes');
 
 const log = bunyan.createLogger({name: 'shodan:slack-notify'});
 const kibanaConfig = config.updater.kibana;
 const slackConfig = config.slack;
 const slackClient = new Slack({token: slackConfig.credentials.token});
+
+const cache = {
+  holidayCache: {},
+  indexes: null,
+};
 
 class ErrorChecks {
   static grownEnough(el, min) {
@@ -75,19 +81,18 @@ const errorsByPriority = [
   },
 ];
 
-const holidayCache = {};
 async function checkIfHoliday() {
   const now = moment();
   const key = now.format('YYYY-MM-DD');
-  if (holidayCache[key] !== undefined) {
-    return holidayCache[key];
+  if (cache.holidayCache[key] !== undefined) {
+    return cache.holidayCache[key];
   }
   try {
     const request = `https://isdayoff.ru/api/getdata?year=${now.format('YYYY')}&month=${now.format('MM')}&day=${now.format('DD')}`;
     const {data} = await axios(request);
     const isHoliday = parseInt(data, 10) === 1;
     log.info(`checking holiday, request ${request} data ${data} isHoliday ${isHoliday}`);
-    holidayCache[key] = isHoliday;
+    cache.holidayCache[key] = isHoliday;
     return isHoliday;
   } catch (err) {
     log.error('Could not check holiday data', err);
@@ -124,7 +129,7 @@ async function getDuty(conf) {
 }
 
 function link(error) {
-  return makeKibanaLink(error.index, error.name, error.msgName, kibanaConfig.url);
+  return makeKibanaLink(error.index, error.name, error.msgName, kibanaConfig.url, cache.indexes);
 }
 
 function formatDate(date) {
@@ -224,7 +229,13 @@ async function processErrorMessages(errorsToReport, project) {
 }
 
 async function run(project) {
-
+  if (!cache.indexes) {
+    try {
+      cache.indexes = await getIndexes();
+    } catch (err) {
+      log.error('Failed to get indexes data', err);
+    }
+  }
   const dbRequests = [
     {name: 'showTopErrors', data: { env: ['production-a', 'production-b'], period: 'hour', role: '', pid: '', index: project.index}},
     {name: 'showTopErrors', data: { env: 'staging', period: 'hour', role: '', pid: '', index: project.index}},

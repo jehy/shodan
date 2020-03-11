@@ -14,6 +14,7 @@ const showHanged = require('./modules/showHanged');
 const showSpeed = require('./modules/showSpeed');
 const showConditions = require('./modules/showConditions');
 const updateMessageComment = require('./modules/updateMessageComment');
+const {getIndexes} = require('./modules/getIndexes');
 
 const log = bunyan.createLogger({name: 'shodan:server'});
 
@@ -28,16 +29,21 @@ app.get('/', (req, res) => {
 
 app.use(express.static('dist'));
 
+const cache = {
+  indexes: null,
+};
+
 setInterval(() => {
   log.info(`Current users connected: ${Object.keys(io.sockets.connected).length}`);
 }, 5000);
 
-function sendClientConfig(socket) {
+function sendClientConfig(socket, indexes) {
   const eventData = {
     name: 'updateConfig',
     data: {
       config:
         {
+          indexes,
           updater: {
             indexes: config.updater.kibana.indexes,
             kibana:
@@ -54,10 +60,17 @@ function sendClientConfig(socket) {
   socket.emit('event', eventData);
 }
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   log.info(`A user connected (${socket.request.user && socket.request.user.displayName || 'unknown'})`);
+  if (!cache.indexes) {
+    try {
+      cache.indexes = await getIndexes();
+    } catch (err) {
+      log.error('Failed to get indexes data', err);
+    }
+  }
 
-  sendClientConfig(socket);
+  sendClientConfig(socket, cache.indexes);
 
   socket.on('event', (event) => {
     log.info(`event ${event.name} fired: ${JSON.stringify(event)}`);

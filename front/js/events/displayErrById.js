@@ -274,7 +274,7 @@ function displayErrById(data, socket, config) {
   const container = $('<div/>');
   const msgName = Utils.formatMessageName(data.errors[0]);
   const {index, name} = data.errors[0];
-  const kibanaLink = makeKibanaLink(index, name, data.errors[0].msgName, config.updater.kibana.url);
+  const kibanaLink = makeKibanaLink(index, name, data.errors[0].msgName, config.updater.kibana.url, config.indexes);
   container.append(`
             <table class="table">
             <thead><th>name</th><th>msgName</th><th>index</th></thead>

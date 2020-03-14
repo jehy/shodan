@@ -31,6 +31,10 @@ class ErrorChecks {
     return el.count >= min;
   }
 
+  static tooMany(el, max) {
+    return el.count >= max;
+  }
+
   static isStaging(el) {
     return el.env === 'staging';
   }
@@ -43,6 +47,12 @@ class ErrorChecks {
 // Ошибки по приоритету. Чем выше, тем приоритетнее. Одна ошибка попадает только в одну категорию, наиболее приоритетную.
 // !! При добавлении ошибок - дописывайте их в хвост, чтобы не менять порядковый номер существующих.
 const errorsByPriority = [
+  {
+    description: 'Слишком много ошибок',
+    condition: (el, conf) => {
+      return ErrorChecks.tooMany(el, conf.tooMany);
+    },
+  },
   {
     description: 'Сегодня появилась впервые на продакшне',
     condition: (el, conf) => {

@@ -112,6 +112,7 @@ function addGraph(graph, data) {
     },
     plotOptions: {
       area: {
+        stacking: 'normal',
         fillColor: {
           linearGradient: {
             x1: 0,

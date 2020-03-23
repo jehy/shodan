@@ -133,7 +133,7 @@ async function getLogUpdateInterval() {
   const lastDate = res && res.eventDate;
   let queryFrom;
   if (!lastDate) {
-    queryFrom = moment().subtract(config.updater.kibana.firstSearchFor, 'h');
+    queryFrom = moment().subtract(config.speedMonitor.firstSearchFor, 'h');
     log.info('First time update, fetching data from ', queryFrom.format(commonDateFormat));
   } else {
     queryFrom = moment(lastDate);
@@ -142,15 +142,15 @@ async function getLogUpdateInterval() {
   if (config.updater.kibana.crawlDelay) {
     now.subtract(config.updater.kibana.crawlDelay, 'm');
   }
-  const queryTo = moment.min(queryFrom.clone().add(config.updater.kibana.searchFor, 'h'), now);
+  const queryTo = moment.min(queryFrom.clone().add(config.speedMonitor.searchFor, 'h'), now);
 
   const dateString = queryFrom.format(commonDateFormat);
   const reply = await knex('speed_logs').count()
-    .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.updater.kibana.searchFor} HOUR) and  "${dateString}"`);
+    .whereRaw(`eventDate between DATE_SUB("${dateString}", INTERVAL ${config.speedMonitor.searchFor} HOUR) and  "${dateString}"`);
   const logsForLastHour = Object.values(reply[0])[0];
   log.info(`Logs in base for hour: ${logsForLastHour}`);
   const maxPerHour = 300;
-  if (logsForLastHour > maxPerHour * config.updater.kibana.searchFor) {
+  if (logsForLastHour > maxPerHour * config.speedMonitor.searchFor) {
     const addFiveMin = queryFrom.clone().add(5, 'm');
     if (addFiveMin < now) {
       log.warn('Too many logs for this hour, I will skip 5 minutes...');
@@ -187,7 +187,7 @@ async function doAddSpeedLogs(force = 0) {
   if (data.count === 1 && (queryTo.clone().add(20, 'minutes').isBefore(moment()))) {
     // rare case, no more logs for an hour
     log.info('only one log, making more request after timeout');
-    await Promise.delay(config.updater.kibana.updateInterval * 1000);
+    await Promise.delay(config.speedMonitor.updateInterval * 1000);
     await doAddSpeedLogs(force + 1);
   }
   return true;

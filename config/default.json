@@ -20,7 +20,9 @@
     }
   },
   "speedMonitor": {
-    "updateInterval": 180
+    "updateInterval": 180,
+    "searchFor": 24,
+    "firstSearchFor": 48
   },
   "updater": {
     "maxErrorLength": 10000,

@@ -19,6 +19,9 @@
       }
     }
   },
+  "speedMonitor": {
+    "updateInterval": 180
+  },
   "updater": {
     "maxErrorLength": 10000,
     "kibana": {

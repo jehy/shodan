@@ -273,6 +273,10 @@ async function run(project) {
   return processErrorMessages(errorsToReport, project);
 }
 
+function randomInt(min, max) {
+  return min + Math.floor((max - min) * Math.random());
+}
+
 async function schedule(projectConfig = null) {
   await knex('slack_bot')
     .whereRaw(`added < DATE_SUB(NOW(), INTERVAL ${config.updater.kibana.storeLogsFor} DAY)`)
@@ -284,7 +288,7 @@ async function schedule(projectConfig = null) {
       const project = {...slackConfig.errorNotifyBot[projectId], projectId, log: projectLog};
       // eslint-disable-next-line no-await-in-loop
       await run(project).catch((e) => projectLog.error(e));
-      setTimeout(()=>schedule(project), project.interval);
+      setTimeout(()=>schedule(project), project.interval + randomInt(200, 10000));
     }
     return;
   }

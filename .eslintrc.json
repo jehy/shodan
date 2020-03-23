@@ -63,7 +63,7 @@
     "function-paren-newline": "off",
     "no-mixed-operators": "off",
     "arrow-body-style": "off",
-    "brace-style": ["warn", "1tbs", { "allowSingleLine": true }],
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
     "padded-blocks": "off",
     "no-plusplus": "off",
     "arrow-spacing": "off",

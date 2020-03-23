@@ -79,8 +79,8 @@ function generateRequest(time, env, host, role, pid, after = false) {
   return request;
 }
 
-async function getNearHangedLogs(index, date, env, host, role, pid) // todo use args
-{
+async function getNearHangedLogs(index, date, env, host, role, pid) {
+  // todo use args
   const kibanaUrl = config.updater.kibana.url;
   const headers = {
     Origin: kibanaUrl,

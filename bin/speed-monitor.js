@@ -50,8 +50,8 @@ async function getData(queryFrom, queryTo) {
           {
             bool: {
               should: [
-                {match_phrase: {msgName: 'SEARCH_TIMING_PIPELINE'}},
-                {match_phrase: {msgName: 'SEARCH_TIMING_TOTAL'}},
+                // {match_phrase: {msgName: 'SEARCH_TIMING_PIPELINE'}}, TODO fix and return
+                // {match_phrase: {msgName: 'SEARCH_TIMING_TOTAL'}}, TODO fix and return
                 {match_phrase: {msgName: 'CONDITIONS_TIMINGS'}},
               ],
               minimum_should_match: 1},
@@ -184,9 +184,10 @@ async function doAddSpeedLogs(force = 0) {
     log.info(`Failed to add ${failed} items`);
   }
   log.info('Added');
-  if (data.count === 1 && (queryTo.clone().add(20, 'minutes') < moment())) // rare case, no more logs for an hour
-  {
-    log.info('only one log, making more request');
+  if (data.count === 1 && (queryTo.clone().add(20, 'minutes').isBefore(moment()))) {
+    // rare case, no more logs for an hour
+    log.info('only one log, making more request after timeout');
+    await Promise.delay(config.updater.kibana.updateInterval * 1000);
     await doAddSpeedLogs(force + 1);
   }
   return true;
@@ -213,7 +214,7 @@ async function addSpeedLogs() {
   } catch (err) {
     log.error(err);
   }
-  setTimeout(() => addSpeedLogs(), config.updater.kibana.updateInterval * 1000);
+  setTimeout(() => addSpeedLogs(), config.speedMonitor.updateInterval * 1000);
 }
 
 addSpeedLogs();

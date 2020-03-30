@@ -93,6 +93,9 @@ const errorsByPriority = [
 
 async function checkIfHoliday() {
   const now = moment();
+  if (now.isBetween('30-03-2020', '03-04-2020 23:59:59')) {
+    return false; // COVID-19 holidays are false
+  }
   const key = now.format('YYYY-MM-DD');
   if (cache.holidayCache[key] !== undefined) {
     return cache.holidayCache[key];

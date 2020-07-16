@@ -34,7 +34,7 @@
   "dependencies": {
     "axios": "^0.19.2",
     "bluebird": "^3.7.2",
-    "bunyan": "~1.8.12",
+    "bunyan": "~1.8.13",
     "config": "~3.3.0",
     "connect-session-knex": "~1.5.0",
     "cookie-parser": "~1.4.4",

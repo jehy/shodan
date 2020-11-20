@@ -134,7 +134,7 @@ async function getDuty(conf) {
   const info = await slackClient.conversations.info({
     channel: conf.monitoringChannelId,
   });
-  const onDuty = info.channel.topic.value.match(/<@\w{9}>/gi);
+  const onDuty = info.channel.topic.value.match(/<@\w{9,11}>/gi);
   const shouldNotify = await isDevOnDuty();
   if (onDuty.length > 1 && !shouldNotify) {
     return onDuty.slice(0, 1);

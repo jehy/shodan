@@ -23,7 +23,7 @@ async function getIndexes() {
   }
 
   const options = {
-    url: `${kibanaUrl}/api/saved_objects/?type=index-pattern&fields=title&per_page=10000`,
+    url: `${kibanaUrl}/api/saved_objects/_find?type=index-pattern&fields=title&per_page=10000`,
     method: 'GET',
     encoding: null,
     headers,

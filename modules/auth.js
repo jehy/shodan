@@ -3,8 +3,9 @@ const cookieParser = require('cookie-parser');
 const config = require('config');
 const passport = require('passport');
 const session = require('express-session');
-const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+//const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const KnexSessionStore = require('connect-session-knex')(session);
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 // const debug = require('debug')('shodan:auth');
 const bunyan = require('bunyan');
 
@@ -44,26 +45,30 @@ function auth(app, io, knex) {
     ((accessToken, refreshToken, profile, done) => {
 
       log.info(`User ${profile.displayName} is logging in`);
+	console.log(profile);
       // eslint-disable-next-line no-underscore-dangle
       const profileJson = profile._json;
-      if (profileJson.domain !== config.ui.auth.google.domain) {
-        log.warn(`wrong domain ${profileJson.domain}`);
-        done(new Error(`Wrong domain ${profileJson.domain}!`));
+      if (profileJson.hd !== config.ui.auth.google.domain) {
+        log.warn(`wrong domain ${profileJson.hd}`);
+        done(new Error(`Wrong domain ${profileJson.hd}!`));
       } else {
         done(null, profile);
         log.info('Login ok');
       }
     }),
   ));
-
+/*
   app.get('/auth/google', passport.authenticate('google', {
     hd: config.ui.auth.google.domain,
     prompt: 'select_account',
     scope: [
-      'https://www.googleapis.com/auth/plus.login',
-      'https://www.googleapis.com/auth/plus.profile.emails.read'],
-  }));
-
+      //'https://www.googleapis.com/auth/plus.login',
+      //'https://www.googleapis.com/auth/plus.profile.emails.read'
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/user.emails.read'
+    ],
+  })); */
+  app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
   app.get('/auth/google/callback', passport.authenticate('google', {failureRedirect: '/login'}), (req, res) => res.redirect('/'));
   app.use((req, res, next) => {
     if (!req.user) {

@@ -42,7 +42,7 @@
     "express": "~4.17.1",
     "express-session": "~1.17.0",
     "knex": "0.20.10",
-    "minimatch": "3.0.4",
+    "minimatch": "3.0.5",
     "moment": "~2.29.2",
     "mysql": "~2.18.1",
     "passport": "~0.4.1",

@@ -45,7 +45,7 @@
     "minimatch": "3.0.5",
     "moment": "~2.29.2",
     "mysql": "~2.18.1",
-    "passport": "~0.4.1",
+    "passport": "~0.6.0",
     "passport-google-oauth": "^1.0.0",
     "passport.socketio": "~3.7.0",
     "performance-now": "~2.1.0",
